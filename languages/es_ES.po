@@ -1,0 +1,172 @@
+# Spanish translation for WooCommerce AI Review Manager
+# Copyright (C) 2026 Valhalla Open
+# This file is distributed under the same license as the WooCommerce AI Review Manager plugin.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: WooCommerce AI Review Manager 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/valhalla-open-org/woo-ai-review-manager/issues\n"
+"POT-Creation-Date: 2026-03-08T10:00:00+00:00\n"
+"PO-Revision-Date: 2026-03-08 10:00+0100\n"
+"Last-Translator: Translation Team <info@valhalla-open-org>\n"
+"Language-Team: Spanish\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: gettext\n"
+"X-Domain: woo-ai-review-manager\n"
+
+#: woo-ai-review-manager.php:52
+msgid "WooCommerce AI Review Manager requires WooCommerce to be installed and active."
+msgstr "WooCommerce AI Review Manager requiere que WooCommerce esté instalado y activo."
+
+#: includes/class-plugin.php
+msgctxt "admin menu"
+msgid "AI Reviews"
+msgstr "Reseñas de IA"
+
+#: includes/class-plugin.php
+msgctxt "admin submenu"
+msgid "Settings"
+msgstr "Configuración"
+
+#: includes/class-plugin.php
+msgctxt "admin submenu"
+msgid "Review Invitations"
+msgstr "Invitaciones a Reseñas"
+
+#: includes/class-plugin.php
+msgctxt "admin submenu"
+msgid "Analytics"
+msgstr "Analítica"
+
+#: includes/class-settings.php
+msgctxt "settings section"
+msgid "API Configuration"
+msgstr "Configuración de API"
+
+#: includes/class-settings.php
+msgid "Gemini API Key"
+msgstr "Clave API de Gemini"
+
+#: includes/class-settings.php
+msgid "Your Gemini API key for sentiment analysis and response generation"
+msgstr "Tu clave API de Gemini para análisis de sentimiento y generación de respuestas"
+
+#: includes/class-settings.php
+msgctxt "settings section"
+msgid "Review Invitation Settings"
+msgstr "Configuración de Invitaciones a Reseñas"
+
+#: includes/class-settings.php
+msgid "Days to Wait for Review"
+msgstr "Días de Espera para Reseña"
+
+#: includes/class-settings.php
+msgid "Number of days after order completion before sending review invitation"
+msgstr "Número de días después de la finalización del pedido antes de enviar la invitación a reseña"
+
+#: includes/class-settings.php
+msgid "Invitation Email Subject"
+msgstr "Asunto del Email de Invitación"
+
+#: includes/class-settings.php
+msgid "Enable Sentiment Analysis"
+msgstr "Habilitar Análisis de Sentimiento"
+
+#: includes/class-settings.php
+msgid "Automatically analyze review sentiment and generate AI responses"
+msgstr "Analizar automáticamente el sentimiento de la reseña y generar respuestas de IA"
+
+#: includes/class-review-collector.php
+msgid "Review Invitation"
+msgstr "Invitación a Reseña"
+
+#: includes/class-review-collector.php
+msgid "Hi %s, We'd love to hear what you think about your recent purchase!"
+msgstr "¡Hola %s, nos encantaría saber qué piensas sobre tu compra reciente!"
+
+#: includes/class-review-collector.php
+msgid "Leave a Review"
+msgstr "Dejar una Reseña"
+
+#: includes/class-sentiment-analyzer.php
+msgctxt "sentiment"
+msgid "Positive"
+msgstr "Positivo"
+
+#: includes/class-sentiment-analyzer.php
+msgctxt "sentiment"
+msgid "Negative"
+msgstr "Negativo"
+
+#: includes/class-sentiment-analyzer.php
+msgctxt "sentiment"
+msgid "Neutral"
+msgstr "Neutral"
+
+#: includes/class-response-generator.php
+msgid "Thank you for your feedback!"
+msgstr "¡Gracias por tu retroalimentación!"
+
+#: includes/class-response-generator.php
+msgid "We appreciate your review."
+msgstr "Apreciamos tu reseña."
+
+#: includes/class-dashboard.php
+msgctxt "admin page"
+msgid "AI Review Analytics"
+msgstr "Analítica de Reseñas de IA"
+
+#: includes/class-dashboard.php
+msgid "Total Reviews"
+msgstr "Reseñas Totales"
+
+#: includes/class-dashboard.php
+msgid "Positive Reviews"
+msgstr "Reseñas Positivas"
+
+#: includes/class-dashboard.php
+msgid "Negative Reviews"
+msgstr "Reseñas Negativas"
+
+#: includes/class-dashboard.php
+msgid "Average Rating"
+msgstr "Calificación Promedio"
+
+#: includes/class-dashboard.php
+msgid "Recent Reviews"
+msgstr "Reseñas Recientes"
+
+#: includes/class-dashboard.php
+msgid "Pending AI Responses"
+msgstr "Respuestas de IA Pendientes"
+
+#. Translators: %s is the review count
+#: includes/class-dashboard.php
+msgid "You have %s pending reviews"
+msgid_plural "You have %s pending reviews"
+msgstr[0] "Tienes %s reseña pendiente"
+msgstr[1] "Tienes %s reseñas pendientes"
+
+#. Plugin Name
+msgid "WooCommerce AI Review Manager"
+msgstr "Gestor de Reseñas de IA de WooCommerce"
+
+#. Plugin URI
+msgid "https://github.com/valhalla-open-org/woo-ai-review-manager"
+msgstr "https://github.com/valhalla-open-org/woo-ai-review-manager"
+
+#. Description
+msgid "Automated review collection, sentiment analysis, and AI-powered response suggestions for WooCommerce stores."
+msgstr "Recopilación automática de reseñas, análisis de sentimiento y sugerencias de respuesta impulsadas por IA para tiendas WooCommerce."
+
+#. Author
+msgid "Valhalla Open"
+msgstr "Valhalla Open"
+
+#. Author URI
+msgid "https://github.com/valhalla-open-org"
+msgstr "https://github.com/valhalla-open-org"

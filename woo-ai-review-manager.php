@@ -61,6 +61,18 @@ function wairm_check_dependencies(): bool {
 }
 
 /**
+ * Load plugin textdomain for translations.
+ */
+function wairm_load_textdomain(): void {
+	load_plugin_textdomain(
+		'woo-ai-review-manager',
+		false,
+		dirname( WAIRM_PLUGIN_BASENAME ) . '/languages'
+	);
+}
+add_action( 'plugins_loaded', 'wairm_load_textdomain', 10 );
+
+/**
  * Bootstrap the plugin.
  */
 function wairm_init(): void {
