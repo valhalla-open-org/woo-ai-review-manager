@@ -213,9 +213,9 @@ final class AI_Client {
 	 */
 	public function generate_response( string $review_text, string $sentiment, string $product_name, string $store_name ): string {
 		$tone_guidance = match ( $sentiment ) {
-			'negative' => 'You genuinely want to fix this. Acknowledge what went wrong, take responsibility, and offer a concrete next step (e.g. "reach out to us at …" or "we\'d love to send a replacement"). Never be defensive or dismissive.',
+			'negative' => 'Sincere and apologetic. Lead with a genuine apology — the customer had a bad experience and deserves to feel heard. Acknowledge the specific issue without making excuses, then offer a concrete resolution (refund, replacement, or asking them to contact support). No humor for negative reviews. Be professional but caring.',
 			'neutral'  => 'Friendly and conversational. Pick up on something specific they mentioned and respond to that. Keep it light.',
-			'positive' => 'Warm and brief — match their energy. If they were casual, be casual back. A short, genuine reply beats a long grateful one.',
+			'positive' => 'Warm and brief — match their energy. If they were casual, be casual back. A short, genuine reply beats a long grateful one. Light humor is fine here if it fits.',
 			default    => 'Friendly and helpful.',
 		};
 
@@ -243,9 +243,8 @@ PROMPT;
 			'- NEVER start with "Thank you for your feedback", "Thanks for sharing", "We appreciate", or any canned opener. Jump straight into a real response.',
 			'- NEVER use phrases like "I\'m sorry to hear that" or "We\'re glad you enjoyed". These sound robotic.',
 			'- Sound like a real person writing a quick reply, not a PR department.',
-			'- Use gentle humor where it fits naturally, but don\'t force it.',
-			'- For negative reviews: name the specific problem, say what you\'ll do about it, give them a way to reach you.',
-			'- For positive reviews: be brief and warm. One genuine sentence beats three grateful ones.',
+			'- For negative reviews: lead with a sincere apology, name the specific problem, offer a concrete resolution. NO humor, NO jokes, NO witty remarks on negative reviews — the customer is frustrated and needs to feel taken seriously.',
+			'- For positive reviews: be brief and warm. One genuine sentence beats three grateful ones. Light humor is welcome here.',
 			'- Match the customer\'s register — casual review gets a casual reply, detailed review gets a more considered reply.',
 			'- No exclamation mark overuse. One max per reply.',
 		] );
