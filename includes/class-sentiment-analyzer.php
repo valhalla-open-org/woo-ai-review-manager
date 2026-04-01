@@ -39,10 +39,11 @@ final class Sentiment_Analyzer {
 			return;
 		}
 
-		$client = new Gemini_Client();
-		if ( ! $client->is_configured() ) {
+		if ( ! AI_Client::is_available() ) {
 			return;
 		}
+
+		$client = new AI_Client();
 
 		$product_id   = (int) $comment->comment_post_ID;
 		$product      = wc_get_product( $product_id );
@@ -113,11 +114,11 @@ final class Sentiment_Analyzer {
 	private function generate_response_suggestion( int $sentiment_id, \WP_Comment $comment, string $product_name, string $sentiment ): void {
 		global $wpdb;
 
-		$client = new Gemini_Client();
-		if ( ! $client->is_configured() ) {
+		if ( ! AI_Client::is_available() ) {
 			return;
 		}
 
+		$client      = new AI_Client();
 		$store_name  = get_bloginfo( 'name' );
 		$review_text = wp_strip_all_tags( $comment->comment_content );
 

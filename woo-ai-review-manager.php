@@ -3,14 +3,14 @@
  * Plugin Name: WooCommerce AI Review Manager
  * Plugin URI:  https://github.com/valhalla-open-org/woo-ai-review-manager
  * Description: Automated review collection, sentiment analysis, and AI-powered response suggestions for WooCommerce stores.
- * Version:     1.0.0
+ * Version:     2.0.0
  * Author:      Valhalla Open
  * Author URI:  https://github.com/valhalla-open-org
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: woo-ai-review-manager
  * Domain Path: /languages
- * Requires at least: 6.0
+ * Requires at least: 7.0
  * Requires PHP: 8.0
  * WC requires at least: 8.0
  * WC tested up to: 9.6
@@ -23,7 +23,7 @@ declare(strict_types=1);
 defined( 'ABSPATH' ) || exit;
 
 // Plugin constants.
-define( 'WAIRM_VERSION', '1.0.0' );
+define( 'WAIRM_VERSION', '2.0.0' );
 define( 'WAIRM_PLUGIN_FILE', __FILE__ );
 define( 'WAIRM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WAIRM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -57,6 +57,19 @@ function wairm_check_dependencies(): bool {
 		);
 		return false;
 	}
+
+	if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
+		add_action(
+			'admin_notices',
+			static function (): void {
+				printf(
+					'<div class="notice notice-warning"><p>%s</p></div>',
+					esc_html__( 'WooCommerce AI Review Manager requires WordPress 7.0+ with the AI Client. Sentiment analysis and AI responses are disabled until the AI Client is available.', 'woo-ai-review-manager' )
+				);
+			}
+		);
+	}
+
 	return true;
 }
 

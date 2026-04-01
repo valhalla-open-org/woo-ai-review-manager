@@ -111,7 +111,6 @@ final class Installer {
 
 	private static function set_default_options(): void {
 		$defaults = [
-			'wairm_gemini_api_key'        => '',
 			'wairm_invitation_delay_days' => 7,
 			'wairm_reminder_enabled'      => 'yes',
 			'wairm_reminder_delay_days'   => 14,

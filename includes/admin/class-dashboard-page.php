@@ -232,23 +232,20 @@ final class Dashboard_Page {
 					</div>
 
 					<div class="wairm-api-status" style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
-						<h3><?php esc_html_e( 'API Status', 'woo-ai-review-manager' ); ?></h3>
-						<?php
-						$api_key = get_option( 'wairm_gemini_api_key', '' );
-						if ( empty( $api_key ) ) :
-						?>
-							<p style="color: #e74c3c;">
-								<strong><?php esc_html_e( 'Gemini API key not configured.', 'woo-ai-review-manager' ); ?></strong>
-							</p>
-							<p><?php esc_html_e( 'Sentiment analysis and AI responses require a Gemini API key.', 'woo-ai-review-manager' ); ?></p>
-							<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="button button-secondary">
-								<?php esc_html_e( 'Configure Now', 'woo-ai-review-manager' ); ?>
-							</a>
-						<?php else : ?>
+						<h3><?php esc_html_e( 'AI Status', 'woo-ai-review-manager' ); ?></h3>
+						<?php if ( \WooAIReviewManager\AI_Client::is_available() ) : ?>
 							<p style="color: #2ecc71;">
-								<strong><?php esc_html_e( 'Gemini API configured.', 'woo-ai-review-manager' ); ?></strong>
+								<strong><?php esc_html_e( 'WordPress AI Client is available.', 'woo-ai-review-manager' ); ?></strong>
 							</p>
 							<p><?php esc_html_e( 'Sentiment analysis and AI response generation are active.', 'woo-ai-review-manager' ); ?></p>
+						<?php else : ?>
+							<p style="color: #e74c3c;">
+								<strong><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></strong>
+							</p>
+							<p><?php esc_html_e( 'Sentiment analysis and AI responses require the WordPress AI Client and a configured AI provider.', 'woo-ai-review-manager' ); ?></p>
+							<a href="<?php echo esc_url( admin_url( 'options-general.php?page=ai-credentials' ) ); ?>" class="button button-secondary">
+								<?php esc_html_e( 'Configure AI Credentials', 'woo-ai-review-manager' ); ?>
+							</a>
 						<?php endif; ?>
 					</div>
 				</div>

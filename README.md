@@ -5,40 +5,41 @@ Automated review collection, sentiment analysis, and AI-powered response suggest
 ## Features
 
 - **Automated Review Invitations**: Automatically sends email invitations to customers after order completion.
-- **Sentiment Analysis**: Uses Google's Gemini API to analyze review sentiment (positive/neutral/negative).
+- **Sentiment Analysis**: Uses the WordPress AI Client API to analyze review sentiment (positive/neutral/negative). Works with any configured AI provider (Anthropic, Google, OpenAI, etc.).
 - **AI Response Suggestions**: Generates store‑owner response suggestions for negative reviews.
 - **Sentiment Dashboard**: WordPress admin dashboard showing sentiment breakdown by product.
 - **Reminder Emails**: Optional reminder emails for customers who don't review.
 - **Token‑Based Review Links**: Secure, expiring review links in customer emails.
 - **HPOS Compatible**: Fully compatible with WooCommerce's High‑Performance Order Storage.
-- **Privacy‑Focused**: Only review text and product name are sent to Gemini API—no PII.
+- **Provider‑Agnostic**: Uses the WordPress 7.0 AI Client — no vendor lock‑in.
+- **Privacy‑Focused**: Only review text and product name are sent to the AI provider—no PII.
 
 ## Requirements
 
-- WordPress 6.0+
+- WordPress 7.0+
 - WooCommerce 8.0+
 - PHP 8.0+
-- Gemini API key (free tier available)
+- An AI provider configured via **Settings → AI Credentials** (Anthropic, Google, OpenAI, or any community connector)
 
 ## Installation
 
 1. Download the plugin ZIP or clone this repository.
 2. Upload the `woo-ai-review-manager` folder to `/wp-content/plugins/`.
 3. Activate the plugin through the WordPress admin.
-4. Go to **AI Reviews → Settings** to configure your Gemini API key.
+4. Go to **Settings → AI Credentials** to configure your preferred AI provider.
 
 ## Configuration
 
-### 1. Get a Gemini API Key
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a new API key (free tier available)
-3. Copy the key
+### 1. Configure an AI Provider
+1. Go to **Settings → AI Credentials** in WordPress admin.
+2. Enter API credentials for your preferred provider (Anthropic, Google, OpenAI, or install a community connector plugin).
+3. The plugin will automatically use the configured provider through the WordPress AI Client API.
 
 ### 2. Plugin Settings
 Navigate to **AI Reviews → Settings**:
 
-#### API Settings
-- **Gemini API Key**: Paste your API key here
+#### AI Settings
+- **AI Provider**: Shows the status of the WordPress AI Client. Credentials are managed in **Settings → AI Credentials**.
 - **Negative Sentiment Threshold**: Score below which reviews are flagged as "negative" (default 0.30)
 
 #### Email Settings
@@ -62,7 +63,7 @@ Navigate to **AI Reviews → Settings**:
 4. Reviews are submitted as normal WooCommerce product reviews.
 
 ### Sentiment Analysis
-1. New reviews are automatically sent to Gemini API for sentiment analysis (if enabled).
+1. New reviews are automatically sent to the configured AI provider for sentiment analysis (if enabled).
 2. Each review receives a sentiment label (positive/neutral/negative) and a score (0.0–1.0).
 3. Key phrases are extracted from the review text.
 4. For negative reviews (score < threshold), AI response suggestions are generated.
@@ -98,8 +99,8 @@ The plugin creates three custom tables:
 ### Architecture
 - `WooAIReviewManager\Plugin` – Main orchestrator
 - `WooAIReviewManager\Review_Collector` – Hooks into WooCommerce orders
-- `WooAIReviewManager\Sentiment_Analyzer` – Processes reviews through Gemini
-- `WooAIReviewManager\Gemini_Client` – Gemini API wrapper
+- `WooAIReviewManager\Sentiment_Analyzer` – Processes reviews through the WordPress AI Client
+- `WooAIReviewManager\AI_Client` – WordPress AI Client wrapper
 - `WooAIReviewManager\Email_Sender` – Handles email sending and review forms
 - `WooAIReviewManager\Admin\Dashboard_Page` – Admin dashboard
 - `WooAIReviewManager\Admin\Settings_Page` – Settings UI
@@ -114,15 +115,15 @@ The plugin creates three custom tables:
 
 ## Privacy & Security
 
-- **No PII to Gemini**: Only review text and product name are sent. No customer name, email, or order details.
-- **API Key Storage**: Encrypted via WordPress options API.
+- **No PII to AI Provider**: Only review text and product name are sent. No customer name, email, or order details.
+- **Credential Management**: API keys are managed through WordPress's built‑in AI Credentials system.
 - **Token‑Based Links**: Review links expire and cannot be guessed.
 - **Email Templates**: Styled HTML templates with unsubscribe hint.
 
 ## FAQ
 
-### Is the Gemini API free?
-Yes, Gemini has a generous free tier. Check [Google's pricing](https://ai.google.dev/pricing) for details.
+### Which AI providers are supported?
+Any provider configured through the WordPress AI Client API. WordPress 7.0 ships with built‑in support for Anthropic, Google, and OpenAI. Community connector plugins can add additional providers.
 
 ### Can I customize email templates?
 Currently, templates are hard‑coded in `class-email-sender.php`. Future versions may add template customisation.
