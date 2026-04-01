@@ -101,6 +101,18 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// Validate state transition — only generated/approved responses can be updated.
+		$current_status = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment WHERE id = %d",
+				$id
+			)
+		);
+
+		if ( ! in_array( $current_status, [ 'generated', 'approved' ], true ) ) {
+			wp_send_json_error( [ 'message' => __( 'This response can no longer be modified.', 'woo-ai-review-manager' ) ] );
+		}
+
 		$update = [ 'ai_response_status' => $action ];
 		$format = [ '%s' ];
 
@@ -141,13 +153,18 @@ final class Responses_Page {
 
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT s.comment_id, s.product_id FROM {$wpdb->prefix}wairm_review_sentiment s WHERE s.id = %d",
+				"SELECT s.comment_id, s.product_id, s.ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment s WHERE s.id = %d",
 				$id
 			)
 		);
 
 		if ( ! $row ) {
 			wp_send_json_error( [ 'message' => __( 'Sentiment record not found.', 'woo-ai-review-manager' ) ] );
+		}
+
+		// Only generated/approved responses can be posted.
+		if ( ! in_array( $row->ai_response_status, [ 'generated', 'approved' ], true ) ) {
+			wp_send_json_error( [ 'message' => __( 'This response has already been posted or dismissed.', 'woo-ai-review-manager' ) ] );
 		}
 
 		$current_user = wp_get_current_user();

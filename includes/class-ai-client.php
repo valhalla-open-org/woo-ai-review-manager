@@ -152,6 +152,9 @@ final class AI_Client {
 
 		$prompt = "Analyze the sentiment of this customer review {$context}.\n\nReview: \"{$review_text}\"";
 
+		$negative_threshold = (float) get_option( 'wairm_negative_threshold', 0.30 );
+		$positive_threshold = max( $negative_threshold + 0.30, 0.65 );
+
 		$schema = [
 			'type'       => 'object',
 			'properties' => [
@@ -163,7 +166,13 @@ final class AI_Client {
 					'type'        => 'number',
 					'minimum'     => 0.0,
 					'maximum'     => 1.0,
-					'description' => 'Sentiment score: 0.0 (most negative) to 1.0 (most positive). >= 0.65 = positive, 0.35-0.64 = neutral, < 0.35 = negative.',
+					'description' => sprintf(
+						'Sentiment score: 0.0 (most negative) to 1.0 (most positive). >= %.2f = positive, %.2f-%.2f = neutral, < %.2f = negative.',
+						$positive_threshold,
+						$negative_threshold,
+						$positive_threshold - 0.01,
+						$negative_threshold
+					),
 				],
 				'key_phrases' => [
 					'type'     => 'array',
@@ -178,9 +187,9 @@ final class AI_Client {
 		$system = implode( "\n", [
 			'You are a sentiment analysis engine for product reviews.',
 			'Rules:',
-			'- score >= 0.65 = positive',
-			'- score 0.35-0.64 = neutral',
-			'- score < 0.35 = negative',
+			sprintf( '- score >= %.2f = positive', $positive_threshold ),
+			sprintf( '- score %.2f-%.2f = neutral', $negative_threshold, $positive_threshold - 0.01 ),
+			sprintf( '- score < %.2f = negative', $negative_threshold ),
 			'- key_phrases: extract 1-5 notable phrases from the review in the review\'s original language',
 		] );
 
