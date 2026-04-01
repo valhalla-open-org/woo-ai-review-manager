@@ -38,51 +38,91 @@ final class AI_Client {
 	/**
 	 * Discover available AI providers and their models.
 	 *
-	 * Uses the PHP AI Client's default registry to enumerate providers and models.
-	 * Returns an array keyed by provider ID with name and models list.
+	 * Uses wp_get_connectors() to list registered AI provider connectors,
+	 * checks which have credentials configured, and queries the PHP AI Client
+	 * registry for each provider's available models.
 	 *
-	 * @return array<string, array{name: string, models: array<string, string>}>
+	 * @return array<string, array{name: string, configured: bool, models: array<string, string>}>
 	 */
 	public static function discover_providers(): array {
-		if ( ! self::is_available() ) {
+		if ( ! function_exists( 'wp_get_connectors' ) ) {
 			return [];
 		}
 
+		$connectors = wp_get_connectors();
+		if ( empty( $connectors ) || ! is_array( $connectors ) ) {
+			return [];
+		}
+
+		// Build a model map from the PHP AI Client registry if available.
+		$registry_models = self::get_registry_models();
+
 		$providers = [];
-
-		// Try the PHP AI Client registry (WordPress\AiClient\AiClient).
-		if ( class_exists( '\WordPress\AiClient\AiClient' ) ) {
-			try {
-				$registry = \WordPress\AiClient\AiClient::defaultRegistry();
-
-				if ( is_object( $registry ) && method_exists( $registry, 'getProviders' ) ) {
-					foreach ( $registry->getProviders() as $provider ) {
-						$id   = method_exists( $provider, 'getId' ) ? $provider->getId() : (string) $provider;
-						$name = method_exists( $provider, 'getName' ) ? $provider->getName() : ucfirst( $id );
-
-						$models = [];
-						if ( method_exists( $provider, 'getModels' ) ) {
-							foreach ( $provider->getModels() as $model ) {
-								$model_id   = method_exists( $model, 'getId' ) ? $model->getId() : (string) $model;
-								$model_name = method_exists( $model, 'getName' ) ? $model->getName() : $model_id;
-								$models[ $model_id ] = $model_name;
-							}
-						}
-
-						if ( ! empty( $models ) ) {
-							$providers[ $id ] = [
-								'name'   => $name,
-								'models' => $models,
-							];
-						}
-					}
-				}
-			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
-				// Registry not available or method signatures differ — fall through.
+		foreach ( $connectors as $id => $connector ) {
+			// Only include AI provider connectors.
+			if ( ! isset( $connector['type'] ) || 'ai_provider' !== $connector['type'] ) {
+				continue;
 			}
+
+			$name = $connector['name'] ?? ucfirst( $id );
+
+			// Check if the connector has credentials configured.
+			$configured = false;
+			if ( ! empty( $connector['authentication']['setting_name'] ) ) {
+				$configured = ! empty( get_option( $connector['authentication']['setting_name'], '' ) );
+			}
+
+			// Get models from the registry for this provider.
+			$models = $registry_models[ $id ] ?? [];
+
+			$providers[ $id ] = [
+				'name'       => $name,
+				'configured' => $configured,
+				'models'     => $models,
+			];
 		}
 
 		return $providers;
+	}
+
+	/**
+	 * Query the PHP AI Client registry for provider models.
+	 *
+	 * @return array<string, array<string, string>> Models keyed by provider ID.
+	 */
+	private static function get_registry_models(): array {
+		if ( ! class_exists( '\WordPress\AiClient\AiClient' ) ) {
+			return [];
+		}
+
+		$models_by_provider = [];
+
+		try {
+			$registry = \WordPress\AiClient\AiClient::defaultRegistry();
+
+			if ( ! is_object( $registry ) || ! method_exists( $registry, 'getProviders' ) ) {
+				return [];
+			}
+
+			foreach ( $registry->getProviders() as $provider ) {
+				$provider_id = method_exists( $provider, 'getId' ) ? $provider->getId() : (string) $provider;
+
+				$models = [];
+				if ( method_exists( $provider, 'getModels' ) ) {
+					foreach ( $provider->getModels() as $model ) {
+						$model_id   = method_exists( $model, 'getId' ) ? $model->getId() : (string) $model;
+						$model_name = method_exists( $model, 'getName' ) ? $model->getName() : $model_id;
+						$models[ $model_id ] = $model_name;
+					}
+				}
+
+				$models_by_provider[ $provider_id ] = $models;
+			}
+		} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+			// Registry not available or method signatures differ.
+		}
+
+		return $models_by_provider;
 	}
 
 	/**

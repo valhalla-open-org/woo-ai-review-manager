@@ -340,10 +340,15 @@ final class Dashboard_Page {
 							<p style="color: #2ecc71;">
 								<strong><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></strong>
 							</p>
-							<?php if ( ! empty( $dash_providers ) ) : ?>
+							<?php
+							$configured_providers = array_filter( $dash_providers, static function ( $p ) {
+								return $p['configured'];
+							} );
+							if ( ! empty( $configured_providers ) ) :
+							?>
 								<p>
 									<?php
-									$provider_names = wp_list_pluck( $dash_providers, 'name' );
+									$provider_names = wp_list_pluck( $configured_providers, 'name' );
 									printf(
 										/* translators: %s: comma-separated list of provider names */
 										esc_html__( 'Active connectors: %s', 'woo-ai-review-manager' ),

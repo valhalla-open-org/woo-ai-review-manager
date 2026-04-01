@@ -110,22 +110,31 @@ final class Settings_Page {
 						<?php if ( $ai_available && ! empty( $providers ) ) : ?>
 						<tr>
 							<th scope="row">
-								<?php esc_html_e( 'Active Connectors', 'woo-ai-review-manager' ); ?>
+								<?php esc_html_e( 'Connectors', 'woo-ai-review-manager' ); ?>
 							</th>
 							<td>
 								<ul style="margin: 0;">
 									<?php foreach ( $providers as $provider_id => $provider_data ) : ?>
 										<li>
+											<?php if ( $provider_data['configured'] ) : ?>
+												<span style="color: #2ecc71;">&#10003;</span>
+											<?php else : ?>
+												<span style="color: #ccc;">&#10007;</span>
+											<?php endif; ?>
 											<strong><?php echo esc_html( $provider_data['name'] ); ?></strong>
-											<span style="color: #888;">&mdash;
-												<?php
-												printf(
-													/* translators: %d: number of models */
-													esc_html( _n( '%d model', '%d models', count( $provider_data['models'] ), 'woo-ai-review-manager' ) ),
-													count( $provider_data['models'] )
-												);
-												?>
-											</span>
+											<?php if ( $provider_data['configured'] && ! empty( $provider_data['models'] ) ) : ?>
+												<span style="color: #888;">&mdash;
+													<?php
+													printf(
+														/* translators: %d: number of models */
+														esc_html( _n( '%d model', '%d models', count( $provider_data['models'] ), 'woo-ai-review-manager' ) ),
+														count( $provider_data['models'] )
+													);
+													?>
+												</span>
+											<?php elseif ( ! $provider_data['configured'] ) : ?>
+												<span style="color: #888;">&mdash; <?php esc_html_e( 'not configured', 'woo-ai-review-manager' ); ?></span>
+											<?php endif; ?>
 										</li>
 									<?php endforeach; ?>
 								</ul>
@@ -144,9 +153,15 @@ final class Settings_Page {
 								<label for="wairm_model_preference"><?php esc_html_e( 'Preferred Model', 'woo-ai-review-manager' ); ?></label>
 							</th>
 							<td>
+								<?php
+								$configured_with_models = array_filter( $providers, static function ( $p ) {
+									return $p['configured'] && ! empty( $p['models'] );
+								} );
+								?>
+								<?php if ( ! empty( $configured_with_models ) ) : ?>
 								<select id="wairm_model_preference" name="wairm_model_preference">
 									<option value=""><?php esc_html_e( 'Automatic (first available)', 'woo-ai-review-manager' ); ?></option>
-									<?php foreach ( $providers as $provider_id => $provider_data ) : ?>
+									<?php foreach ( $configured_with_models as $provider_id => $provider_data ) : ?>
 										<optgroup label="<?php echo esc_attr( $provider_data['name'] ); ?>">
 											<?php foreach ( $provider_data['models'] as $model_id => $model_name ) : ?>
 												<option value="<?php echo esc_attr( $model_id ); ?>" <?php selected( $saved_model, $model_id ); ?>>
@@ -156,20 +171,11 @@ final class Settings_Page {
 										</optgroup>
 									<?php endforeach; ?>
 								</select>
+								<?php else : ?>
+								<input type="text" id="wairm_model_preference" name="wairm_model_preference" value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g. claude-sonnet-4-6', 'woo-ai-review-manager' ); ?>" />
+								<?php endif; ?>
 								<p class="description">
 									<?php esc_html_e( 'Choose a specific model or leave on "Automatic" to let WordPress pick the best available model.', 'woo-ai-review-manager' ); ?>
-								</p>
-							</td>
-						</tr>
-						<?php elseif ( $ai_available && $text_supported ) : ?>
-						<tr>
-							<th scope="row">
-								<label for="wairm_model_preference"><?php esc_html_e( 'Preferred Model', 'woo-ai-review-manager' ); ?></label>
-							</th>
-							<td>
-								<input type="text" id="wairm_model_preference" name="wairm_model_preference" value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g. claude-sonnet-4-6', 'woo-ai-review-manager' ); ?>" />
-								<p class="description">
-									<?php esc_html_e( 'Enter a model ID or leave empty for automatic selection. Examples: claude-sonnet-4-6, gemini-3.1-pro-preview, gpt-5.4', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>
