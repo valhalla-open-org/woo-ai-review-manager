@@ -18,7 +18,6 @@ final class Email_Sender {
 		add_action( 'admin_post_nopriv_wairm_submit_review', [ $this, 'handle_form_submission' ] );
 		add_action( 'admin_post_wairm_submit_review', [ $this, 'handle_form_submission' ] );
 		add_action( 'template_redirect', [ $this, 'intercept_review_token' ] );
-		add_action( 'wp', [ $this, 'maybe_show_thank_you' ] );
 	}
 
 	/**
@@ -32,6 +31,14 @@ final class Email_Sender {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public token-based URL, no nonce available.
 		if ( empty( $_GET['wairm_token'] ) || sanitize_key( wp_unslash( $_GET['action'] ?? '' ) ) !== 'review' ) {
 			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$is_submitted = ! empty( $_GET['wairm_submitted'] );
+
+		if ( $is_submitted ) {
+			$this->render_thank_you_page();
+			exit;
 		}
 
 		$form_html = $this->review_form_shortcode();
@@ -694,8 +701,9 @@ final class Email_Sender {
 
 		$redirect_url = add_query_arg(
 			[
-				'wairm_thank_you' => '1',
-				'_wpnonce'        => wp_create_nonce( 'wairm_thank_you' ),
+				'wairm_token'     => $token,
+				'action'          => 'review',
+				'wairm_submitted' => '1',
 			],
 			get_home_url()
 		);
@@ -704,20 +712,189 @@ final class Email_Sender {
 	}
 
 	/**
-	 * Show thank-you notice on the front page after review submission.
+	 * Render a standalone thank-you page after review submission.
 	 */
-	public function maybe_show_thank_you(): void {
-		if ( ! isset( $_GET['wairm_thank_you'] ) ) {
-			return;
-		}
-		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'wairm_thank_you' ) ) {
-			return;
-		}
-		add_filter( 'the_content', static function ( string $content ): string {
-			$notice = '<div class="wairm-thank-you" style="padding: 20px; margin: 20px 0; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; text-align: center;">'
-				. '<p style="font-size: 18px; margin: 0;">' . esc_html__( 'Thank you for your reviews! Your feedback helps us improve.', 'woo-ai-review-manager' ) . '</p>'
-				. '</div>';
-			return $notice . $content;
-		} );
+	private function render_thank_you_page(): void {
+		$site_name = esc_html( get_bloginfo( 'name' ) );
+		$charset   = esc_attr( get_bloginfo( 'charset' ) );
+		$shop_url  = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : get_home_url();
+		?>
+		<!DOCTYPE html>
+		<html <?php language_attributes(); ?>>
+		<head>
+			<meta charset="<?php echo $charset; ?>">
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+			<title><?php echo esc_html__( 'Thank You', 'woo-ai-review-manager' ) . ' — ' . $site_name; ?></title>
+			<?php wp_head(); ?>
+			<style>
+				*, *::before, *::after { box-sizing: border-box; }
+				body {
+					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+					font-size: 15px;
+					line-height: 1.6;
+					color: #1a1a1a;
+					margin: 0;
+					padding: 20px;
+					background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+					min-height: 100vh;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+				.wairm-thankyou {
+					max-width: 520px;
+					width: 100%;
+					background: #fff;
+					padding: 48px 40px;
+					border-radius: 16px;
+					box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+					text-align: center;
+					animation: wairm-ty-fadein 0.6s ease;
+				}
+				@keyframes wairm-ty-fadein {
+					from { opacity: 0; transform: translateY(16px); }
+					to   { opacity: 1; transform: translateY(0); }
+				}
+				@media (max-width: 600px) {
+					body { padding: 16px; }
+					.wairm-thankyou { padding: 36px 24px; }
+				}
+
+				/* Checkmark animation */
+				.wairm-ty-icon {
+					width: 80px;
+					height: 80px;
+					margin: 0 auto 24px;
+					background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					animation: wairm-ty-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+				}
+				@keyframes wairm-ty-pop {
+					from { transform: scale(0); }
+					to   { transform: scale(1); }
+				}
+				.wairm-ty-icon svg {
+					width: 40px;
+					height: 40px;
+					stroke: #fff;
+					stroke-width: 3;
+					fill: none;
+					stroke-linecap: round;
+					stroke-linejoin: round;
+				}
+				.wairm-ty-icon svg .checkmark-path {
+					stroke-dasharray: 50;
+					stroke-dashoffset: 50;
+					animation: wairm-ty-draw 0.4s ease 0.6s forwards;
+				}
+				@keyframes wairm-ty-draw {
+					to { stroke-dashoffset: 0; }
+				}
+
+				/* Typography */
+				.wairm-ty-heading {
+					font-size: 24px;
+					font-weight: 700;
+					color: #1a1a1a;
+					margin: 0 0 12px;
+				}
+				.wairm-ty-message {
+					font-size: 16px;
+					color: #555;
+					margin: 0 0 8px;
+					line-height: 1.7;
+				}
+				.wairm-ty-submessage {
+					font-size: 14px;
+					color: #888;
+					margin: 0 0 32px;
+				}
+
+				/* Stars decoration */
+				.wairm-ty-stars {
+					display: flex;
+					justify-content: center;
+					gap: 6px;
+					margin-bottom: 28px;
+				}
+				.wairm-ty-stars span {
+					font-size: 28px;
+					color: #f5a623;
+					animation: wairm-ty-star 0.3s ease both;
+				}
+				.wairm-ty-stars span:nth-child(1) { animation-delay: 0.8s; }
+				.wairm-ty-stars span:nth-child(2) { animation-delay: 0.9s; }
+				.wairm-ty-stars span:nth-child(3) { animation-delay: 1.0s; }
+				.wairm-ty-stars span:nth-child(4) { animation-delay: 1.1s; }
+				.wairm-ty-stars span:nth-child(5) { animation-delay: 1.2s; }
+				@keyframes wairm-ty-star {
+					from { opacity: 0; transform: scale(0) rotate(-30deg); }
+					to   { opacity: 1; transform: scale(1) rotate(0); }
+				}
+
+				/* CTA button */
+				.wairm-ty-btn {
+					display: inline-block;
+					background: #3b82f6;
+					color: #fff;
+					text-decoration: none;
+					padding: 12px 28px;
+					border-radius: 8px;
+					font-size: 15px;
+					font-weight: 600;
+					transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+				}
+				.wairm-ty-btn:hover {
+					background: #2563eb;
+					box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+					color: #fff;
+				}
+				.wairm-ty-btn:active { transform: scale(0.98); }
+
+				/* Footer */
+				.wairm-ty-footer {
+					margin-top: 32px;
+					padding-top: 20px;
+					border-top: 1px solid #eee;
+					font-size: 13px;
+					color: #aaa;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="wairm-thankyou">
+				<div class="wairm-ty-icon">
+					<svg viewBox="0 0 40 40">
+						<polyline class="checkmark-path" points="12,21 18,27 28,14" />
+					</svg>
+				</div>
+
+				<h1 class="wairm-ty-heading"><?php esc_html_e( 'Thank you!', 'woo-ai-review-manager' ); ?></h1>
+				<p class="wairm-ty-message"><?php esc_html_e( 'Your reviews have been submitted successfully.', 'woo-ai-review-manager' ); ?></p>
+				<p class="wairm-ty-submessage"><?php esc_html_e( 'Your feedback helps us improve and helps other customers make informed decisions.', 'woo-ai-review-manager' ); ?></p>
+
+				<div class="wairm-ty-stars">
+					<span>&#9733;</span>
+					<span>&#9733;</span>
+					<span>&#9733;</span>
+					<span>&#9733;</span>
+					<span>&#9733;</span>
+				</div>
+
+				<a href="<?php echo esc_url( $shop_url ); ?>" class="wairm-ty-btn">
+					<?php esc_html_e( 'Continue Shopping', 'woo-ai-review-manager' ); ?>
+				</a>
+
+				<div class="wairm-ty-footer">
+					<?php echo esc_html( get_bloginfo( 'name' ) ); ?>
+				</div>
+			</div>
+			<?php wp_footer(); ?>
+		</body>
+		</html>
+		<?php
 	}
 }
