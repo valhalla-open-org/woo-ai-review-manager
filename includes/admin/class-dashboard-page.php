@@ -341,8 +341,8 @@ final class Dashboard_Page {
 								<strong><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></strong>
 							</p>
 							<p><?php esc_html_e( 'Sentiment analysis and AI responses require the WordPress AI Client and a configured AI provider.', 'woo-ai-review-manager' ); ?></p>
-							<a href="<?php echo esc_url( admin_url( 'options-general.php?page=ai-credentials' ) ); ?>" class="button button-secondary">
-								<?php esc_html_e( 'Configure AI Credentials', 'woo-ai-review-manager' ); ?>
+							<a href="<?php echo esc_url( admin_url( 'options-connectors.php' ) ); ?>" class="button button-secondary">
+								<?php esc_html_e( 'Configure AI Connectors', 'woo-ai-review-manager' ); ?>
 							</a>
 						<?php endif; ?>
 					</div>

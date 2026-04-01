@@ -81,9 +81,9 @@ final class Settings_Page {
 								<?php endif; ?>
 								<p class="description">
 									<?php printf(
-										/* translators: %s: link to AI Credentials settings */
-										esc_html__( 'AI credentials are managed through %s. Configure your preferred AI provider (Anthropic, Google, OpenAI, or others) there.', 'woo-ai-review-manager' ),
-										'<a href="' . esc_url( admin_url( 'options-general.php?page=ai-credentials' ) ) . '">' . esc_html__( 'Settings &rarr; AI Credentials', 'woo-ai-review-manager' ) . '</a>'
+										/* translators: %s: link to Connectors settings */
+										esc_html__( 'AI connectors are managed through %s. Install and configure your preferred AI provider (Anthropic, Google, OpenAI, or others) there.', 'woo-ai-review-manager' ),
+										'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
 									); ?>
 								</p>
 								<p class="description">
@@ -215,7 +215,7 @@ final class Settings_Page {
 							</th>
 							<td>
 								<p>
-									<?php esc_html_e( 'This plugin sends review text to the AI provider configured in your WordPress AI Credentials for sentiment analysis and response generation.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'This plugin sends review text to the AI provider configured in your WordPress Connectors for sentiment analysis and response generation.', 'woo-ai-review-manager' ); ?>
 								</p>
 								<p>
 									<?php esc_html_e( 'Please review the privacy policy of your configured AI provider for details on how they handle your data.', 'woo-ai-review-manager' ); ?>

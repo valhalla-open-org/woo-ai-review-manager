@@ -35,7 +35,7 @@ Existing store with hundreds of reviews? Hit one button and watch the progress b
 
 ## Built for WordPress 7.0
 
-Powered by the new **WordPress AI Client API**, the plugin works with any AI provider you've configured in WordPress — Anthropic, OpenAI, Google, or any future provider. No separate API keys to manage inside the plugin. Just connect your preferred AI in **Settings → AI Credentials** and you're ready to go.
+Powered by the new **WordPress AI Client API**, the plugin works with any AI provider you've configured in WordPress — Anthropic, OpenAI, Google, or any future provider. No separate API keys to manage inside the plugin. Just connect your preferred AI in **Settings → Connectors** and you're ready to go.
 
 ---
 
@@ -61,19 +61,19 @@ Powered by the new **WordPress AI Client API**, the plugin works with any AI pro
 - WordPress 7.0+
 - WooCommerce 8.0+
 - PHP 8.0+
-- An AI provider configured via **Settings → AI Credentials** (Anthropic, Google, OpenAI, or any community connector)
+- An AI provider configured via **Settings → Connectors** (Anthropic, Google, OpenAI, or any community connector)
 
 ## Installation
 
 1. Download the plugin ZIP or clone this repository.
 2. Upload the `woo-ai-review-manager` folder to `/wp-content/plugins/`.
 3. Activate the plugin through the WordPress admin.
-4. Go to **Settings → AI Credentials** to configure your preferred AI provider.
+4. Go to **Settings → Connectors** to configure your preferred AI provider.
 
 ## Configuration
 
 ### 1. Configure an AI Provider
-1. Go to **Settings → AI Credentials** in WordPress admin.
+1. Go to **Settings → Connectors** in WordPress admin.
 2. Enter API credentials for your preferred provider (Anthropic, Google, OpenAI, or install a community connector plugin).
 3. The plugin will automatically use the configured provider through the WordPress AI Client API.
 
@@ -81,7 +81,7 @@ Powered by the new **WordPress AI Client API**, the plugin works with any AI pro
 Navigate to **AI Reviews → Settings**:
 
 #### AI Settings
-- **AI Provider**: Shows the status of the WordPress AI Client. Credentials are managed in **Settings → AI Credentials**.
+- **AI Provider**: Shows the status of the WordPress AI Client. Credentials are managed in **Settings → Connectors**.
 - **Negative Sentiment Threshold**: Score below which reviews are flagged as "negative" (default 0.30)
 
 #### Email Settings
@@ -171,7 +171,7 @@ The plugin creates three custom tables:
 ## Privacy & Security
 
 - **No PII to AI Provider**: Only review text and product name are sent. No customer name, email, or order details.
-- **Credential Management**: API keys are managed through WordPress's built‑in AI Credentials system.
+- **Credential Management**: API keys are managed through WordPress's built‑in Connectors system.
 - **Token‑Based Links**: Review links expire and cannot be guessed.
 - **Email Templates**: Styled HTML templates with unsubscribe hint.
 

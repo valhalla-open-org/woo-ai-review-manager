@@ -4,7 +4,7 @@
  *
  * Uses the WordPress 7.0 AI Client API (wp_ai_client_prompt) instead of
  * direct provider API calls. API keys are managed through the WordPress
- * Connectors API (Settings > AI Credentials).
+ * Connectors API (Settings > Connectors).
  *
  * @package WooAIReviewManager
  */
