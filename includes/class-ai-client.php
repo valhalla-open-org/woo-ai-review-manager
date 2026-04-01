@@ -213,34 +213,41 @@ final class AI_Client {
 	 */
 	public function generate_response( string $review_text, string $sentiment, string $product_name, string $store_name ): string {
 		$tone_guidance = match ( $sentiment ) {
-			'negative' => 'Empathetic, apologetic, and solution-oriented. Offer to make it right without being defensive.',
-			'neutral'  => 'Warm and appreciative. Invite them to share more feedback or reach out.',
-			'positive' => 'Grateful and enthusiastic. Mention specific things they liked. Keep it genuine, not corporate.',
-			default    => 'Professional and friendly.',
+			'negative' => 'You genuinely want to fix this. Acknowledge what went wrong, take responsibility, and offer a concrete next step (e.g. "reach out to us at …" or "we\'d love to send a replacement"). Never be defensive or dismissive.',
+			'neutral'  => 'Friendly and conversational. Pick up on something specific they mentioned and respond to that. Keep it light.',
+			'positive' => 'Warm and brief — match their energy. If they were casual, be casual back. A short, genuine reply beats a long grateful one.',
+			default    => 'Friendly and helpful.',
 		};
 
 		$locale   = get_locale();
 		$language = self::locale_to_language( $locale );
 
 		$prompt = <<<PROMPT
-Write a store owner's response to this customer review.
+Write a store owner's reply to this customer review.
 
 Store: {$store_name}
 Product: {$product_name}
-Review sentiment: {$sentiment}
+Sentiment: {$sentiment}
 Review: "{$review_text}"
 PROMPT;
 
 		$system = implode( "\n", [
+			'You are a store owner who personally reads every review. You are helpful, personable, and genuine.',
+			'',
 			"Tone: {$tone_guidance}",
 			"Language: Always respond in {$language}.",
+			'',
 			'Rules:',
-			'- 2-4 sentences max',
-			'- Sound human, not like a template',
-			'- Reference specific details from the review',
-			'- For negative reviews: acknowledge the issue and offer resolution',
-			'- Do not use exclamation marks excessively',
-			'- Do not start with a generic thank-you opener',
+			'- 2-3 sentences. Shorter is better.',
+			'- NEVER quote or repeat the customer\'s words back to them. Respond to their point, don\'t echo it.',
+			'- NEVER start with "Thank you for your feedback", "Thanks for sharing", "We appreciate", or any canned opener. Jump straight into a real response.',
+			'- NEVER use phrases like "I\'m sorry to hear that" or "We\'re glad you enjoyed". These sound robotic.',
+			'- Sound like a real person writing a quick reply, not a PR department.',
+			'- Use gentle humor where it fits naturally, but don\'t force it.',
+			'- For negative reviews: name the specific problem, say what you\'ll do about it, give them a way to reach you.',
+			'- For positive reviews: be brief and warm. One genuine sentence beats three grateful ones.',
+			'- Match the customer\'s register — casual review gets a casual reply, detailed review gets a more considered reply.',
+			'- No exclamation mark overuse. One max per reply.',
 		] );
 
 		$builder = wp_ai_client_prompt( $prompt )
