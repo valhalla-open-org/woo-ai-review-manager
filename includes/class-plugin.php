@@ -57,8 +57,8 @@ final class Plugin {
 	private function init_hooks(): void {
 		// Admin.
 		if ( is_admin() ) {
-			new Admin\Settings_Page();
 			new Admin\Dashboard_Page();
+			new Admin\Settings_Page();
 			new Admin\Responses_Page();
 		}
 
