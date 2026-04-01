@@ -78,6 +78,9 @@ final class Sentiment_Analyzer {
 		$threshold = (float) get_option( 'wairm_negative_threshold', '0.30' );
 		if ( $result['score'] < $threshold ) {
 			$this->generate_response_suggestion( $wpdb->insert_id, $comment, $product_name, $result['sentiment'] );
+		} elseif ( 'yes' === get_option( 'wairm_auto_respond_positive', 'no' ) ) {
+			// Generate suggestions for positive/neutral reviews when enabled.
+			$this->generate_response_suggestion( $wpdb->insert_id, $comment, $product_name, $result['sentiment'] );
 		}
 	}
 

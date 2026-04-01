@@ -39,9 +39,11 @@ final class Plugin {
 		new Response_Generator();
 		new Email_Sender();
 
-		// REST API.
-		add_action( 'rest_api_init', [ new API\Reviews_Controller(), 'register_routes' ] );
-		add_action( 'rest_api_init', [ new API\Sentiment_Controller(), 'register_routes' ] );
+		// REST API (lazy-loaded — controllers instantiated only on REST requests).
+		add_action( 'rest_api_init', static function (): void {
+			( new API\Reviews_Controller() )->register_routes();
+			( new API\Sentiment_Controller() )->register_routes();
+		} );
 
 		// Cron.
 		add_action( 'wairm_process_pending_reviews', [ Sentiment_Analyzer::class, 'process_pending' ] );

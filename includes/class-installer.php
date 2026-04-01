@@ -89,14 +89,7 @@ final class Installer {
 	}
 
 	private static function schedule_cron(): void {
-		if ( ! wp_next_scheduled( 'wairm_process_pending_reviews' ) ) {
-			wp_schedule_event( time(), 'hourly', 'wairm_process_pending_reviews' );
-		}
-		if ( ! wp_next_scheduled( 'wairm_send_review_invitations' ) ) {
-			wp_schedule_event( time(), 'every_five_minutes', 'wairm_send_review_invitations' );
-		}
-
-		// Register custom cron interval.
+		// Register custom cron interval first so it's available for scheduling.
 		add_filter(
 			'cron_schedules',
 			static function ( array $schedules ): array {
@@ -107,6 +100,13 @@ final class Installer {
 				return $schedules;
 			}
 		);
+
+		if ( ! wp_next_scheduled( 'wairm_process_pending_reviews' ) ) {
+			wp_schedule_event( time(), 'hourly', 'wairm_process_pending_reviews' );
+		}
+		if ( ! wp_next_scheduled( 'wairm_send_review_invitations' ) ) {
+			wp_schedule_event( time(), 'every_five_minutes', 'wairm_send_review_invitations' );
+		}
 	}
 
 	private static function set_default_options(): void {

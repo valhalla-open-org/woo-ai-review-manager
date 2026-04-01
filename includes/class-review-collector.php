@@ -133,12 +133,17 @@ final class Review_Collector {
 			return;
 		}
 
-		// Queue for async sentiment analysis.
-		as_schedule_single_action(
-			time(),
-			'wairm_analyze_single_review',
-			[ 'comment_id' => $comment_id ],
-			'wairm'
-		);
+		// Queue for async sentiment analysis via Action Scheduler (bundled with WooCommerce).
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action(
+				time(),
+				'wairm_analyze_single_review',
+				[ 'comment_id' => $comment_id ],
+				'wairm'
+			);
+		} else {
+			// Fallback: analyze synchronously if Action Scheduler is unavailable.
+			do_action( 'wairm_analyze_single_review', $comment_id );
+		}
 	}
 }
