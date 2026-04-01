@@ -5,76 +5,119 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	// Sentiment pie chart.
 	var canvas = document.getElementById( 'wairm-sentiment-chart' );
 	if ( canvas && typeof Chart !== 'undefined' && wairm.chart ) {
-		new Chart( canvas.getContext( '2d' ), {
-			type: 'pie',
-			data: {
-				labels: [ 'Positive', 'Neutral', 'Negative' ],
-				datasets: [ {
-					data: [
-						wairm.chart.positive,
-						wairm.chart.neutral,
-						wairm.chart.negative
-					],
-					backgroundColor: [ '#2ecc71', '#f39c12', '#e74c3c' ]
-				} ]
-			},
-			options: {
-				responsive: true,
-				plugins: {
-					legend: { position: 'bottom' }
+		var chartData = wairm.chart;
+		var hasData   = chartData.positive + chartData.neutral + chartData.negative > 0;
+
+		var i18nChart = wairm.i18n;
+
+		if ( hasData ) {
+			new Chart( canvas.getContext( '2d' ), {
+				type: 'pie',
+				data: {
+					labels: [ i18nChart.chart_positive, i18nChart.chart_neutral, i18nChart.chart_negative ],
+					datasets: [ {
+						data: [ chartData.positive, chartData.neutral, chartData.negative ],
+						backgroundColor: [ '#2ecc71', '#f39c12', '#e74c3c' ]
+					} ]
+				},
+				options: {
+					responsive: true,
+					plugins: {
+						legend: { position: 'bottom' }
+					}
 				}
-			}
-		} );
+			} );
+		} else {
+			canvas.parentNode.innerHTML = '<p style="color: #888; text-align: center;">' + i18nChart.no_chart_data + '</p>';
+		}
 	}
 
-	// View full AI suggestion.
-	document.querySelectorAll( '.view-suggestion' ).forEach( function ( btn ) {
-		btn.addEventListener( 'click', function () {
-			var suggestion = JSON.parse( this.dataset.suggestion );
-			/* eslint-disable-next-line no-alert */
-			alert( 'AI Response Suggestion:\n\n' + suggestion );
-		} );
-	} );
-
-	// Analyze old reviews button.
+	// Analyze old reviews with batch processing and progress bar.
 	var analyzeBtn = document.getElementById( 'wairm-analyze-old-reviews' );
 	if ( analyzeBtn ) {
 		analyzeBtn.addEventListener( 'click', function () {
-			/* eslint-disable-next-line no-alert */
-			if ( ! confirm( wairm.i18n.confirm_analyze ) ) {
+			var i18n        = wairm.i18n;
+			var total       = parseInt( wairm.pending_count, 10 ) || 0;
+			var processed   = 0;
+			var progressWrap = document.getElementById( 'wairm-analyze-progress' );
+			var progressBar  = document.getElementById( 'wairm-progress-bar' );
+			var progressText = document.getElementById( 'wairm-progress-text' );
+
+			if ( total <= 0 ) {
+				/* eslint-disable-next-line no-alert */
+				alert( i18n.nothing );
 				return;
 			}
 
-			var btn = this;
-			btn.disabled = true;
-			btn.textContent = wairm.i18n.processing;
+			analyzeBtn.disabled = true;
+			analyzeBtn.textContent = i18n.analyzing;
+			progressWrap.style.display = 'block';
+			progressBar.style.width = '0%';
+			progressText.textContent = '';
 
-			fetch( wairm.ajax_url, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: new URLSearchParams( {
-					action: 'wairm_analyze_old_reviews',
-					nonce: wairm.nonce
+			function updateProgress() {
+				var pct = total > 0 ? Math.round( ( processed / total ) * 100 ) : 0;
+				progressBar.style.width = pct + '%';
+				progressText.textContent = i18n.batch_progress
+					.replace( '%1$d', processed )
+					.replace( '%2$d', total );
+			}
+
+			function runBatch() {
+				fetch( wairm.ajax_url, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+					body: new URLSearchParams( {
+						action: 'wairm_analyze_batch',
+						nonce: wairm.nonce
+					} )
 				} )
-			} )
-				.then( function ( res ) {
-					return res.json();
-				} )
-				.then( function ( data ) {
-					/* eslint-disable-next-line no-alert */
-					alert( ( data.data && data.data.message ) || wairm.i18n.complete );
-					if ( data.success ) {
-						location.reload();
-					}
-				} )
-				.catch( function () {
-					/* eslint-disable-next-line no-alert */
-					alert( wairm.i18n.request_failed );
-				} )
-				.finally( function () {
-					btn.disabled = false;
-					btn.textContent = wairm.i18n.analyze_button;
-				} );
+					.then( function ( res ) { return res.json(); } )
+					.then( function ( data ) {
+						if ( ! data.success ) {
+							/* eslint-disable-next-line no-alert */
+							alert( ( data.data && data.data.message ) || i18n.error );
+							resetButton();
+							return;
+						}
+
+						var result = data.data;
+						var batchProcessed = ( result.processed || 0 );
+						processed += batchProcessed + ( result.failed || 0 );
+						updateProgress();
+
+						// Stop if nothing was actually analyzed (prevents infinite loop).
+						if ( batchProcessed === 0 && result.remaining > 0 ) {
+							/* eslint-disable-next-line no-alert */
+							alert( i18n.error );
+							resetButton();
+							return;
+						}
+
+						if ( result.remaining > 0 ) {
+							runBatch();
+						} else {
+							progressBar.style.width = '100%';
+							progressText.textContent = i18n.complete;
+							setTimeout( function () {
+								location.reload();
+							}, 1000 );
+						}
+					} )
+					.catch( function () {
+						/* eslint-disable-next-line no-alert */
+						alert( i18n.error );
+						resetButton();
+					} );
+			}
+
+			function resetButton() {
+				analyzeBtn.disabled = false;
+				analyzeBtn.textContent = i18n.analyze_button;
+			}
+
+			updateProgress();
+			runBatch();
 		} );
 	}
 } );

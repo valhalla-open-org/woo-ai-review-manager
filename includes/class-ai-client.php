@@ -64,7 +64,7 @@ final class AI_Client {
 			'- score >= 0.65 = positive',
 			'- score 0.35-0.64 = neutral',
 			'- score < 0.35 = negative',
-			'- key_phrases: extract 1-5 notable phrases from the review',
+			'- key_phrases: extract 1-5 notable phrases from the review in the review\'s original language',
 		] );
 
 		$result = wp_ai_client_prompt( $prompt )
@@ -95,6 +95,9 @@ final class AI_Client {
 			default    => 'Professional and friendly.',
 		};
 
+		$locale   = get_locale();
+		$language = self::locale_to_language( $locale );
+
 		$prompt = <<<PROMPT
 Write a store owner's response to this customer review.
 
@@ -106,13 +109,14 @@ PROMPT;
 
 		$system = implode( "\n", [
 			"Tone: {$tone_guidance}",
+			"Language: Always respond in {$language}.",
 			'Rules:',
 			'- 2-4 sentences max',
 			'- Sound human, not like a template',
 			'- Reference specific details from the review',
 			'- For negative reviews: acknowledge the issue and offer resolution',
 			'- Do not use exclamation marks excessively',
-			'- Do not start with "Thank you for your review"',
+			'- Do not start with a generic thank-you opener',
 		] );
 
 		$result = wp_ai_client_prompt( $prompt )
@@ -126,6 +130,57 @@ PROMPT;
 		}
 
 		return trim( $result );
+	}
+
+	/**
+	 * Convert a WordPress locale code to a human-readable language name.
+	 */
+	private static function locale_to_language( string $locale ): string {
+		$map = [
+			'en' => 'English',
+			'de' => 'German',
+			'es' => 'Spanish',
+			'fr' => 'French',
+			'it' => 'Italian',
+			'pt' => 'Portuguese',
+			'nl' => 'Dutch',
+			'sv' => 'Swedish',
+			'da' => 'Danish',
+			'nb' => 'Norwegian',
+			'nn' => 'Norwegian',
+			'fi' => 'Finnish',
+			'pl' => 'Polish',
+			'cs' => 'Czech',
+			'ja' => 'Japanese',
+			'ko' => 'Korean',
+			'zh' => 'Chinese',
+			'ar' => 'Arabic',
+			'he' => 'Hebrew',
+			'ru' => 'Russian',
+			'tr' => 'Turkish',
+			'el' => 'Greek',
+			'hi' => 'Hindi',
+			'th' => 'Thai',
+			'vi' => 'Vietnamese',
+			'uk' => 'Ukrainian',
+			'ro' => 'Romanian',
+			'hu' => 'Hungarian',
+		];
+
+		$prefix = strtolower( substr( $locale, 0, 2 ) );
+
+		if ( isset( $map[ $prefix ] ) ) {
+			return $map[ $prefix ];
+		}
+
+		// Fall back to the native language name from WordPress translations.
+		$translations = wp_get_available_translations();
+		if ( isset( $translations[ $locale ]['english_name'] ) ) {
+			return $translations[ $locale ]['english_name'];
+		}
+
+		// Last resort: use the locale code itself so the AI still gets a language hint.
+		return $locale;
 	}
 
 	/**

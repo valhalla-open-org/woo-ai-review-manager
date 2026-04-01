@@ -25,6 +25,7 @@ final class Installer {
 	public static function deactivate(): void {
 		wp_clear_scheduled_hook( 'wairm_process_pending_reviews' );
 		wp_clear_scheduled_hook( 'wairm_send_review_invitations' );
+		wp_clear_scheduled_hook( 'wairm_expire_invitations' );
 	}
 
 	private static function create_tables(): void {
@@ -106,6 +107,9 @@ final class Installer {
 		}
 		if ( ! wp_next_scheduled( 'wairm_send_review_invitations' ) ) {
 			wp_schedule_event( time(), 'every_five_minutes', 'wairm_send_review_invitations' );
+		}
+		if ( ! wp_next_scheduled( 'wairm_expire_invitations' ) ) {
+			wp_schedule_event( time(), 'daily', 'wairm_expire_invitations' );
 		}
 	}
 

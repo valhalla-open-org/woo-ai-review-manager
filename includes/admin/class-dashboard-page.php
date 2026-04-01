@@ -16,7 +16,7 @@ final class Dashboard_Page {
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_menu_page' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
-		add_action( 'wp_ajax_wairm_analyze_old_reviews', [ $this, 'ajax_analyze_old_reviews' ] );
+		add_action( 'wp_ajax_wairm_analyze_batch', [ $this, 'ajax_analyze_batch' ] );
 	}
 
 	public function add_menu_page(): void {
@@ -61,52 +61,62 @@ final class Dashboard_Page {
 	}
 
 	/**
-	 * Localize dashboard script with chart data. Called from render_page()
-	 * after stats are fetched so the data is available to JS.
+	 * Localize dashboard script with chart data.
 	 */
-	private function localize_dashboard_data( object $stats ): void {
+	private function localize_dashboard_data( object $stats, int $pending_count, int $actionable_responses ): void {
 		wp_localize_script(
 			'wairm-dashboard',
 			'wairm',
 			[
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'wairm_dashboard' ),
-				'chart'    => [
+				'ajax_url'             => admin_url( 'admin-ajax.php' ),
+				'nonce'                => wp_create_nonce( 'wairm_dashboard' ),
+				'pending_count'        => $pending_count,
+				'chart'                => [
 					'positive' => absint( $stats->positive ?? 0 ),
 					'neutral'  => absint( $stats->neutral ?? 0 ),
 					'negative' => absint( $stats->negative ?? 0 ),
 				],
-				'i18n'     => [
-					'confirm_analyze' => __( 'This will analyze up to 50 unanalyzed reviews. Continue?', 'woo-ai-review-manager' ),
-					'processing'      => __( 'Processing...', 'woo-ai-review-manager' ),
+				'i18n'                 => [
 					'analyze_button'  => __( 'Analyze Old Reviews', 'woo-ai-review-manager' ),
-					'complete'        => __( 'Processing complete.', 'woo-ai-review-manager' ),
-					'request_failed'  => __( 'Request failed.', 'woo-ai-review-manager' ),
+					'analyzing'       => __( 'Analyzing...', 'woo-ai-review-manager' ),
+					'batch_progress'  => /* translators: 1: processed, 2: total */ __( 'Analyzed %1$d of %2$d...', 'woo-ai-review-manager' ),
+					'complete'        => __( 'All done! Reloading...', 'woo-ai-review-manager' ),
+					'nothing'         => __( 'No unanalyzed reviews found.', 'woo-ai-review-manager' ),
+					'error'           => __( 'An error occurred. Please try again.', 'woo-ai-review-manager' ),
+					'chart_positive'  => __( 'Positive', 'woo-ai-review-manager' ),
+					'chart_neutral'   => __( 'Neutral', 'woo-ai-review-manager' ),
+					'chart_negative'  => __( 'Negative', 'woo-ai-review-manager' ),
+					'no_chart_data'   => __( 'No sentiment data yet. Analyze some reviews to see the chart.', 'woo-ai-review-manager' ),
 				],
 			]
 		);
 	}
 
 	/**
-	 * AJAX handler for analyzing old reviews.
+	 * AJAX handler: analyze one batch of reviews and report progress.
 	 */
-	public function ajax_analyze_old_reviews(): void {
+	public function ajax_analyze_batch(): void {
 		check_ajax_referer( 'wairm_dashboard', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
-		\WooAIReviewManager\Sentiment_Analyzer::process_pending();
+		if ( ! \WooAIReviewManager\AI_Client::is_available() ) {
+			wp_send_json_error( [ 'message' => __( 'AI Client is not available. Please configure AI credentials first.', 'woo-ai-review-manager' ) ] );
+		}
 
-		wp_send_json_success( [ 'message' => __( 'Analysis complete. Reload to see updated results.', 'woo-ai-review-manager' ) ] );
+		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 10 );
+
+		wp_send_json_success( $result );
 	}
 
 	public function render_page(): void {
 		global $wpdb;
 
-		// Get overall sentiment stats.
 		$table = $wpdb->prefix . 'wairm_review_sentiment';
+
+		// Overall sentiment stats.
 		$stats = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT
@@ -122,13 +132,27 @@ final class Dashboard_Page {
 			)
 		);
 
-		$this->localize_dashboard_data( $stats );
+		// Unanalyzed count.
+		$pending_count = \WooAIReviewManager\Sentiment_Analyzer::count_pending();
 
-		// Get recent reviews with sentiment.
+		// Actionable responses count.
+		$actionable_responses = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table}
+				 WHERE ai_response_suggestion IS NOT NULL
+				   AND ai_response_status IN (%s, %s)",
+				'generated',
+				'approved'
+			)
+		);
+
+		$this->localize_dashboard_data( $stats, $pending_count, $actionable_responses );
+
+		// Recent reviews.
 		$recent = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT s.*, c.comment_content, c.comment_date, p.post_title as product_name
-				 FROM {$wpdb->prefix}wairm_review_sentiment s
+				"SELECT s.*, c.comment_content, c.comment_author, c.comment_date, p.post_title as product_name
+				 FROM {$table} s
 				 JOIN {$wpdb->comments} c ON c.comment_ID = s.comment_id
 				 JOIN {$wpdb->posts} p ON p.ID = s.product_id
 				 ORDER BY s.analyzed_at DESC
@@ -137,14 +161,11 @@ final class Dashboard_Page {
 			)
 		);
 
-		// Get top products by review count.
+		// Top products.
 		$top_products = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT
-					product_id,
-					COUNT(*) as review_count,
-					AVG(score) as avg_score,
-					p.post_title as product_name
+				"SELECT product_id, COUNT(*) as review_count, AVG(score) as avg_score,
+				        p.post_title as product_name
 				 FROM {$table} s
 				 JOIN {$wpdb->posts} p ON p.ID = s.product_id
 				 WHERE p.post_type = %s
@@ -159,9 +180,25 @@ final class Dashboard_Page {
 		<div class="wrap wairm-dashboard">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'AI Review Manager Dashboard', 'woo-ai-review-manager' ); ?></h1>
 
+			<?php if ( $actionable_responses > 0 ) : ?>
+			<div class="notice notice-info" style="margin: 15px 0;">
+				<p>
+					<?php
+					printf(
+						/* translators: 1: count, 2: link open, 3: link close */
+						esc_html__( 'You have %1$s AI response suggestions waiting for review. %2$sManage Responses%3$s', 'woo-ai-review-manager' ),
+						'<strong>' . esc_html( (string) $actionable_responses ) . '</strong>',
+						'<a href="' . esc_url( admin_url( 'admin.php?page=wairm-responses' ) ) . '">',
+						'</a>'
+					);
+					?>
+				</p>
+			</div>
+			<?php endif; ?>
+
 			<div class="wairm-stats-grid">
 				<div class="wairm-stat-card">
-					<h3><?php esc_html_e( 'Total Reviews Analyzed', 'woo-ai-review-manager' ); ?></h3>
+					<h3><?php esc_html_e( 'Total Analyzed', 'woo-ai-review-manager' ); ?></h3>
 					<div class="stat-number"><?php echo absint( $stats->total_reviews ?? 0 ); ?></div>
 				</div>
 
@@ -169,9 +206,7 @@ final class Dashboard_Page {
 					<h3><?php esc_html_e( 'Positive', 'woo-ai-review-manager' ); ?></h3>
 					<div class="stat-number"><?php echo absint( $stats->positive ?? 0 ); ?></div>
 					<?php if ( $stats->total_reviews > 0 ) : ?>
-						<div class="stat-percent">
-							<?php echo esc_html( round( ( $stats->positive / $stats->total_reviews ) * 100, 1 ) ); ?>%
-						</div>
+						<div class="stat-percent"><?php echo esc_html( round( ( $stats->positive / $stats->total_reviews ) * 100, 1 ) ); ?>%</div>
 					<?php endif; ?>
 				</div>
 
@@ -179,9 +214,7 @@ final class Dashboard_Page {
 					<h3><?php esc_html_e( 'Neutral', 'woo-ai-review-manager' ); ?></h3>
 					<div class="stat-number"><?php echo absint( $stats->neutral ?? 0 ); ?></div>
 					<?php if ( $stats->total_reviews > 0 ) : ?>
-						<div class="stat-percent">
-							<?php echo esc_html( round( ( $stats->neutral / $stats->total_reviews ) * 100, 1 ) ); ?>%
-						</div>
+						<div class="stat-percent"><?php echo esc_html( round( ( $stats->neutral / $stats->total_reviews ) * 100, 1 ) ); ?>%</div>
 					<?php endif; ?>
 				</div>
 
@@ -189,9 +222,7 @@ final class Dashboard_Page {
 					<h3><?php esc_html_e( 'Negative', 'woo-ai-review-manager' ); ?></h3>
 					<div class="stat-number"><?php echo absint( $stats->negative ?? 0 ); ?></div>
 					<?php if ( $stats->total_reviews > 0 ) : ?>
-						<div class="stat-percent">
-							<?php echo esc_html( round( ( $stats->negative / $stats->total_reviews ) * 100, 1 ) ); ?>%
-						</div>
+						<div class="stat-percent"><?php echo esc_html( round( ( $stats->negative / $stats->total_reviews ) * 100, 1 ) ); ?>%</div>
 					<?php endif; ?>
 				</div>
 			</div>
@@ -216,16 +247,17 @@ final class Dashboard_Page {
 									<span class="review-date"><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $review->comment_date ) ) ); ?></span>
 								</div>
 								<div class="review-excerpt"><?php echo esc_html( wp_trim_words( $review->comment_content, 30 ) ); ?></div>
-								<div class="review-score">Score: <?php echo esc_html( number_format( $review->score, 2 ) ); ?></div>
-								<?php if ( $review->ai_response_suggestion ) : ?>
-									<div class="ai-suggestion">
-										<strong><?php esc_html_e( 'AI Response Suggestion:', 'woo-ai-review-manager' ); ?></strong>
-										<p><?php echo esc_html( wp_trim_words( $review->ai_response_suggestion, 20 ) ); ?></p>
-										<button class="button button-small view-suggestion" data-suggestion="<?php echo esc_attr( wp_json_encode( $review->ai_response_suggestion ) ); ?>">
-											<?php esc_html_e( 'View Full', 'woo-ai-review-manager' ); ?>
-										</button>
-									</div>
-								<?php endif; ?>
+								<div class="review-meta">
+									<span class="review-author"><?php echo esc_html( $review->comment_author ); ?></span>
+									<span class="review-score"><?php esc_html_e( 'Score:', 'woo-ai-review-manager' ); ?> <?php echo esc_html( number_format( $review->score, 2 ) ); ?></span>
+									<?php if ( $review->ai_response_suggestion && 'sent' !== $review->ai_response_status ) : ?>
+										<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses&status=actionable' ) ); ?>" class="button button-small">
+											<?php esc_html_e( 'Respond', 'woo-ai-review-manager' ); ?>
+										</a>
+									<?php elseif ( 'sent' === $review->ai_response_status ) : ?>
+										<span class="dashicons dashicons-yes-alt" style="color: #2ecc71;" title="<?php esc_attr_e( 'Reply posted', 'woo-ai-review-manager' ); ?>"></span>
+									<?php endif; ?>
+								</div>
 							</div>
 							<?php endforeach; ?>
 						</div>
@@ -266,15 +298,35 @@ final class Dashboard_Page {
 
 					<h2 style="margin-top: 30px;"><?php esc_html_e( 'Quick Actions', 'woo-ai-review-manager' ); ?></h2>
 					<div class="wairm-quick-actions">
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="button button-primary">
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses' ) ); ?>" class="button button-primary">
+							<?php esc_html_e( 'Manage Responses', 'woo-ai-review-manager' ); ?>
+							<?php if ( $actionable_responses > 0 ) : ?>
+								<span class="wairm-badge"><?php echo absint( $actionable_responses ); ?></span>
+							<?php endif; ?>
+						</a>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="button">
 							<?php esc_html_e( 'Settings', 'woo-ai-review-manager' ); ?>
 						</a>
-						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>" class="button">
-							<?php esc_html_e( 'View Products', 'woo-ai-review-manager' ); ?>
-						</a>
-						<button class="button" id="wairm-analyze-old-reviews">
-							<?php esc_html_e( 'Analyze Old Reviews', 'woo-ai-review-manager' ); ?>
-						</button>
+
+						<?php if ( $pending_count > 0 ) : ?>
+						<div id="wairm-analyze-section" style="margin-top: 15px;">
+							<button class="button" id="wairm-analyze-old-reviews">
+								<?php
+								printf(
+									/* translators: %d: number of unanalyzed reviews */
+									esc_html__( 'Analyze %d Unanalyzed Reviews', 'woo-ai-review-manager' ),
+									$pending_count
+								);
+								?>
+							</button>
+							<div id="wairm-analyze-progress" style="display: none; margin-top: 10px;">
+								<div style="background: #e0e0e0; border-radius: 4px; overflow: hidden; height: 20px;">
+									<div id="wairm-progress-bar" style="background: #3498db; height: 100%; width: 0%; transition: width 0.3s;"></div>
+								</div>
+								<p id="wairm-progress-text" style="margin: 5px 0; font-size: 13px; color: #666;"></p>
+							</div>
+						</div>
+						<?php endif; ?>
 					</div>
 
 					<div class="wairm-api-status" style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 4px;">

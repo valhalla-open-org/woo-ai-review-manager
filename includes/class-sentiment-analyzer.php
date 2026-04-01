@@ -85,9 +85,32 @@ final class Sentiment_Analyzer {
 	}
 
 	/**
-	 * Process all pending (unanalyzed) reviews.
+	 * Count unanalyzed reviews.
 	 */
-	public static function process_pending(): void {
+	public static function count_pending(): int {
+		global $wpdb;
+
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*)
+				 FROM {$wpdb->comments} c
+				 LEFT JOIN {$wpdb->prefix}wairm_review_sentiment s ON s.comment_id = c.comment_ID
+				 WHERE c.comment_type = %s
+				   AND c.comment_approved = %s
+				   AND s.id IS NULL",
+				'review',
+				'1'
+			)
+		);
+	}
+
+	/**
+	 * Process a batch of pending (unanalyzed) reviews.
+	 *
+	 * @param int $batch_size Number of reviews to process.
+	 * @return array{processed: int, failed: int, remaining: int}
+	 */
+	public static function process_pending( int $batch_size = 50 ): array {
 		global $wpdb;
 
 		$unanalyzed = $wpdb->get_col(
@@ -102,18 +125,43 @@ final class Sentiment_Analyzer {
 				 LIMIT %d",
 				'review',
 				'1',
-				50
+				$batch_size
 			)
 		);
 
-		if ( empty( $unanalyzed ) ) {
-			return;
+		$processed = 0;
+		$failed    = 0;
+
+		if ( ! empty( $unanalyzed ) ) {
+			$analyzer = new self();
+			foreach ( $unanalyzed as $comment_id ) {
+				$before = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT id FROM {$wpdb->prefix}wairm_review_sentiment WHERE comment_id = %d",
+						(int) $comment_id
+					)
+				);
+				$analyzer->analyze_review( (int) $comment_id );
+				$after = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT id FROM {$wpdb->prefix}wairm_review_sentiment WHERE comment_id = %d",
+						(int) $comment_id
+					)
+				);
+
+				if ( $after && ! $before ) {
+					$processed++;
+				} else {
+					$failed++;
+				}
+			}
 		}
 
-		$analyzer = new self();
-		foreach ( $unanalyzed as $comment_id ) {
-			$analyzer->analyze_review( (int) $comment_id );
-		}
+		return [
+			'processed' => $processed,
+			'failed'    => $failed,
+			'remaining' => self::count_pending(),
+		];
 	}
 
 	/**
