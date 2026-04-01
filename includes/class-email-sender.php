@@ -83,6 +83,9 @@ final class Email_Sender {
 
 	private static function build_email_body( object $email ): string {
 		$product_ids = json_decode( $email->product_ids, true );
+		if ( ! is_array( $product_ids ) ) {
+			return '';
+		}
 		$products    = [];
 
 		foreach ( (array) $product_ids as $product_id ) {
@@ -209,6 +212,9 @@ final class Email_Sender {
 		);
 
 		$product_ids = json_decode( $invitation->product_ids, true );
+		if ( ! is_array( $product_ids ) ) {
+			return '<p>' . esc_html__( 'Invalid invitation data.', 'woo-ai-review-manager' ) . '</p>';
+		}
 		ob_start();
 		?>
 		<div class="wairm-review-form">
@@ -219,6 +225,7 @@ final class Email_Sender {
 				<input type="hidden" name="action" value="wairm_submit_review">
 				<input type="hidden" name="invitation_id" value="<?php echo absint( $invitation->id ); ?>">
 				<input type="hidden" name="token" value="<?php echo esc_attr( $token ); ?>">
+				<?php wp_nonce_field( 'wairm_review' ); ?>
 
 				<?php foreach ( (array) $product_ids as $product_id ) :
 					$product = wc_get_product( $product_id );
@@ -320,15 +327,29 @@ add_action( 'admin_post_nopriv_wairm_submit_review', static function (): void {
 		[ '%d' ]
 	);
 
-	wp_redirect( get_home_url() . '?wairm_thank_you=1' );
+	$redirect_url = add_query_arg(
+		[
+			'wairm_thank_you' => '1',
+			'_wpnonce'        => wp_create_nonce( 'wairm_thank_you' ),
+		],
+		get_home_url()
+	);
+	wp_safe_redirect( $redirect_url );
 	exit;
 } );
 
 // Thank you page notice.
 add_action( 'wp', static function (): void {
-	if ( isset( $_GET['wairm_thank_you'] ) ) {
-		add_action( 'wp_footer', static function (): void {
-			echo '<script>alert("' . esc_js( __( 'Thank you for your reviews!', 'woo-ai-review-manager' ) ) . '");</script>';
-		} );
+	if ( ! isset( $_GET['wairm_thank_you'] ) ) {
+		return;
 	}
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'wairm_thank_you' ) ) {
+		return;
+	}
+	add_filter( 'the_content', static function ( string $content ): string {
+		$notice = '<div class="wairm-thank-you" style="padding: 20px; margin: 20px 0; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; text-align: center;">'
+			. '<p style="font-size: 18px; margin: 0;">' . esc_html__( 'Thank you for your reviews! Your feedback helps us improve.', 'woo-ai-review-manager' ) . '</p>'
+			. '</div>';
+		return $notice . $content;
+	} );
 } );

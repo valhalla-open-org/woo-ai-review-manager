@@ -88,14 +88,19 @@ final class Sentiment_Analyzer {
 		global $wpdb;
 
 		$unanalyzed = $wpdb->get_col(
-			"SELECT c.comment_ID
-			 FROM {$wpdb->comments} c
-			 LEFT JOIN {$wpdb->prefix}wairm_review_sentiment s ON s.comment_id = c.comment_ID
-			 WHERE c.comment_type = 'review'
-			   AND c.comment_approved = '1'
-			   AND s.id IS NULL
-			 ORDER BY c.comment_date DESC
-			 LIMIT 50"
+			$wpdb->prepare(
+				"SELECT c.comment_ID
+				 FROM {$wpdb->comments} c
+				 LEFT JOIN {$wpdb->prefix}wairm_review_sentiment s ON s.comment_id = c.comment_ID
+				 WHERE c.comment_type = %s
+				   AND c.comment_approved = %s
+				   AND s.id IS NULL
+				 ORDER BY c.comment_date DESC
+				 LIMIT %d",
+				'review',
+				'1',
+				50
+			)
 		);
 
 		if ( empty( $unanalyzed ) ) {

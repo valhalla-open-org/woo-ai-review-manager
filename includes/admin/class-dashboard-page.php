@@ -16,6 +16,7 @@ final class Dashboard_Page {
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_menu_page' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+		add_action( 'wp_ajax_wairm_analyze_old_reviews', [ $this, 'ajax_analyze_old_reviews' ] );
 	}
 
 	public function add_menu_page(): void {
@@ -53,34 +54,75 @@ final class Dashboard_Page {
 		wp_enqueue_script(
 			'wairm-dashboard',
 			WAIRM_PLUGIN_URL . 'assets/js/dashboard.js',
-			[ 'jquery', 'wairm-charts' ],
+			[ 'wairm-charts' ],
 			WAIRM_VERSION,
 			true
 		);
+	}
 
+	/**
+	 * Localize dashboard script with chart data. Called from render_page()
+	 * after stats are fetched so the data is available to JS.
+	 */
+	private function localize_dashboard_data( object $stats ): void {
 		wp_localize_script(
 			'wairm-dashboard',
 			'wairm',
 			[
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'nonce'    => wp_create_nonce( 'wairm_dashboard' ),
+				'chart'    => [
+					'positive' => absint( $stats->positive ?? 0 ),
+					'neutral'  => absint( $stats->neutral ?? 0 ),
+					'negative' => absint( $stats->negative ?? 0 ),
+				],
+				'i18n'     => [
+					'confirm_analyze' => __( 'This will analyze up to 50 unanalyzed reviews. Continue?', 'woo-ai-review-manager' ),
+					'processing'      => __( 'Processing...', 'woo-ai-review-manager' ),
+					'analyze_button'  => __( 'Analyze Old Reviews', 'woo-ai-review-manager' ),
+					'complete'        => __( 'Processing complete.', 'woo-ai-review-manager' ),
+					'request_failed'  => __( 'Request failed.', 'woo-ai-review-manager' ),
+				],
 			]
 		);
+	}
+
+	/**
+	 * AJAX handler for analyzing old reviews.
+	 */
+	public function ajax_analyze_old_reviews(): void {
+		check_ajax_referer( 'wairm_dashboard', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		\WooAIReviewManager\Sentiment_Analyzer::process_pending();
+
+		wp_send_json_success( [ 'message' => __( 'Analysis complete. Reload to see updated results.', 'woo-ai-review-manager' ) ] );
 	}
 
 	public function render_page(): void {
 		global $wpdb;
 
 		// Get overall sentiment stats.
+		$table = $wpdb->prefix . 'wairm_review_sentiment';
 		$stats = $wpdb->get_row(
-			"SELECT
-				COUNT(*) as total_reviews,
-				SUM(CASE WHEN sentiment = 'positive' THEN 1 ELSE 0 END) as positive,
-				SUM(CASE WHEN sentiment = 'neutral' THEN 1 ELSE 0 END) as neutral,
-				SUM(CASE WHEN sentiment = 'negative' THEN 1 ELSE 0 END) as negative,
-				AVG(score) as avg_score
-			 FROM {$wpdb->prefix}wairm_review_sentiment"
+			$wpdb->prepare(
+				"SELECT
+					COUNT(*) as total_reviews,
+					SUM(CASE WHEN sentiment = %s THEN 1 ELSE 0 END) as positive,
+					SUM(CASE WHEN sentiment = %s THEN 1 ELSE 0 END) as neutral,
+					SUM(CASE WHEN sentiment = %s THEN 1 ELSE 0 END) as negative,
+					AVG(score) as avg_score
+				 FROM {$table}",
+				'positive',
+				'neutral',
+				'negative'
+			)
 		);
+
+		$this->localize_dashboard_data( $stats );
 
 		// Get recent reviews with sentiment.
 		$recent = $wpdb->get_results(
@@ -97,17 +139,21 @@ final class Dashboard_Page {
 
 		// Get top products by review count.
 		$top_products = $wpdb->get_results(
-			"SELECT
-				product_id,
-				COUNT(*) as review_count,
-				AVG(score) as avg_score,
-				p.post_title as product_name
-			 FROM {$wpdb->prefix}wairm_review_sentiment s
-			 JOIN {$wpdb->posts} p ON p.ID = s.product_id
-			 WHERE p.post_type = 'product'
-			 GROUP BY product_id
-			 ORDER BY review_count DESC
-			 LIMIT 5"
+			$wpdb->prepare(
+				"SELECT
+					product_id,
+					COUNT(*) as review_count,
+					AVG(score) as avg_score,
+					p.post_title as product_name
+				 FROM {$table} s
+				 JOIN {$wpdb->posts} p ON p.ID = s.product_id
+				 WHERE p.post_type = %s
+				 GROUP BY product_id
+				 ORDER BY review_count DESC
+				 LIMIT %d",
+				'product',
+				5
+			)
 		);
 		?>
 		<div class="wrap wairm-dashboard">
@@ -251,76 +297,6 @@ final class Dashboard_Page {
 				</div>
 			</div>
 		</div>
-
-		<script>
-		document.addEventListener('DOMContentLoaded', function() {
-			const ctx = document.getElementById('wairm-sentiment-chart').getContext('2d');
-			new Chart(ctx, {
-				type: 'pie',
-				data: {
-					labels: ['Positive', 'Neutral', 'Negative'],
-					datasets: [{
-						data: [
-							<?php echo absint( $stats->positive ?? 0 ); ?>,
-							<?php echo absint( $stats->neutral ?? 0 ); ?>,
-							<?php echo absint( $stats->negative ?? 0 ); ?>
-						],
-						backgroundColor: [
-							'#2ecc71',
-							'#f39c12',
-							'#e74c3c'
-						]
-					}]
-				},
-				options: {
-					responsive: true,
-					plugins: {
-						legend: { position: 'bottom' }
-					}
-				}
-			});
-
-			// View suggestion modal.
-			document.querySelectorAll('.view-suggestion').forEach(btn => {
-				btn.addEventListener('click', function() {
-					const suggestion = JSON.parse(this.dataset.suggestion);
-					alert('AI Response Suggestion:\n\n' + suggestion);
-				});
-			});
-
-			// Analyze old reviews.
-			document.getElementById('wairm-analyze-old-reviews').addEventListener('click', function() {
-				if (confirm('<?php esc_html_e( 'This will analyze up to 50 unanalyzed reviews. Continue?', 'woo-ai-review-manager' ); ?>')) {
-					const btn = this;
-					btn.disabled = true;
-					btn.textContent = '<?php esc_html_e( 'Processing...', 'woo-ai-review-manager' ); ?>';
-
-					fetch(ajaxurl, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-						body: new URLSearchParams({
-							action: 'wairm_analyze_old_reviews',
-							nonce: wairm.nonce
-						})
-					})
-					.then(res => res.json())
-					.then(data => {
-						alert(data.message || '<?php esc_html_e( 'Processing complete.', 'woo-ai-review-manager' ); ?>');
-						if (data.success) {
-							location.reload();
-						}
-					})
-					.catch(() => {
-						alert('<?php esc_html_e( 'Request failed.', 'woo-ai-review-manager' ); ?>');
-					})
-					.finally(() => {
-						btn.disabled = false;
-						btn.textContent = '<?php esc_html_e( 'Analyze Old Reviews', 'woo-ai-review-manager' ); ?>';
-					});
-				}
-			});
-		});
-		</script>
 		<?php
 	}
 }
