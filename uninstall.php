@@ -35,3 +35,4 @@ foreach ( $options as $option ) {
 // Clear any scheduled cron events.
 wp_clear_scheduled_hook( 'wairm_process_pending_reviews' );
 wp_clear_scheduled_hook( 'wairm_send_review_invitations' );
+wp_clear_scheduled_hook( 'wairm_expire_invitations' );

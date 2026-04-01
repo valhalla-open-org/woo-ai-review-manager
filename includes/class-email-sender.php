@@ -219,7 +219,7 @@ final class Email_Sender {
 		</head>
 		<body>
 			<div class="container">
-				<h1><?php esc_html_e( 'How was your recent purchase?', 'woo-ai-review-manager' ); ?></h1>
+				<h1><?php echo esc_html( self::resolve_subject_placeholders( $email ) ); ?></h1>
 
 				<p><?php
 					printf(

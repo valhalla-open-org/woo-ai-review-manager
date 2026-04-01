@@ -1,0 +1,347 @@
+/**
+ * WooAI Review Manager – Admin Styles
+ *
+ * Shared styles for the Dashboard and Responses pages.
+ *
+ * @package WooAIReviewManager
+ */
+
+/* -------------------------------------------------------
+   Dashboard – Stats Grid
+   ------------------------------------------------------- */
+.wairm-stats-grid {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 180px, 1fr ) );
+	gap: 16px;
+	margin: 20px 0;
+}
+
+.wairm-stat-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 6px;
+	padding: 20px;
+	text-align: center;
+}
+
+.wairm-stat-card h3 {
+	margin: 0 0 8px;
+	font-size: 13px;
+	color: #666;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.wairm-stat-card .stat-number {
+	font-size: 36px;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.wairm-stat-card .stat-percent {
+	font-size: 14px;
+	color: #888;
+	margin-top: 4px;
+}
+
+.wairm-stat-card.positive .stat-number { color: #2ecc71; }
+.wairm-stat-card.neutral  .stat-number { color: #f39c12; }
+.wairm-stat-card.negative .stat-number { color: #e74c3c; }
+
+/* -------------------------------------------------------
+   Dashboard – Chart Section
+   ------------------------------------------------------- */
+.wairm-chart-section {
+	margin: 30px 0;
+}
+
+.wairm-chart-section h2 {
+	margin-bottom: 10px;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Two-Column Layout
+   ------------------------------------------------------- */
+.wairm-two-column {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 24px;
+	margin-top: 20px;
+}
+
+@media screen and ( max-width: 960px ) {
+	.wairm-two-column {
+		grid-template-columns: 1fr;
+	}
+}
+
+.wairm-column h2 {
+	margin-top: 0;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Review Cards
+   ------------------------------------------------------- */
+.wairm-recent-reviews {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.wairm-review-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-left: 4px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 14px 16px;
+}
+
+.wairm-review-card.sentiment-positive { border-left-color: #2ecc71; }
+.wairm-review-card.sentiment-neutral  { border-left-color: #f39c12; }
+.wairm-review-card.sentiment-negative { border-left-color: #e74c3c; }
+
+.wairm-review-card .review-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.wairm-review-card .product-name {
+	font-weight: 600;
+}
+
+.wairm-review-card .review-date {
+	color: #888;
+	font-size: 12px;
+	margin-left: auto;
+}
+
+.wairm-review-card .review-excerpt {
+	color: #444;
+	font-size: 13px;
+	line-height: 1.5;
+	margin-bottom: 8px;
+}
+
+.wairm-review-card .review-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	font-size: 12px;
+	color: #888;
+}
+
+/* -------------------------------------------------------
+   Shared – Sentiment Badge
+   ------------------------------------------------------- */
+.sentiment-badge {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+	color: #fff;
+}
+
+.sentiment-badge.sentiment-positive { background: #2ecc71; }
+.sentiment-badge.sentiment-neutral  { background: #f39c12; }
+.sentiment-badge.sentiment-negative { background: #e74c3c; }
+
+/* -------------------------------------------------------
+   Dashboard – Quick Actions
+   ------------------------------------------------------- */
+.wairm-quick-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: flex-start;
+}
+
+.wairm-quick-actions .button {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.wairm-badge {
+	display: inline-block;
+	background: #d63638;
+	color: #fff;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	padding: 3px 6px;
+	border-radius: 10px;
+	margin-left: 4px;
+	vertical-align: middle;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Analyze Progress
+   ------------------------------------------------------- */
+#wairm-analyze-section {
+	flex-basis: 100%;
+}
+
+#wairm-analyze-progress {
+	margin-top: 10px;
+}
+
+/* -------------------------------------------------------
+   Dashboard – AI Status
+   ------------------------------------------------------- */
+.wairm-api-status {
+	margin-top: 30px;
+	padding: 15px;
+	background: #f5f5f5;
+	border-radius: 4px;
+}
+
+.wairm-api-status h3 {
+	margin-top: 0;
+}
+
+/* -------------------------------------------------------
+   Responses Page – Filter Tabs
+   ------------------------------------------------------- */
+.wairm-responses .subsubsub {
+	margin-bottom: 10px;
+}
+
+/* -------------------------------------------------------
+   Responses Page – Response Cards
+   ------------------------------------------------------- */
+.wairm-response-list {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	margin-top: 16px;
+}
+
+.wairm-response-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 6px;
+	padding: 16px 20px;
+	transition: opacity 0.3s;
+}
+
+.wairm-response-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.wairm-response-status {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+}
+
+.wairm-response-status.status-generated { background: #e8f4fd; color: #0073aa; }
+.wairm-response-status.status-approved  { background: #e7f5e7; color: #2e7d32; }
+.wairm-response-status.status-sent      { background: #eee;    color: #555; }
+.wairm-response-status.status-dismissed { background: #fce4e4; color: #b71c1c; }
+
+.wairm-response-meta {
+	margin-left: auto;
+	font-size: 12px;
+	color: #888;
+}
+
+.wairm-response-review {
+	background: #f9f9f9;
+	border-left: 3px solid #ddd;
+	padding: 10px 14px;
+	margin-bottom: 12px;
+	border-radius: 3px;
+}
+
+.wairm-response-review p {
+	margin: 6px 0 4px;
+	color: #333;
+	line-height: 1.6;
+}
+
+.wairm-response-review .review-score {
+	font-size: 12px;
+	color: #888;
+}
+
+.wairm-response-suggestion {
+	margin-bottom: 12px;
+}
+
+.wairm-response-suggestion strong {
+	display: block;
+	margin-bottom: 6px;
+}
+
+.wairm-response-text.large-text {
+	width: 100%;
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+/* -------------------------------------------------------
+   Responses Page – Action Buttons
+   ------------------------------------------------------- */
+.wairm-response-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	padding-top: 8px;
+	border-top: 1px solid #eee;
+}
+
+.wairm-posted-label {
+	font-weight: 600;
+	font-size: 13px;
+}
+
+/* -------------------------------------------------------
+   Responses Page – Inline Notices
+   ------------------------------------------------------- */
+.wairm-inline-notice {
+	padding: 6px 12px;
+	border-radius: 4px;
+	font-size: 13px;
+	animation: wairm-fade-in 0.2s ease;
+}
+
+.wairm-inline-notice.notice-success {
+	background: #e7f5e7;
+	color: #2e7d32;
+}
+
+.wairm-inline-notice.notice-error {
+	background: #fce4e4;
+	color: #b71c1c;
+}
+
+@keyframes wairm-fade-in {
+	from { opacity: 0; transform: translateY( -4px ); }
+	to   { opacity: 1; transform: translateY( 0 ); }
+}
+
+/* -------------------------------------------------------
+   Responses Page – Empty State
+   ------------------------------------------------------- */
+.wairm-empty-state {
+	text-align: center;
+	padding: 60px 20px;
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	margin-top: 20px;
+	border-radius: 6px;
+}
