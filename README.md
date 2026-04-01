@@ -1,18 +1,60 @@
 # WooCommerce AI Review Manager
 
-Automated review collection, sentiment analysis, and AI-powered response suggestions for WooCommerce stores.
+**Turn every customer review into a growth opportunity — automatically.**
 
-## Features
+WooCommerce AI Review Manager uses the power of AI to analyze your store's reviews, generate thoughtful responses, and proactively collect new feedback — all from one intuitive dashboard.
 
-- **Automated Review Invitations**: Automatically sends email invitations to customers after order completion.
-- **Sentiment Analysis**: Uses the WordPress AI Client API to analyze review sentiment (positive/neutral/negative). Works with any configured AI provider (Anthropic, Google, OpenAI, etc.).
-- **AI Response Suggestions**: Generates store‑owner response suggestions for negative reviews.
-- **Sentiment Dashboard**: WordPress admin dashboard showing sentiment breakdown by product.
-- **Reminder Emails**: Optional reminder emails for customers who don't review.
-- **Token‑Based Review Links**: Secure, expiring review links in customer emails.
-- **HPOS Compatible**: Fully compatible with WooCommerce's High‑Performance Order Storage.
-- **Provider‑Agnostic**: Uses the WordPress 7.0 AI Client — no vendor lock‑in.
-- **Privacy‑Focused**: Only review text and product name are sent to the AI provider—no PII.
+---
+
+## What It Does
+
+### Sentiment Analysis on Autopilot
+Every new review is automatically scored and classified as positive, neutral, or negative. See at a glance how customers feel about each product with sentiment scores, key phrase extraction, and trend visualizations — no spreadsheets required.
+
+### AI-Crafted Response Suggestions
+Stop staring at a blank reply box. The plugin generates tailored responses for every review — empathetic and solution-oriented for complaints, warm and genuine for praise. Edit them to add your personal touch, or post them as-is with a single click.
+
+### One-Click Response Workflow
+Review, approve, edit, and post AI suggestions as real WooCommerce replies — all without leaving your dashboard. A clear status pipeline (New → Approved → Posted) keeps your team aligned and nothing falls through the cracks.
+
+### Proactive Review Collection
+Automatically email customers after purchase inviting them to leave a review. Customize the timing, email subject, and message. Smart reminders follow up with customers who haven't responded yet, and expired invitations are cleaned up automatically.
+
+### Real-Time Dashboard
+Your command center for customer sentiment. At a glance you see:
+- Total reviews analyzed with positive/neutral/negative breakdown
+- Sentiment distribution chart
+- Top products by review volume and score
+- Pending items that need your attention with direct action links
+- AI service health status
+
+### Bulk Analysis
+Existing store with hundreds of reviews? Hit one button and watch the progress bar as the plugin analyzes your entire review history in batches — no timeouts, no server strain.
+
+---
+
+## Built for WordPress 7.0
+
+Powered by the new **WordPress AI Client API**, the plugin works with any AI provider you've configured in WordPress — Anthropic, OpenAI, Google, or any future provider. No separate API keys to manage inside the plugin. Just connect your preferred AI in **Settings → AI Credentials** and you're ready to go.
+
+---
+
+## Key Features
+
+- **Provider-agnostic AI** — works with any WordPress AI Client provider
+- **Automatic sentiment scoring** — every review analyzed as it arrives
+- **Smart response generation** — tone-matched to each review's sentiment
+- **Full response workflow** — approve, edit, post, dismiss, or regenerate
+- **Email invitation system** — customizable post-purchase review requests with reminders
+- **Batch analysis** — process your entire review history with a progress bar
+- **REST API** — endpoints for reviews and per-product sentiment aggregation
+- **WooCommerce HPOS compatible**
+- **Clean uninstall** — removes all data and scheduled tasks when deactivated
+- **Privacy-focused** — only review text and product name are sent to the AI provider, no PII
+
+*Less time managing reviews. More time growing your store.*
+
+---
 
 ## Requirements
 
@@ -70,10 +112,18 @@ Navigate to **AI Reviews → Settings**:
 
 ### Dashboard
 1. Go to **AI Reviews** in the WordPress admin.
-2. View overall sentiment statistics.
-3. See recent reviews with sentiment labels.
-4. View top products by review count.
-5. Read AI response suggestions for negative reviews.
+2. View overall sentiment statistics and distribution chart.
+3. See recent reviews with sentiment labels and quick-action links.
+4. View top products by review count and average score.
+5. Use "Analyze Unanalyzed Reviews" to batch-process existing reviews with a progress bar.
+6. Click "Manage Responses" to review, approve, edit, and post AI suggestions.
+
+### Response Management
+1. Go to **AI Reviews → AI Responses**.
+2. Filter by status: Needs Action, New, Approved, Posted, Dismissed, or All.
+3. Edit the AI suggestion text to add your personal touch.
+4. **Approve** to save for later, **Post Reply** to publish as a WooCommerce reply, or **Dismiss** to skip.
+5. **Regenerate** to get a fresh AI suggestion for any review.
 
 ## Database Schema
 
@@ -101,13 +151,18 @@ The plugin creates three custom tables:
 - `WooAIReviewManager\Review_Collector` – Hooks into WooCommerce orders
 - `WooAIReviewManager\Sentiment_Analyzer` – Processes reviews through the WordPress AI Client
 - `WooAIReviewManager\AI_Client` – WordPress AI Client wrapper
+- `WooAIReviewManager\Response_Generator` – On-demand AI response generation
 - `WooAIReviewManager\Email_Sender` – Handles email sending and review forms
-- `WooAIReviewManager\Admin\Dashboard_Page` – Admin dashboard
+- `WooAIReviewManager\Admin\Dashboard_Page` – Admin dashboard with analytics
+- `WooAIReviewManager\Admin\Responses_Page` – Response management workflow
 - `WooAIReviewManager\Admin\Settings_Page` – Settings UI
+- `WooAIReviewManager\API\Reviews_Controller` – REST API for reviews
+- `WooAIReviewManager\API\Sentiment_Controller` – REST API for sentiment stats
 
 ### Cron Events
 - `wairm_process_pending_reviews` – Hourly sentiment analysis of unanalyzed reviews
 - `wairm_send_review_invitations` – Every 5 minutes sends queued emails
+- `wairm_expire_invitations` – Daily cleanup of expired review invitations
 
 ### REST API
 - `GET /wp-json/wairm/v1/reviews` – List reviews with sentiment
@@ -140,13 +195,12 @@ Yes, uncheck "Auto‑Analyze New Reviews" in settings.
 ## Roadmap
 
 - [ ] Email template customisation
-- [ ] Multiple language support
-- [ ] Review moderation workflow
 - [ ] Export sentiment reports (CSV)
-- [ ] Webhook notifications for negative reviews
+- [ ] Webhook/Slack notifications for negative reviews
 - [ ] A/B testing of email subject lines
 - [ ] WooCommerce email template integration
 - [ ] Review rating prediction
+- [ ] Bulk response actions (approve/post/dismiss multiple at once)
 
 ## Support
 Create an issue on [GitHub](https://github.com/valhalla-open-org/woo-ai-review-manager).
