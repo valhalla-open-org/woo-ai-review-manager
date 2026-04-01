@@ -30,7 +30,6 @@ final class Settings_Page {
 	}
 
 	public function register_settings(): void {
-		register_setting( 'wairm_settings', 'wairm_gemini_api_key' );
 		register_setting( 'wairm_settings', 'wairm_invitation_delay_days' );
 		register_setting( 'wairm_settings', 'wairm_reminder_enabled' );
 		register_setting( 'wairm_settings', 'wairm_reminder_delay_days' );
@@ -64,23 +63,31 @@ final class Settings_Page {
 				<?php settings_fields( 'wairm_settings' ); ?>
 
 				<?php if ( 'api' === $active_tab ) : ?>
-					<h2><?php esc_html_e( 'Gemini API Configuration', 'woo-ai-review-manager' ); ?></h2>
+					<h2><?php esc_html_e( 'AI Configuration', 'woo-ai-review-manager' ); ?></h2>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<label for="wairm_gemini_api_key"><?php esc_html_e( 'Gemini API Key', 'woo-ai-review-manager' ); ?></label>
+								<?php esc_html_e( 'AI Provider', 'woo-ai-review-manager' ); ?>
 							</th>
 							<td>
-								<input type="password" id="wairm_gemini_api_key" name="wairm_gemini_api_key" value="<?php echo esc_attr( get_option( 'wairm_gemini_api_key', '' ) ); ?>" class="regular-text" />
+								<?php if ( \WooAIReviewManager\AI_Client::is_available() ) : ?>
+									<p style="color: #2ecc71;">
+										<strong><?php esc_html_e( 'WordPress AI Client is available.', 'woo-ai-review-manager' ); ?></strong>
+									</p>
+								<?php else : ?>
+									<p style="color: #e74c3c;">
+										<strong><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></strong>
+									</p>
+								<?php endif; ?>
 								<p class="description">
 									<?php printf(
-										/* translators: %s: Google AI Studio URL */
-										esc_html__( 'Get your API key from %s', 'woo-ai-review-manager' ),
-										'<a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a>'
+										/* translators: %s: link to AI Credentials settings */
+										esc_html__( 'AI credentials are managed through %s. Configure your preferred AI provider (Anthropic, Google, OpenAI, or others) there.', 'woo-ai-review-manager' ),
+										'<a href="' . esc_url( admin_url( 'options-general.php?page=ai-credentials' ) ) . '">' . esc_html__( 'Settings &rarr; AI Credentials', 'woo-ai-review-manager' ) . '</a>'
 									); ?>
 								</p>
 								<p class="description">
-									<strong><?php esc_html_e( 'Required for sentiment analysis and AI response generation.', 'woo-ai-review-manager' ); ?></strong>
+									<?php esc_html_e( 'This plugin uses the WordPress AI Client API and works with any AI provider configured on your site.', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -184,7 +191,7 @@ final class Settings_Page {
 									<?php esc_html_e( 'Automatically analyze new reviews for sentiment', 'woo-ai-review-manager' ); ?>
 								</label>
 								<p class="description">
-									<?php esc_html_e( 'When enabled, all new WooCommerce reviews will be sent to Gemini for sentiment analysis.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'When enabled, all new WooCommerce reviews will be sent to the configured AI provider for sentiment analysis.', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -208,17 +215,13 @@ final class Settings_Page {
 							</th>
 							<td>
 								<p>
-									<?php esc_html_e( 'This plugin sends review text to Google\'s Gemini API for sentiment analysis and response generation.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'This plugin sends review text to the AI provider configured in your WordPress AI Credentials for sentiment analysis and response generation.', 'woo-ai-review-manager' ); ?>
 								</p>
 								<p>
-									<?php printf(
-										/* translators: %s: Google privacy policy URL */
-										esc_html__( 'Review Google\'s %s for details on how they handle your data.', 'woo-ai-review-manager' ),
-										'<a href="https://policies.google.com/privacy" target="_blank">' . esc_html__( 'Privacy Policy', 'woo-ai-review-manager' ) . '</a>'
-									); ?>
+									<?php esc_html_e( 'Please review the privacy policy of your configured AI provider for details on how they handle your data.', 'woo-ai-review-manager' ); ?>
 								</p>
 								<p>
-									<?php esc_html_e( 'No customer personally identifiable information (PII) is sent to Gemini—only the review text and product name.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'No customer personally identifiable information (PII) is sent to the AI provider—only the review text and product name.', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>

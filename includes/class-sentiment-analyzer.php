@@ -39,10 +39,11 @@ final class Sentiment_Analyzer {
 			return;
 		}
 
-		$client = new Gemini_Client();
-		if ( ! $client->is_configured() ) {
+		if ( ! AI_Client::is_available() ) {
 			return;
 		}
+
+		$client = new AI_Client();
 
 		$product_id   = (int) $comment->comment_post_ID;
 		$product      = wc_get_product( $product_id );
@@ -77,6 +78,9 @@ final class Sentiment_Analyzer {
 		$threshold = (float) get_option( 'wairm_negative_threshold', '0.30' );
 		if ( $result['score'] < $threshold ) {
 			$this->generate_response_suggestion( $wpdb->insert_id, $comment, $product_name, $result['sentiment'] );
+		} elseif ( 'yes' === get_option( 'wairm_auto_respond_positive', 'no' ) ) {
+			// Generate suggestions for positive/neutral reviews when enabled.
+			$this->generate_response_suggestion( $wpdb->insert_id, $comment, $product_name, $result['sentiment'] );
 		}
 	}
 
@@ -87,14 +91,19 @@ final class Sentiment_Analyzer {
 		global $wpdb;
 
 		$unanalyzed = $wpdb->get_col(
-			"SELECT c.comment_ID
-			 FROM {$wpdb->comments} c
-			 LEFT JOIN {$wpdb->prefix}wairm_review_sentiment s ON s.comment_id = c.comment_ID
-			 WHERE c.comment_type = 'review'
-			   AND c.comment_approved = '1'
-			   AND s.id IS NULL
-			 ORDER BY c.comment_date DESC
-			 LIMIT 50"
+			$wpdb->prepare(
+				"SELECT c.comment_ID
+				 FROM {$wpdb->comments} c
+				 LEFT JOIN {$wpdb->prefix}wairm_review_sentiment s ON s.comment_id = c.comment_ID
+				 WHERE c.comment_type = %s
+				   AND c.comment_approved = %s
+				   AND s.id IS NULL
+				 ORDER BY c.comment_date DESC
+				 LIMIT %d",
+				'review',
+				'1',
+				50
+			)
 		);
 
 		if ( empty( $unanalyzed ) ) {
@@ -113,11 +122,11 @@ final class Sentiment_Analyzer {
 	private function generate_response_suggestion( int $sentiment_id, \WP_Comment $comment, string $product_name, string $sentiment ): void {
 		global $wpdb;
 
-		$client = new Gemini_Client();
-		if ( ! $client->is_configured() ) {
+		if ( ! AI_Client::is_available() ) {
 			return;
 		}
 
+		$client      = new AI_Client();
 		$store_name  = get_bloginfo( 'name' );
 		$review_text = wp_strip_all_tags( $comment->comment_content );
 

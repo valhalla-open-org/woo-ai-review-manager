@@ -1,6 +1,6 @@
 <?php
 /**
- * Handles sending review invitation emails.
+ * Handles sending review invitation emails and the public review form.
  *
  * @package WooAIReviewManager
  */
@@ -13,12 +13,66 @@ defined( 'ABSPATH' ) || exit;
 
 final class Email_Sender {
 
+	public function __construct() {
+		add_shortcode( 'wairm_review_form', [ $this, 'review_form_shortcode' ] );
+		add_action( 'admin_post_nopriv_wairm_submit_review', [ $this, 'handle_form_submission' ] );
+		add_action( 'admin_post_wairm_submit_review', [ $this, 'handle_form_submission' ] );
+		add_action( 'template_redirect', [ $this, 'intercept_review_token' ] );
+		add_action( 'wp', [ $this, 'maybe_show_thank_you' ] );
+	}
+
+	/**
+	 * Intercept review token URLs and render the review form on the front page.
+	 *
+	 * When a customer clicks the email link (home_url?wairm_token=xxx&action=review),
+	 * this renders the review form directly via a template_redirect so no shortcode
+	 * page setup is needed.
+	 */
+	public function intercept_review_token(): void {
+		if ( empty( $_GET['wairm_token'] ) || ( $_GET['action'] ?? '' ) !== 'review' ) {
+			return;
+		}
+
+		$form_html = $this->review_form_shortcode();
+
+		// Render a minimal standalone page with the review form.
+		$site_name = esc_html( get_bloginfo( 'name' ) );
+		$charset   = esc_attr( get_bloginfo( 'charset' ) );
+		?>
+		<!DOCTYPE html>
+		<html <?php language_attributes(); ?>>
+		<head>
+			<meta charset="<?php echo $charset; ?>">
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+			<title><?php echo esc_html__( 'Leave a Review', 'woo-ai-review-manager' ) . ' — ' . $site_name; ?></title>
+			<?php wp_head(); ?>
+			<style>
+				body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background: #f9f9f9; }
+				.wairm-review-page { max-width: 700px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+				.wairm-review-page h2 { margin-top: 0; }
+			</style>
+		</head>
+		<body>
+			<div class="wairm-review-page">
+				<?php echo $form_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already escaped in shortcode. ?>
+			</div>
+			<?php wp_footer(); ?>
+		</body>
+		</html>
+		<?php
+		exit;
+	}
+
+	/**
+	 * Process the email sending queue (called via cron).
+	 */
 	public static function process_queue(): void {
 		global $wpdb;
 
 		$now = current_time( 'mysql', true );
 
 		// Get up to 20 queued emails ready to send.
+		// Allow invitations in 'pending' (initial) or 'sent'/'clicked' (reminder) statuses.
 		$pending = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT eq.*, ri.customer_email, ri.customer_name, ri.order_id, ri.token, ri.product_ids
@@ -26,7 +80,8 @@ final class Email_Sender {
 				 JOIN {$wpdb->prefix}wairm_review_invitations ri ON ri.id = eq.invitation_id
 				 WHERE eq.status = 'queued'
 				   AND eq.scheduled_at <= %s
-				   AND ri.status = 'pending'
+				   AND ri.status IN ('pending', 'sent', 'clicked')
+				   AND ri.status != 'reviewed'
 				 LIMIT 20",
 				$now
 			)
@@ -40,18 +95,28 @@ final class Email_Sender {
 	private static function send_email( object $email ): void {
 		global $wpdb;
 
-		// Update status to sending.
-		$wpdb->update(
-			$wpdb->prefix . 'wairm_email_queue',
-			[ 'status' => 'sent', 'sent_at' => current_time( 'mysql', true ) ],
-			[ 'id' => $email->id ],
-			[ '%s', '%s' ],
-			[ '%d' ]
+		// Increment attempts before trying.
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$wpdb->prefix}wairm_email_queue SET attempts = attempts + 1 WHERE id = %d",
+				$email->id
+			)
 		);
 
 		// Build email content.
-		$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) );
+		$subject = self::resolve_subject_placeholders( $email );
 		$body    = self::build_email_body( $email );
+
+		if ( '' === $body ) {
+			$wpdb->update(
+				$wpdb->prefix . 'wairm_email_queue',
+				[ 'status' => 'failed', 'last_error' => 'Empty email body (invalid product data)' ],
+				[ 'id' => $email->id ],
+				[ '%s', '%s' ],
+				[ '%d' ]
+			);
+			return;
+		}
 
 		$headers = [
 			'Content-Type: text/html; charset=UTF-8',
@@ -61,16 +126,26 @@ final class Email_Sender {
 		$sent = wp_mail( $email->customer_email, $subject, $body, $headers );
 
 		if ( $sent ) {
-			// Update invitation status.
+			// Mark email as sent.
 			$wpdb->update(
-				$wpdb->prefix . 'wairm_review_invitations',
+				$wpdb->prefix . 'wairm_email_queue',
 				[ 'status' => 'sent', 'sent_at' => current_time( 'mysql', true ) ],
-				[ 'id' => $email->invitation_id ],
+				[ 'id' => $email->id ],
 				[ '%s', '%s' ],
 				[ '%d' ]
 			);
+
+			// Update invitation status to 'sent' only if still 'pending'.
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$wpdb->prefix}wairm_review_invitations
+					 SET status = 'sent', sent_at = %s
+					 WHERE id = %d AND status = 'pending'",
+					current_time( 'mysql', true ),
+					$email->invitation_id
+				)
+			);
 		} else {
-			// Mark as failed.
 			$wpdb->update(
 				$wpdb->prefix . 'wairm_email_queue',
 				[ 'status' => 'failed', 'last_error' => 'wp_mail returned false' ],
@@ -81,16 +156,32 @@ final class Email_Sender {
 		}
 	}
 
+	/**
+	 * Replace {customer_name} and {store_name} placeholders in the email subject.
+	 */
+	private static function resolve_subject_placeholders( object $email ): string {
+		$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) );
+
+		return str_replace(
+			[ '{customer_name}', '{store_name}' ],
+			[ $email->customer_name, get_bloginfo( 'name' ) ],
+			$subject
+		);
+	}
+
 	private static function build_email_body( object $email ): string {
 		$product_ids = json_decode( $email->product_ids, true );
-		$products    = [];
+		if ( ! is_array( $product_ids ) ) {
+			return '';
+		}
+		$products = [];
 
-		foreach ( (array) $product_ids as $product_id ) {
+		foreach ( $product_ids as $product_id ) {
 			$product = wc_get_product( $product_id );
 			if ( $product ) {
 				$products[] = [
-					'name' => $product->get_name(),
-					'url'  => get_permalink( $product_id ),
+					'name'  => $product->get_name(),
+					'url'   => get_permalink( $product_id ),
 					'image' => wp_get_attachment_image_url( $product->get_image_id(), 'thumbnail' ),
 				];
 			}
@@ -104,13 +195,15 @@ final class Email_Sender {
 			get_home_url()
 		);
 
+		$expiry_days = absint( get_option( 'wairm_invitation_expiry_days', 30 ) );
+
 		ob_start();
 		?>
 		<!DOCTYPE html>
 		<html>
 		<head>
 			<meta charset="UTF-8">
-			<title><?php echo esc_html( get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) ) ); ?></title>
+			<title><?php echo esc_html( self::resolve_subject_placeholders( $email ) ); ?></title>
 			<style>
 				body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f9f9f9; }
 				.container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
@@ -159,7 +252,13 @@ final class Email_Sender {
 				</p>
 
 				<p style="font-size: 14px; color: #666;">
-					<?php esc_html_e( 'This review link will expire in 30 days.', 'woo-ai-review-manager' ); ?>
+					<?php
+					printf(
+						/* translators: %d: number of days */
+						esc_html__( 'This review link will expire in %d days.', 'woo-ai-review-manager' ),
+						$expiry_days
+					);
+					?>
 				</p>
 
 				<div class="footer">
@@ -178,7 +277,7 @@ final class Email_Sender {
 	/**
 	 * Shortcode to render a review form for token-based access.
 	 */
-	public static function review_form_shortcode(): string {
+	public function review_form_shortcode(): string {
 		$token = sanitize_text_field( $_GET['wairm_token'] ?? '' );
 		if ( empty( $token ) ) {
 			return '<p>' . esc_html__( 'Invalid or missing review invitation.', 'woo-ai-review-manager' ) . '</p>';
@@ -186,10 +285,11 @@ final class Email_Sender {
 
 		global $wpdb;
 
+		// Accept invitations that are sent or clicked (allow page refreshes).
 		$invitation = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}wairm_review_invitations
-				 WHERE token = %s AND status = 'sent' AND expires_at > %s",
+				 WHERE token = %s AND status IN ('sent', 'clicked') AND expires_at > %s",
 				$token,
 				current_time( 'mysql', true )
 			)
@@ -199,16 +299,22 @@ final class Email_Sender {
 			return '<p>' . esc_html__( 'This review invitation is invalid or has expired.', 'woo-ai-review-manager' ) . '</p>';
 		}
 
-		// Mark as clicked.
-		$wpdb->update(
-			$wpdb->prefix . 'wairm_review_invitations',
-			[ 'status' => 'clicked', 'clicked_at' => current_time( 'mysql', true ) ],
-			[ 'id' => $invitation->id ],
-			[ '%s', '%s' ],
-			[ '%d' ]
-		);
+		// Mark as clicked if still 'sent'.
+		if ( 'sent' === $invitation->status ) {
+			$wpdb->update(
+				$wpdb->prefix . 'wairm_review_invitations',
+				[ 'status' => 'clicked', 'clicked_at' => current_time( 'mysql', true ) ],
+				[ 'id' => $invitation->id ],
+				[ '%s', '%s' ],
+				[ '%d' ]
+			);
+		}
 
 		$product_ids = json_decode( $invitation->product_ids, true );
+		if ( ! is_array( $product_ids ) ) {
+			return '<p>' . esc_html__( 'Invalid invitation data.', 'woo-ai-review-manager' ) . '</p>';
+		}
+
 		ob_start();
 		?>
 		<div class="wairm-review-form">
@@ -219,10 +325,13 @@ final class Email_Sender {
 				<input type="hidden" name="action" value="wairm_submit_review">
 				<input type="hidden" name="invitation_id" value="<?php echo absint( $invitation->id ); ?>">
 				<input type="hidden" name="token" value="<?php echo esc_attr( $token ); ?>">
+				<?php wp_nonce_field( 'wairm_review' ); ?>
 
-				<?php foreach ( (array) $product_ids as $product_id ) :
+				<?php foreach ( $product_ids as $product_id ) :
 					$product = wc_get_product( $product_id );
-					if ( ! $product ) continue;
+					if ( ! $product ) {
+						continue;
+					}
 				?>
 				<div style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
 					<h3><?php echo esc_html( $product->get_name() ); ?></h3>
@@ -259,44 +368,66 @@ final class Email_Sender {
 		<?php
 		return ob_get_clean();
 	}
-}
 
-add_shortcode( 'wairm_review_form', [ Email_Sender::class, 'review_form_shortcode' ] );
+	/**
+	 * Handle review form submission.
+	 */
+	public function handle_form_submission(): void {
+		if ( ! wp_verify_nonce( $_POST['_wpnonce'] ?? '', 'wairm_review' ) ) {
+			wp_die( esc_html__( 'Invalid request.', 'woo-ai-review-manager' ) );
+		}
 
-// Handle form submission.
-add_action( 'admin_post_nopriv_wairm_submit_review', static function (): void {
-	if ( ! wp_verify_nonce( $_POST['_wpnonce'] ?? '', 'wairm_review' ) ) {
-		wp_die( esc_html__( 'Invalid request.', 'woo-ai-review-manager' ) );
-	}
+		global $wpdb;
 
-	global $wpdb;
+		$invitation_id = absint( $_POST['invitation_id'] ?? 0 );
+		$token         = sanitize_text_field( $_POST['token'] ?? '' );
 
-	$invitation_id = absint( $_POST['invitation_id'] ?? 0 );
-	$token         = sanitize_text_field( $_POST['token'] ?? '' );
+		// Verify invitation exists, matches token, and hasn't already been reviewed.
+		$invitation = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}wairm_review_invitations
+				 WHERE id = %d AND token = %s AND status IN ('sent', 'clicked')",
+				$invitation_id,
+				$token
+			)
+		);
 
-	$invitation = $wpdb->get_row(
-		$wpdb->prepare(
-			"SELECT * FROM {$wpdb->prefix}wairm_review_invitations WHERE id = %d AND token = %s",
-			$invitation_id,
-			$token
-		)
-	);
+		if ( ! $invitation ) {
+			wp_die( esc_html__( 'Invalid invitation or reviews already submitted.', 'woo-ai-review-manager' ) );
+		}
 
-	if ( ! $invitation ) {
-		wp_die( esc_html__( 'Invalid invitation.', 'woo-ai-review-manager' ) );
-	}
+		// Process each product review.
+		$product_ids = $_POST['product_ids'] ?? [];
+		$ratings     = $_POST['rating'] ?? [];
+		$reviews     = $_POST['review'] ?? [];
 
-	// Process each product review.
-	$product_ids = $_POST['product_ids'] ?? [];
-	$ratings     = $_POST['rating'] ?? [];
-	$reviews     = $_POST['review'] ?? [];
+		foreach ( (array) $product_ids as $product_id ) {
+			$product_id = absint( $product_id );
+			$rating     = absint( $ratings[ $product_id ] ?? 0 );
+			$content    = sanitize_textarea_field( $reviews[ $product_id ] ?? '' );
 
-	foreach ( (array) $product_ids as $product_id ) {
-		$product_id = absint( $product_id );
-		$rating     = absint( $ratings[ $product_id ] ?? 0 );
-		$content    = sanitize_textarea_field( $reviews[ $product_id ] ?? '' );
+			if ( $rating < 1 || $rating > 5 || empty( $content ) ) {
+				continue;
+			}
 
-		if ( $rating > 0 && $content ) {
+			// Check for duplicate review from this customer for this product.
+			$existing = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT comment_ID FROM {$wpdb->comments}
+					 WHERE comment_post_ID = %d
+					   AND comment_author_email = %s
+					   AND comment_type = %s
+					 LIMIT 1",
+					$product_id,
+					$invitation->customer_email,
+					'review'
+				)
+			);
+
+			if ( $existing ) {
+				continue;
+			}
+
 			$comment_data = [
 				'comment_post_ID'      => $product_id,
 				'comment_author'       => $invitation->customer_name,
@@ -309,26 +440,51 @@ add_action( 'admin_post_nopriv_wairm_submit_review', static function (): void {
 
 			wp_insert_comment( $comment_data );
 		}
+
+		// Mark invitation as reviewed to prevent resubmission.
+		$wpdb->update(
+			$wpdb->prefix . 'wairm_review_invitations',
+			[ 'status' => 'reviewed' ],
+			[ 'id' => $invitation_id ],
+			[ '%s' ],
+			[ '%d' ]
+		);
+
+		// Cancel any pending reminder emails for this invitation.
+		$wpdb->update(
+			$wpdb->prefix . 'wairm_email_queue',
+			[ 'status' => 'cancelled' ],
+			[ 'invitation_id' => $invitation_id, 'status' => 'queued' ],
+			[ '%s' ],
+			[ '%d', '%s' ]
+		);
+
+		$redirect_url = add_query_arg(
+			[
+				'wairm_thank_you' => '1',
+				'_wpnonce'        => wp_create_nonce( 'wairm_thank_you' ),
+			],
+			get_home_url()
+		);
+		wp_safe_redirect( $redirect_url );
+		exit;
 	}
 
-	// Update invitation to reviewed.
-	$wpdb->update(
-		$wpdb->prefix . 'wairm_review_invitations',
-		[ 'status' => 'reviewed' ],
-		[ 'id' => $invitation_id ],
-		[ '%s' ],
-		[ '%d' ]
-	);
-
-	wp_redirect( get_home_url() . '?wairm_thank_you=1' );
-	exit;
-} );
-
-// Thank you page notice.
-add_action( 'wp', static function (): void {
-	if ( isset( $_GET['wairm_thank_you'] ) ) {
-		add_action( 'wp_footer', static function (): void {
-			echo '<script>alert("' . esc_js( __( 'Thank you for your reviews!', 'woo-ai-review-manager' ) ) . '");</script>';
+	/**
+	 * Show thank-you notice on the front page after review submission.
+	 */
+	public function maybe_show_thank_you(): void {
+		if ( ! isset( $_GET['wairm_thank_you'] ) ) {
+			return;
+		}
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'wairm_thank_you' ) ) {
+			return;
+		}
+		add_filter( 'the_content', static function ( string $content ): string {
+			$notice = '<div class="wairm-thank-you" style="padding: 20px; margin: 20px 0; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; text-align: center;">'
+				. '<p style="font-size: 18px; margin: 0;">' . esc_html__( 'Thank you for your reviews! Your feedback helps us improve.', 'woo-ai-review-manager' ) . '</p>'
+				. '</div>';
+			return $notice . $content;
 		} );
 	}
-} );
+}
