@@ -329,21 +329,52 @@ final class Dashboard_Page {
 						<?php endif; ?>
 					</div>
 
+					<?php
+					$text_supported  = \WooAIReviewManager\AI_Client::is_text_supported();
+					$dash_providers  = \WooAIReviewManager\AI_Client::discover_providers();
+					$dash_model_pref = get_option( 'wairm_model_preference', '' );
+					?>
 					<div class="wairm-api-status" style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
 						<h3><?php esc_html_e( 'AI Status', 'woo-ai-review-manager' ); ?></h3>
-						<?php if ( \WooAIReviewManager\AI_Client::is_available() ) : ?>
+						<?php if ( $text_supported ) : ?>
 							<p style="color: #2ecc71;">
-								<strong><?php esc_html_e( 'WordPress AI Client is available.', 'woo-ai-review-manager' ); ?></strong>
+								<strong><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></strong>
 							</p>
-							<p><?php esc_html_e( 'Sentiment analysis and AI response generation are active.', 'woo-ai-review-manager' ); ?></p>
+							<?php if ( ! empty( $dash_providers ) ) : ?>
+								<p>
+									<?php
+									$provider_names = wp_list_pluck( $dash_providers, 'name' );
+									printf(
+										/* translators: %s: comma-separated list of provider names */
+										esc_html__( 'Active connectors: %s', 'woo-ai-review-manager' ),
+										esc_html( implode( ', ', $provider_names ) )
+									);
+									?>
+								</p>
+							<?php endif; ?>
+							<?php if ( ! empty( $dash_model_pref ) ) : ?>
+								<p>
+									<?php
+									printf(
+										/* translators: %s: model ID */
+										esc_html__( 'Preferred model: %s', 'woo-ai-review-manager' ),
+										'<code>' . esc_html( $dash_model_pref ) . '</code>'
+									);
+									?>
+								</p>
+							<?php endif; ?>
+						<?php elseif ( \WooAIReviewManager\AI_Client::is_available() ) : ?>
+							<p style="color: #e74c3c;">
+								<strong><?php esc_html_e( 'No AI connectors configured for text generation.', 'woo-ai-review-manager' ); ?></strong>
+							</p>
+							<a href="<?php echo esc_url( admin_url( 'options-connectors.php' ) ); ?>" class="button button-secondary">
+								<?php esc_html_e( 'Configure AI Connectors', 'woo-ai-review-manager' ); ?>
+							</a>
 						<?php else : ?>
 							<p style="color: #e74c3c;">
 								<strong><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></strong>
 							</p>
-							<p><?php esc_html_e( 'Sentiment analysis and AI responses require the WordPress AI Client and a configured AI provider.', 'woo-ai-review-manager' ); ?></p>
-							<a href="<?php echo esc_url( admin_url( 'options-connectors.php' ) ); ?>" class="button button-secondary">
-								<?php esc_html_e( 'Configure AI Connectors', 'woo-ai-review-manager' ); ?>
-							</a>
+							<p><?php esc_html_e( 'This plugin requires WordPress 7.0 or later.', 'woo-ai-review-manager' ); ?></p>
 						<?php endif; ?>
 					</div>
 				</div>

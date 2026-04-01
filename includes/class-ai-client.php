@@ -18,10 +18,87 @@ defined( 'ABSPATH' ) || exit;
 final class AI_Client {
 
 	/**
-	 * Check whether the WordPress AI Client is available and configured.
+	 * Check whether the WordPress AI Client is available.
 	 */
 	public static function is_available(): bool {
 		return function_exists( 'wp_ai_client_prompt' );
+	}
+
+	/**
+	 * Check whether text generation is actually supported (at least one provider configured).
+	 */
+	public static function is_text_supported(): bool {
+		if ( ! self::is_available() ) {
+			return false;
+		}
+
+		return wp_ai_client_prompt( 'test' )->is_supported_for_text_generation();
+	}
+
+	/**
+	 * Discover available AI providers and their models.
+	 *
+	 * Uses the PHP AI Client's default registry to enumerate providers and models.
+	 * Returns an array keyed by provider ID with name and models list.
+	 *
+	 * @return array<string, array{name: string, models: array<string, string>}>
+	 */
+	public static function discover_providers(): array {
+		if ( ! self::is_available() ) {
+			return [];
+		}
+
+		$providers = [];
+
+		// Try the PHP AI Client registry (WordPress\AiClient\AiClient).
+		if ( class_exists( '\WordPress\AiClient\AiClient' ) ) {
+			try {
+				$registry = \WordPress\AiClient\AiClient::defaultRegistry();
+
+				if ( is_object( $registry ) && method_exists( $registry, 'getProviders' ) ) {
+					foreach ( $registry->getProviders() as $provider ) {
+						$id   = method_exists( $provider, 'getId' ) ? $provider->getId() : (string) $provider;
+						$name = method_exists( $provider, 'getName' ) ? $provider->getName() : ucfirst( $id );
+
+						$models = [];
+						if ( method_exists( $provider, 'getModels' ) ) {
+							foreach ( $provider->getModels() as $model ) {
+								$model_id   = method_exists( $model, 'getId' ) ? $model->getId() : (string) $model;
+								$model_name = method_exists( $model, 'getName' ) ? $model->getName() : $model_id;
+								$models[ $model_id ] = $model_name;
+							}
+						}
+
+						if ( ! empty( $models ) ) {
+							$providers[ $id ] = [
+								'name'   => $name,
+								'models' => $models,
+							];
+						}
+					}
+				}
+			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+				// Registry not available or method signatures differ — fall through.
+			}
+		}
+
+		return $providers;
+	}
+
+	/**
+	 * Apply the saved model preference to a prompt builder.
+	 *
+	 * @param \WP_AI_Client_Prompt_Builder $builder The prompt builder instance.
+	 * @return \WP_AI_Client_Prompt_Builder
+	 */
+	private static function apply_model_preference( $builder ) {
+		$preference = get_option( 'wairm_model_preference', '' );
+
+		if ( ! empty( $preference ) ) {
+			$builder->using_model_preference( $preference );
+		}
+
+		return $builder;
 	}
 
 	/**
@@ -67,12 +144,13 @@ final class AI_Client {
 			'- key_phrases: extract 1-5 notable phrases from the review in the review\'s original language',
 		] );
 
-		$result = wp_ai_client_prompt( $prompt )
+		$builder = wp_ai_client_prompt( $prompt )
 			->using_system_instruction( $system )
 			->using_temperature( 0.3 )
 			->using_max_tokens( 500 )
-			->as_json_response( $schema )
-			->generate_text();
+			->as_json_response( $schema );
+
+		$result = self::apply_model_preference( $builder )->generate_text();
 
 		if ( is_wp_error( $result ) ) {
 			throw new \RuntimeException( 'AI sentiment analysis failed: ' . $result->get_error_message() );
@@ -119,11 +197,12 @@ PROMPT;
 			'- Do not start with a generic thank-you opener',
 		] );
 
-		$result = wp_ai_client_prompt( $prompt )
+		$builder = wp_ai_client_prompt( $prompt )
 			->using_system_instruction( $system )
 			->using_temperature( 0.7 )
-			->using_max_tokens( 500 )
-			->generate_text();
+			->using_max_tokens( 500 );
+
+		$result = self::apply_model_preference( $builder )->generate_text();
 
 		if ( is_wp_error( $result ) ) {
 			throw new \RuntimeException( 'AI response generation failed: ' . $result->get_error_message() );

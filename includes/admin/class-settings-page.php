@@ -39,6 +39,11 @@ final class Settings_Page {
 		register_setting( 'wairm_settings', 'wairm_auto_analyze' );
 		register_setting( 'wairm_settings', 'wairm_auto_respond_positive' );
 		register_setting( 'wairm_settings', 'wairm_negative_threshold' );
+		register_setting( 'wairm_settings', 'wairm_model_preference', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
 	}
 
 	public function render_page(): void {
@@ -63,34 +68,113 @@ final class Settings_Page {
 				<?php settings_fields( 'wairm_settings' ); ?>
 
 				<?php if ( 'api' === $active_tab ) : ?>
+					<?php
+					$ai_available    = \WooAIReviewManager\AI_Client::is_available();
+					$text_supported  = \WooAIReviewManager\AI_Client::is_text_supported();
+					$providers       = \WooAIReviewManager\AI_Client::discover_providers();
+					$saved_model     = get_option( 'wairm_model_preference', '' );
+					?>
 					<h2><?php esc_html_e( 'AI Configuration', 'woo-ai-review-manager' ); ?></h2>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<?php esc_html_e( 'AI Provider', 'woo-ai-review-manager' ); ?>
+								<?php esc_html_e( 'AI Status', 'woo-ai-review-manager' ); ?>
 							</th>
 							<td>
-								<?php if ( \WooAIReviewManager\AI_Client::is_available() ) : ?>
-									<p style="color: #2ecc71;">
-										<strong><?php esc_html_e( 'WordPress AI Client is available.', 'woo-ai-review-manager' ); ?></strong>
-									</p>
-								<?php else : ?>
+								<?php if ( ! $ai_available ) : ?>
 									<p style="color: #e74c3c;">
 										<strong><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></strong>
 									</p>
+									<p class="description">
+										<?php esc_html_e( 'This plugin requires WordPress 7.0 or later with the AI Client API.', 'woo-ai-review-manager' ); ?>
+									</p>
+								<?php elseif ( ! $text_supported ) : ?>
+									<p style="color: #e74c3c;">
+										<strong><?php esc_html_e( 'No AI connectors are configured for text generation.', 'woo-ai-review-manager' ); ?></strong>
+									</p>
+									<p class="description">
+										<?php printf(
+											/* translators: %s: link to Connectors settings */
+											esc_html__( 'Install and activate at least one AI provider connector in %s.', 'woo-ai-review-manager' ),
+											'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
+										); ?>
+									</p>
+								<?php else : ?>
+									<p style="color: #2ecc71;">
+										<strong><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></strong>
+									</p>
 								<?php endif; ?>
+							</td>
+						</tr>
+
+						<?php if ( $ai_available && ! empty( $providers ) ) : ?>
+						<tr>
+							<th scope="row">
+								<?php esc_html_e( 'Active Connectors', 'woo-ai-review-manager' ); ?>
+							</th>
+							<td>
+								<ul style="margin: 0;">
+									<?php foreach ( $providers as $provider_id => $provider_data ) : ?>
+										<li>
+											<strong><?php echo esc_html( $provider_data['name'] ); ?></strong>
+											<span style="color: #888;">&mdash;
+												<?php
+												printf(
+													/* translators: %d: number of models */
+													esc_html( _n( '%d model', '%d models', count( $provider_data['models'] ), 'woo-ai-review-manager' ) ),
+													count( $provider_data['models'] )
+												);
+												?>
+											</span>
+										</li>
+									<?php endforeach; ?>
+								</ul>
 								<p class="description">
 									<?php printf(
 										/* translators: %s: link to Connectors settings */
-										esc_html__( 'AI connectors are managed through %s. Install and configure your preferred AI provider (Anthropic, Google, OpenAI, or others) there.', 'woo-ai-review-manager' ),
+										esc_html__( 'Manage connectors in %s.', 'woo-ai-review-manager' ),
 										'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
 									); ?>
 								</p>
+							</td>
+						</tr>
+
+						<tr>
+							<th scope="row">
+								<label for="wairm_model_preference"><?php esc_html_e( 'Preferred Model', 'woo-ai-review-manager' ); ?></label>
+							</th>
+							<td>
+								<select id="wairm_model_preference" name="wairm_model_preference">
+									<option value=""><?php esc_html_e( 'Automatic (first available)', 'woo-ai-review-manager' ); ?></option>
+									<?php foreach ( $providers as $provider_id => $provider_data ) : ?>
+										<optgroup label="<?php echo esc_attr( $provider_data['name'] ); ?>">
+											<?php foreach ( $provider_data['models'] as $model_id => $model_name ) : ?>
+												<option value="<?php echo esc_attr( $model_id ); ?>" <?php selected( $saved_model, $model_id ); ?>>
+													<?php echo esc_html( $model_name ); ?>
+												</option>
+											<?php endforeach; ?>
+										</optgroup>
+									<?php endforeach; ?>
+								</select>
 								<p class="description">
-									<?php esc_html_e( 'This plugin uses the WordPress AI Client API and works with any AI provider configured on your site.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Choose a specific model or leave on "Automatic" to let WordPress pick the best available model.', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>
+						<?php elseif ( $ai_available && $text_supported ) : ?>
+						<tr>
+							<th scope="row">
+								<label for="wairm_model_preference"><?php esc_html_e( 'Preferred Model', 'woo-ai-review-manager' ); ?></label>
+							</th>
+							<td>
+								<input type="text" id="wairm_model_preference" name="wairm_model_preference" value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g. claude-sonnet-4-6', 'woo-ai-review-manager' ); ?>" />
+								<p class="description">
+									<?php esc_html_e( 'Enter a model ID or leave empty for automatic selection. Examples: claude-sonnet-4-6, gemini-3.1-pro-preview, gpt-5.4', 'woo-ai-review-manager' ); ?>
+								</p>
+							</td>
+						</tr>
+						<?php endif; ?>
+
 						<tr>
 							<th scope="row">
 								<label for="wairm_negative_threshold"><?php esc_html_e( 'Negative Sentiment Threshold', 'woo-ai-review-manager' ); ?></label>
