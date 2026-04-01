@@ -156,16 +156,15 @@ final class AI_Client {
 		$positive_threshold = max( $negative_threshold + 0.30, 0.65 );
 
 		$schema = [
-			'type'       => 'object',
-			'properties' => [
+			'type'                 => 'object',
+			'additionalProperties' => false,
+			'properties'           => [
 				'sentiment'   => [
 					'type' => 'string',
 					'enum' => [ 'positive', 'neutral', 'negative' ],
 				],
 				'score'       => [
 					'type'        => 'number',
-					'minimum'     => 0.0,
-					'maximum'     => 1.0,
 					'description' => sprintf(
 						'Sentiment score: 0.0 (most negative) to 1.0 (most positive). >= %.2f = positive, %.2f-%.2f = neutral, < %.2f = negative.',
 						$positive_threshold,
@@ -175,13 +174,11 @@ final class AI_Client {
 					),
 				],
 				'key_phrases' => [
-					'type'     => 'array',
-					'items'    => [ 'type' => 'string' ],
-					'minItems' => 1,
-					'maxItems' => 5,
+					'type'  => 'array',
+					'items' => [ 'type' => 'string' ],
 				],
 			],
-			'required'   => [ 'sentiment', 'score', 'key_phrases' ],
+			'required'             => [ 'sentiment', 'score', 'key_phrases' ],
 		];
 
 		$system = implode( "\n", [
