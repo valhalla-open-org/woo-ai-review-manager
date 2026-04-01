@@ -68,7 +68,13 @@ final class Responses_Page {
 					'updated'          => __( 'Response updated.', 'woo-ai-review-manager' ),
 					'regenerating'     => __( 'Regenerating...', 'woo-ai-review-manager' ),
 					'regenerated'      => __( 'New suggestion generated.', 'woo-ai-review-manager' ),
+					'regenerate'       => __( 'Regenerate', 'woo-ai-review-manager' ),
 					'error'            => __( 'Something went wrong. Please try again.', 'woo-ai-review-manager' ),
+					'empty_response'   => __( 'Response text cannot be empty.', 'woo-ai-review-manager' ),
+					'status_approved'  => __( 'Approved', 'woo-ai-review-manager' ),
+					'status_dismissed' => __( 'Dismissed', 'woo-ai-review-manager' ),
+					'status_posted'    => __( 'Posted', 'woo-ai-review-manager' ),
+					'status_new'       => __( 'New', 'woo-ai-review-manager' ),
 				],
 			]
 		);
@@ -81,7 +87,7 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => 'Permission denied.' ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -92,7 +98,7 @@ final class Responses_Page {
 
 		$valid_actions = [ 'approved', 'dismissed' ];
 		if ( ! $id || ! in_array( $action, $valid_actions, true ) ) {
-			wp_send_json_error( [ 'message' => 'Invalid request.' ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
 		$update = [ 'ai_response_status' => $action ];
@@ -121,7 +127,7 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => 'Permission denied.' ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -130,7 +136,7 @@ final class Responses_Page {
 		$text = sanitize_textarea_field( wp_unslash( $_POST['response_text'] ?? '' ) );
 
 		if ( ! $id || empty( $text ) ) {
-			wp_send_json_error( [ 'message' => 'Invalid request.' ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
 		$row = $wpdb->get_row(
@@ -141,7 +147,7 @@ final class Responses_Page {
 		);
 
 		if ( ! $row ) {
-			wp_send_json_error( [ 'message' => 'Sentiment record not found.' ] );
+			wp_send_json_error( [ 'message' => __( 'Sentiment record not found.', 'woo-ai-review-manager' ) ] );
 		}
 
 		$current_user = wp_get_current_user();
@@ -158,7 +164,7 @@ final class Responses_Page {
 		] );
 
 		if ( ! $comment_id ) {
-			wp_send_json_error( [ 'message' => 'Failed to post reply.' ] );
+			wp_send_json_error( [ 'message' => __( 'Failed to post reply.', 'woo-ai-review-manager' ) ] );
 		}
 
 		$wpdb->update(
@@ -182,18 +188,18 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => 'Permission denied.' ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
 		if ( ! \WooAIReviewManager\AI_Client::is_available() ) {
-			wp_send_json_error( [ 'message' => 'AI Client is not available.' ] );
+			wp_send_json_error( [ 'message' => __( 'AI Client is not available.', 'woo-ai-review-manager' ) ] );
 		}
 
 		global $wpdb;
 
 		$id = absint( $_POST['sentiment_id'] ?? 0 );
 		if ( ! $id ) {
-			wp_send_json_error( [ 'message' => 'Invalid request.' ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
 		$row = $wpdb->get_row(
@@ -207,7 +213,7 @@ final class Responses_Page {
 		);
 
 		if ( ! $row ) {
-			wp_send_json_error( [ 'message' => 'Not found.' ] );
+			wp_send_json_error( [ 'message' => __( 'Not found.', 'woo-ai-review-manager' ) ] );
 		}
 
 		$product      = wc_get_product( (int) $row->product_id );

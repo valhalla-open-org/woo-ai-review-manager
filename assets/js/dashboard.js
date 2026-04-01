@@ -8,11 +8,13 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		var chartData = wairm.chart;
 		var hasData   = chartData.positive + chartData.neutral + chartData.negative > 0;
 
+		var i18nChart = wairm.i18n;
+
 		if ( hasData ) {
 			new Chart( canvas.getContext( '2d' ), {
 				type: 'pie',
 				data: {
-					labels: [ 'Positive', 'Neutral', 'Negative' ],
+					labels: [ i18nChart.chart_positive, i18nChart.chart_neutral, i18nChart.chart_negative ],
 					datasets: [ {
 						data: [ chartData.positive, chartData.neutral, chartData.negative ],
 						backgroundColor: [ '#2ecc71', '#f39c12', '#e74c3c' ]
@@ -26,7 +28,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				}
 			} );
 		} else {
-			canvas.parentNode.innerHTML = '<p style="color: #888; text-align: center;">No sentiment data yet. Analyze some reviews to see the chart.</p>';
+			canvas.parentNode.innerHTML = '<p style="color: #888; text-align: center;">' + i18nChart.no_chart_data + '</p>';
 		}
 	}
 

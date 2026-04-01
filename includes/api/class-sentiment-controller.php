@@ -48,7 +48,7 @@ final class Sentiment_Controller {
 		$product = wc_get_product( $product_id );
 		if ( ! $product ) {
 			return new \WP_REST_Response(
-				[ 'code' => 'not_found', 'message' => 'Product not found.' ],
+				[ 'code' => 'not_found', 'message' => __( 'Product not found.', 'woo-ai-review-manager' ) ],
 				404
 			);
 		}

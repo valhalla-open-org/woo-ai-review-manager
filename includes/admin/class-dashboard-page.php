@@ -83,6 +83,10 @@ final class Dashboard_Page {
 					'complete'        => __( 'All done! Reloading...', 'woo-ai-review-manager' ),
 					'nothing'         => __( 'No unanalyzed reviews found.', 'woo-ai-review-manager' ),
 					'error'           => __( 'An error occurred. Please try again.', 'woo-ai-review-manager' ),
+					'chart_positive'  => __( 'Positive', 'woo-ai-review-manager' ),
+					'chart_neutral'   => __( 'Neutral', 'woo-ai-review-manager' ),
+					'chart_negative'  => __( 'Negative', 'woo-ai-review-manager' ),
+					'no_chart_data'   => __( 'No sentiment data yet. Analyze some reviews to see the chart.', 'woo-ai-review-manager' ),
 				],
 			]
 		);

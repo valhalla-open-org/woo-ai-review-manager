@@ -60,7 +60,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				enableCard( card );
 				if ( data.success ) {
 					card.dataset.status = 'approved';
-					card.querySelector( '.wairm-response-status' ).textContent = 'Approved';
+					card.querySelector( '.wairm-response-status' ).textContent = i18n.status_approved;
 					card.querySelector( '.wairm-response-status' ).className = 'wairm-response-status status-approved';
 					showNotice( card, i18n.updated );
 				} else {
@@ -88,7 +88,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				if ( data.success ) {
 					card.style.opacity = '0.5';
 					card.dataset.status = 'dismissed';
-					card.querySelector( '.wairm-response-status' ).textContent = 'Dismissed';
+					card.querySelector( '.wairm-response-status' ).textContent = i18n.status_dismissed;
 					card.querySelector( '.wairm-response-status' ).className = 'wairm-response-status status-dismissed';
 					// Remove Post/Approve/Dismiss buttons but keep Regenerate.
 					var actions = card.querySelector( '.wairm-response-actions' );
@@ -114,7 +114,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			var text = card.querySelector( '.wairm-response-text' ).value;
 
 			if ( ! text.trim() ) {
-				showNotice( card, 'Response text cannot be empty.', 'error' );
+				showNotice( card, i18n.empty_response, 'error' );
 				return;
 			}
 
@@ -127,7 +127,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			}, function ( data ) {
 				if ( data.success ) {
 					card.dataset.status = 'sent';
-					card.querySelector( '.wairm-response-status' ).textContent = 'Posted';
+					card.querySelector( '.wairm-response-status' ).textContent = i18n.status_posted;
 					card.querySelector( '.wairm-response-status' ).className = 'wairm-response-status status-sent';
 					card.querySelector( '.wairm-response-text' ).readOnly = true;
 					card.querySelector( '.wairm-response-actions' ).innerHTML =
@@ -152,11 +152,11 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				sentiment_id: card.dataset.id
 			}, function ( data ) {
 				enableCard( card );
-				btn.textContent = 'Regenerate';
+				btn.textContent = i18n.regenerate;
 				if ( data.success && data.data.suggestion ) {
 					card.querySelector( '.wairm-response-text' ).value = data.data.suggestion;
 					card.dataset.status = 'generated';
-					card.querySelector( '.wairm-response-status' ).textContent = 'New';
+					card.querySelector( '.wairm-response-status' ).textContent = i18n.status_new;
 					card.querySelector( '.wairm-response-status' ).className = 'wairm-response-status status-generated';
 					showNotice( card, i18n.regenerated );
 				} else {
