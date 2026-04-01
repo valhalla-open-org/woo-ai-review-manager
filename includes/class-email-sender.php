@@ -638,6 +638,8 @@ final class Email_Sender {
 		$ratings     = $_POST['rating'] ?? [];
 		$reviews     = $_POST['review'] ?? [];
 
+		$new_comment_ids = [];
+
 		foreach ( (array) $product_ids as $product_id ) {
 			$product_id = absint( $product_id );
 			$rating     = absint( $ratings[ $product_id ] ?? 0 );
@@ -678,6 +680,7 @@ final class Email_Sender {
 
 			if ( $new_comment_id ) {
 				update_comment_meta( $new_comment_id, 'rating', $rating );
+				$new_comment_ids[] = $new_comment_id;
 			}
 		}
 
@@ -689,6 +692,13 @@ final class Email_Sender {
 			[ '%s' ],
 			[ '%d' ]
 		);
+
+		// Analyze reviews synchronously — Action Scheduler depends on WP cron
+		// which is unreliable on low-traffic sites. analyze_review() has its own
+		// duplicate check so this is safe even if AS also processes the job.
+		foreach ( $new_comment_ids as $cid ) {
+			do_action( 'wairm_analyze_single_review', $cid );
+		}
 
 		// Cancel any pending reminder emails for this invitation.
 		$wpdb->update(
