@@ -249,7 +249,7 @@ final class Dashboard_Page {
 								<div class="review-excerpt"><?php echo esc_html( wp_trim_words( $review->comment_content, 30 ) ); ?></div>
 								<div class="review-meta">
 									<span class="review-author"><?php echo esc_html( $review->comment_author ); ?></span>
-									<span class="review-score"><?php esc_html_e( 'Score:', 'woo-ai-review-manager' ); ?> <?php echo esc_html( number_format( $review->score, 2 ) ); ?></span>
+									<span class="review-score"><?php esc_html_e( 'Score:', 'woo-ai-review-manager' ); ?> <?php echo esc_html( number_format( (float) $review->score, 2 ) ); ?></span>
 									<?php if ( $review->ai_response_suggestion && 'sent' !== $review->ai_response_status ) : ?>
 										<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses&status=actionable' ) ); ?>" class="button button-small">
 											<?php esc_html_e( 'Respond', 'woo-ai-review-manager' ); ?>
@@ -283,7 +283,7 @@ final class Dashboard_Page {
 									<td><?php echo esc_html( $product->product_name ); ?></td>
 									<td><?php echo absint( $product->review_count ); ?></td>
 									<td>
-										<?php echo esc_html( number_format( $product->avg_score, 2 ) ); ?>
+										<?php echo esc_html( number_format( (float) $product->avg_score, 2 ) ); ?>
 										<span class="score-bar" style="display: inline-block; width: 50px; height: 6px; background: #e0e0e0; margin-left: 10px; vertical-align: middle;">
 											<span style="display: block; width: <?php echo esc_attr( $product->avg_score * 100 ); ?>%; height: 100%; background: <?php echo $product->avg_score > 0.65 ? '#2ecc71' : ( $product->avg_score > 0.35 ? '#f39c12' : '#e74c3c' ); ?>;"></span>
 										</span>
