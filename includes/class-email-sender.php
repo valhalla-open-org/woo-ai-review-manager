@@ -29,7 +29,8 @@ final class Email_Sender {
 	 * page setup is needed.
 	 */
 	public function intercept_review_token(): void {
-		if ( empty( $_GET['wairm_token'] ) || ( $_GET['action'] ?? '' ) !== 'review' ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public token-based URL, no nonce available.
+		if ( empty( $_GET['wairm_token'] ) || sanitize_key( wp_unslash( $_GET['action'] ?? '' ) ) !== 'review' ) {
 			return;
 		}
 
@@ -92,8 +93,22 @@ final class Email_Sender {
 		}
 	}
 
+	private const MAX_EMAIL_ATTEMPTS = 3;
+
 	private static function send_email( object $email ): void {
 		global $wpdb;
+
+		// Skip emails that have exceeded retry limit.
+		if ( (int) $email->attempts >= self::MAX_EMAIL_ATTEMPTS ) {
+			$wpdb->update(
+				$wpdb->prefix . 'wairm_email_queue',
+				[ 'status' => 'failed', 'last_error' => 'Max retry attempts exceeded' ],
+				[ 'id' => $email->id ],
+				[ '%s', '%s' ],
+				[ '%d' ]
+			);
+			return;
+		}
 
 		// Increment attempts before trying.
 		$wpdb->query(
@@ -278,7 +293,8 @@ final class Email_Sender {
 	 * Shortcode to render a review form for token-based access.
 	 */
 	public function review_form_shortcode(): string {
-		$token = sanitize_text_field( $_GET['wairm_token'] ?? '' );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public token-based URL, no nonce available.
+		$token = sanitize_text_field( wp_unslash( $_GET['wairm_token'] ?? '' ) );
 		if ( empty( $token ) ) {
 			return '<p>' . esc_html__( 'Invalid or missing review invitation.', 'woo-ai-review-manager' ) . '</p>';
 		}
@@ -435,10 +451,13 @@ final class Email_Sender {
 				'comment_content'      => $content,
 				'comment_type'         => 'review',
 				'comment_approved'     => 1,
-				'comment_meta'         => [ 'rating' => $rating ],
 			];
 
-			wp_insert_comment( $comment_data );
+			$new_comment_id = wp_insert_comment( $comment_data );
+
+			if ( $new_comment_id ) {
+				update_comment_meta( $new_comment_id, 'rating', $rating );
+			}
 		}
 
 		// Mark invitation as reviewed to prevent resubmission.

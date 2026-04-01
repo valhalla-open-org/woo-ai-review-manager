@@ -30,20 +30,71 @@ final class Settings_Page {
 	}
 
 	public function register_settings(): void {
-		register_setting( 'wairm_settings', 'wairm_invitation_delay_days' );
-		register_setting( 'wairm_settings', 'wairm_reminder_enabled' );
-		register_setting( 'wairm_settings', 'wairm_reminder_delay_days' );
-		register_setting( 'wairm_settings', 'wairm_invitation_expiry_days' );
-		register_setting( 'wairm_settings', 'wairm_email_from_name' );
-		register_setting( 'wairm_settings', 'wairm_email_subject' );
-		register_setting( 'wairm_settings', 'wairm_auto_analyze' );
-		register_setting( 'wairm_settings', 'wairm_auto_respond_positive' );
-		register_setting( 'wairm_settings', 'wairm_negative_threshold' );
+		register_setting( 'wairm_settings', 'wairm_invitation_delay_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 7,
+		] );
+		register_setting( 'wairm_settings', 'wairm_reminder_enabled', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'yes',
+		] );
+		register_setting( 'wairm_settings', 'wairm_reminder_delay_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 14,
+		] );
+		register_setting( 'wairm_settings', 'wairm_invitation_expiry_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 30,
+		] );
+		register_setting( 'wairm_settings', 'wairm_email_from_name', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
+		register_setting( 'wairm_settings', 'wairm_email_subject', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
+		register_setting( 'wairm_settings', 'wairm_auto_analyze', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'yes',
+		] );
+		register_setting( 'wairm_settings', 'wairm_auto_respond_positive', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'no',
+		] );
+		register_setting( 'wairm_settings', 'wairm_negative_threshold', [
+			'type'              => 'number',
+			'sanitize_callback' => [ $this, 'sanitize_threshold' ],
+			'default'           => 0.30,
+		] );
 		register_setting( 'wairm_settings', 'wairm_model_preference', [
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 			'default'           => '',
 		] );
+	}
+
+	/**
+	 * Sanitize a yes/no checkbox value.
+	 */
+	public function sanitize_yes_no( $value ): string {
+		return 'yes' === $value ? 'yes' : 'no';
+	}
+
+	/**
+	 * Sanitize the negative sentiment threshold (0.0 to 1.0).
+	 */
+	public function sanitize_threshold( $value ): float {
+		$value = (float) $value;
+		return max( 0.0, min( 1.0, $value ) );
 	}
 
 	public function render_page(): void {
