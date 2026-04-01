@@ -412,7 +412,7 @@ final class Responses_Page {
 								?>
 							</span>
 							<span class="wairm-response-meta">
-								<?php echo esc_html( $row->product_name ); ?>
+								<a href="<?php echo esc_url( get_permalink( (int) $row->product_id ) ); ?>" target="_blank"><?php echo esc_html( $row->product_name ); ?></a>
 								&middot;
 								<?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $row->comment_date ) ) ); ?>
 								&middot;
