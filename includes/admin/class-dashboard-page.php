@@ -98,6 +98,10 @@ final class Dashboard_Page {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
+		if ( ! \WooAIReviewManager\AI_Client::is_available() ) {
+			wp_send_json_error( [ 'message' => __( 'AI Client is not available. Please configure AI credentials first.', 'woo-ai-review-manager' ) ] );
+		}
+
 		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 10 );
 
 		wp_send_json_success( $result );

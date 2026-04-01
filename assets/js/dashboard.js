@@ -5,26 +5,29 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	// Sentiment pie chart.
 	var canvas = document.getElementById( 'wairm-sentiment-chart' );
 	if ( canvas && typeof Chart !== 'undefined' && wairm.chart ) {
-		new Chart( canvas.getContext( '2d' ), {
-			type: 'pie',
-			data: {
-				labels: [ 'Positive', 'Neutral', 'Negative' ],
-				datasets: [ {
-					data: [
-						wairm.chart.positive,
-						wairm.chart.neutral,
-						wairm.chart.negative
-					],
-					backgroundColor: [ '#2ecc71', '#f39c12', '#e74c3c' ]
-				} ]
-			},
-			options: {
-				responsive: true,
-				plugins: {
-					legend: { position: 'bottom' }
+		var chartData = wairm.chart;
+		var hasData   = chartData.positive + chartData.neutral + chartData.negative > 0;
+
+		if ( hasData ) {
+			new Chart( canvas.getContext( '2d' ), {
+				type: 'pie',
+				data: {
+					labels: [ 'Positive', 'Neutral', 'Negative' ],
+					datasets: [ {
+						data: [ chartData.positive, chartData.neutral, chartData.negative ],
+						backgroundColor: [ '#2ecc71', '#f39c12', '#e74c3c' ]
+					} ]
+				},
+				options: {
+					responsive: true,
+					plugins: {
+						legend: { position: 'bottom' }
+					}
 				}
-			}
-		} );
+			} );
+		} else {
+			canvas.parentNode.innerHTML = '<p style="color: #888; text-align: center;">No sentiment data yet. Analyze some reviews to see the chart.</p>';
+		}
 	}
 
 	// Analyze old reviews with batch processing and progress bar.
@@ -77,8 +80,17 @@ document.addEventListener( 'DOMContentLoaded', function () {
 						}
 
 						var result = data.data;
-						processed += ( result.processed || 0 ) + ( result.failed || 0 );
+						var batchProcessed = ( result.processed || 0 );
+						processed += batchProcessed + ( result.failed || 0 );
 						updateProgress();
+
+						// Stop if nothing was actually analyzed (prevents infinite loop).
+						if ( batchProcessed === 0 && result.remaining > 0 ) {
+							/* eslint-disable-next-line no-alert */
+							alert( i18n.error );
+							resetButton();
+							return;
+						}
 
 						if ( result.remaining > 0 ) {
 							runBatch();

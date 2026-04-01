@@ -87,9 +87,14 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			}, function ( data ) {
 				if ( data.success ) {
 					card.style.opacity = '0.5';
+					card.dataset.status = 'dismissed';
 					card.querySelector( '.wairm-response-status' ).textContent = 'Dismissed';
 					card.querySelector( '.wairm-response-status' ).className = 'wairm-response-status status-dismissed';
-					card.querySelector( '.wairm-response-actions' ).innerHTML = '';
+					// Remove Post/Approve/Dismiss buttons but keep Regenerate.
+					var actions = card.querySelector( '.wairm-response-actions' );
+					actions.querySelectorAll( '.wairm-action-post, .wairm-action-approve, .wairm-action-dismiss' ).forEach( function ( b ) { b.remove(); } );
+					var existing = actions.querySelector( '.wairm-inline-notice' );
+					if ( existing ) { existing.remove(); }
 				} else {
 					enableCard( card );
 					showNotice( card, i18n.error, 'error' );
