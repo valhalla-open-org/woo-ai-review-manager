@@ -168,16 +168,20 @@ final class Responses_Page {
 		}
 
 		$current_user = wp_get_current_user();
+		$reply_name   = get_option( 'wairm_email_from_name', '' );
+		if ( empty( $reply_name ) ) {
+			$reply_name = get_bloginfo( 'name' );
+		}
 
 		$comment_id = wp_insert_comment( [
-			'comment_post_ID' => (int) $row->product_id,
-			'comment_parent'  => (int) $row->comment_id,
-			'comment_content' => $text,
-			'comment_type'    => 'comment',
+			'comment_post_ID'  => (int) $row->product_id,
+			'comment_parent'   => (int) $row->comment_id,
+			'comment_content'  => $text,
+			'comment_type'     => 'comment',
 			'comment_approved' => 1,
-			'user_id'         => $current_user->ID,
-			'comment_author'  => $current_user->display_name,
-			'comment_author_email' => $current_user->user_email,
+			'user_id'          => $current_user->ID,
+			'comment_author'   => $reply_name,
+			'comment_author_email' => get_option( 'admin_email' ),
 		] );
 
 		if ( ! $comment_id ) {
