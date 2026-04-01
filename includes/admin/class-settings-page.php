@@ -30,55 +30,60 @@ final class Settings_Page {
 	}
 
 	public function register_settings(): void {
-		register_setting( 'wairm_settings', 'wairm_invitation_delay_days', [
-			'type'              => 'integer',
-			'sanitize_callback' => 'absint',
-			'default'           => 7,
-		] );
-		register_setting( 'wairm_settings', 'wairm_reminder_enabled', [
-			'type'              => 'string',
-			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
-			'default'           => 'yes',
-		] );
-		register_setting( 'wairm_settings', 'wairm_reminder_delay_days', [
-			'type'              => 'integer',
-			'sanitize_callback' => 'absint',
-			'default'           => 14,
-		] );
-		register_setting( 'wairm_settings', 'wairm_invitation_expiry_days', [
-			'type'              => 'integer',
-			'sanitize_callback' => 'absint',
-			'default'           => 30,
-		] );
-		register_setting( 'wairm_settings', 'wairm_email_from_name', [
-			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-			'default'           => '',
-		] );
-		register_setting( 'wairm_settings', 'wairm_email_subject', [
-			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-			'default'           => '',
-		] );
-		register_setting( 'wairm_settings', 'wairm_auto_analyze', [
-			'type'              => 'string',
-			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
-			'default'           => 'yes',
-		] );
-		register_setting( 'wairm_settings', 'wairm_auto_respond_positive', [
-			'type'              => 'string',
-			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
-			'default'           => 'no',
-		] );
-		register_setting( 'wairm_settings', 'wairm_negative_threshold', [
+		// API tab settings.
+		register_setting( 'wairm_settings_api', 'wairm_negative_threshold', [
 			'type'              => 'number',
 			'sanitize_callback' => [ $this, 'sanitize_threshold' ],
 			'default'           => 0.30,
 		] );
-		register_setting( 'wairm_settings', 'wairm_model_preference', [
+		register_setting( 'wairm_settings_api', 'wairm_model_preference', [
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
 			'default'           => '',
+		] );
+
+		// Email tab settings.
+		register_setting( 'wairm_settings_email', 'wairm_invitation_delay_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 7,
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_reminder_enabled', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'yes',
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_reminder_delay_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 14,
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_invitation_expiry_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 30,
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_email_from_name', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_email_subject', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
+
+		// General tab settings.
+		register_setting( 'wairm_settings_general', 'wairm_auto_analyze', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'yes',
+		] );
+		register_setting( 'wairm_settings_general', 'wairm_auto_respond_positive', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'no',
 		] );
 	}
 
@@ -116,7 +121,14 @@ final class Settings_Page {
 			</nav>
 
 			<form method="post" action="options.php" class="wairm-settings-form">
-				<?php settings_fields( 'wairm_settings' ); ?>
+				<?php
+				$settings_group = match ( $active_tab ) {
+					'email'   => 'wairm_settings_email',
+					'general' => 'wairm_settings_general',
+					default   => 'wairm_settings_api',
+				};
+				settings_fields( $settings_group );
+				?>
 
 				<?php if ( 'api' === $active_tab ) : ?>
 					<?php

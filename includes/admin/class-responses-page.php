@@ -328,7 +328,8 @@ final class Responses_Page {
 		$base_url    = admin_url( 'admin.php?page=wairm-responses' );
 		?>
 		<div class="wrap wairm-responses">
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'AI Response Suggestions', 'woo-ai-review-manager' ); ?></h1>
+			<h1><?php esc_html_e( 'AI Response Suggestions', 'woo-ai-review-manager' ); ?></h1>
+			<hr class="wp-header-end">
 
 			<ul class="subsubsub">
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'actionable', $base_url ) ); ?>" class="<?php echo 'actionable' === $filter ? 'current' : ''; ?>">
