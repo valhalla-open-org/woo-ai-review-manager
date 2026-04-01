@@ -171,9 +171,8 @@ final class Review_Collector {
 		}
 
 		// Queue for async sentiment analysis via Action Scheduler (bundled with WooCommerce).
-		if ( function_exists( 'as_schedule_single_action' ) ) {
-			as_schedule_single_action(
-				time(),
+		if ( function_exists( 'as_enqueue_async_action' ) ) {
+			as_enqueue_async_action(
 				'wairm_analyze_single_review',
 				[ 'comment_id' => $comment_id ],
 				'wairm'
