@@ -109,7 +109,7 @@ PROMPT;
 
 		$system = implode( "\n", [
 			"Tone: {$tone_guidance}",
-			"Language: Respond in {$language}. Match the language of the review.",
+			"Language: Always respond in {$language}.",
 			'Rules:',
 			'- 2-4 sentences max',
 			'- Sound human, not like a template',
@@ -169,7 +169,18 @@ PROMPT;
 
 		$prefix = strtolower( substr( $locale, 0, 2 ) );
 
-		return $map[ $prefix ] ?? 'the same language as the review';
+		if ( isset( $map[ $prefix ] ) ) {
+			return $map[ $prefix ];
+		}
+
+		// Fall back to the native language name from WordPress translations.
+		$translations = wp_get_available_translations();
+		if ( isset( $translations[ $locale ]['english_name'] ) ) {
+			return $translations[ $locale ]['english_name'];
+		}
+
+		// Last resort: use the locale code itself so the AI still gets a language hint.
+		return $locale;
 	}
 
 	/**
