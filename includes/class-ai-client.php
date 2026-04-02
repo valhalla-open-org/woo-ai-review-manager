@@ -213,9 +213,9 @@ final class AI_Client {
 	 */
 	public function generate_response( string $review_text, string $sentiment, string $product_name, string $store_name ): string {
 		$tone_guidance = match ( $sentiment ) {
-			'negative' => 'Sincere and apologetic. Lead with a genuine apology — the customer had a bad experience and deserves to feel heard. Acknowledge the specific issue without making excuses, then offer a concrete resolution (refund, replacement, or asking them to contact support). No humor for negative reviews. Be professional but caring.',
-			'neutral'  => 'Friendly and conversational. Pick up on something specific they mentioned and respond to that. Keep it light.',
-			'positive' => 'Warm and brief — match their energy. If they were casual, be casual back. A short, genuine reply beats a long grateful one. Light humor is fine here if it fits.',
+			'negative' => 'Sincere and empathetic. Apologize that their experience fell short, but do NOT amplify their criticism or agree that the product is bad (never say "that\'s not acceptable" or similar). If the product is physically broken or defective, offer a replacement or refund. If the issue is subjective (fit, color, expectations), be sympathetic and direct them to support — do NOT offer refunds for subjective complaints. No humor, no jokes, no witty remarks.',
+			'neutral'  => 'Friendly and conversational. Pick up on something specific they mentioned and respond to that. Keep it light and casual.',
+			'positive' => 'Warm and brief — match their energy. If they were casual, be casual back. A short, genuine reply beats a long grateful one. Light humor is fine if it actually makes sense in context.',
 			default    => 'Friendly and helpful.',
 		};
 
@@ -247,10 +247,15 @@ PROMPT;
 			'- 2-3 sentences. Shorter is better.',
 			'- NEVER quote or repeat the customer\'s words back to them. Respond to their point, don\'t echo it.',
 			'- NEVER start with "Thank you for your feedback", "Thanks for sharing", "We appreciate", or any canned opener. Jump straight into a real response.',
-			'- NEVER use phrases like "I\'m sorry to hear that" or "We\'re glad you enjoyed". These sound robotic.',
+			'- NEVER use phrases like "I\'m sorry to hear that", "We\'re glad you enjoyed", or "that\'s not acceptable". These sound robotic or damage the brand.',
+			'- NEVER amplify or agree with criticism. Don\'t say "that\'s not acceptable" or "you\'re right, that shouldn\'t happen". Apologize that their experience fell short without validating that the product is bad.',
+			'- Keep complaints vague in your reply. Say "sorry it didn\'t meet your expectations" rather than repeating specific complaints like "the color was wrong and the quality was poor".',
 			'- Sound like a real person writing a quick reply, not a PR department.',
-			'- For negative reviews: lead with a sincere apology, name the specific problem, offer a concrete resolution. NO humor, NO jokes, NO witty remarks on negative reviews — the customer is frustrated and needs to feel taken seriously.',
-			'- For positive reviews: be brief and warm. One genuine sentence beats three grateful ones. Light humor is welcome here.',
+			'- For negative reviews with a DEFECTIVE product (broken, torn, stitching undone, damaged): apologize and offer a replacement or refund via the support email.',
+			'- For negative reviews with SUBJECTIVE complaints (sizing, color, expectations, appearance): be empathetic and invite them to reach out to support, but do NOT offer refunds or replacements unprompted.',
+			'- For positive reviews: be brief and warm. One genuine sentence beats three grateful ones.',
+			'- For suggestions or feature requests: respond casually and optimistically, e.g. "more colors might be coming soon" — not "I\'ll keep pushing on our side".',
+			'- Any humor must make logical sense in context. Don\'t force jokes or make confusing quips.',
 			'- Match the customer\'s register — casual review gets a casual reply, detailed review gets a more considered reply.',
 			'- No exclamation mark overuse. One max per reply.',
 			'- When directing a customer to contact support, use the support email provided above.',
