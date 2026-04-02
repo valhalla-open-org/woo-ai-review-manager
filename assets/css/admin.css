@@ -484,3 +484,370 @@
 .wairm-insight-period {
 	min-width: 130px;
 }
+
+/* -------------------------------------------------------
+   Insight Cards – Layout
+   ------------------------------------------------------- */
+.wairm-insight-cards {
+	animation: wairm-fade-in 0.3s ease;
+}
+
+.wairm-card-grid {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 320px, 1fr ) );
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.wairm-card-grid.wairm-two-col {
+	grid-template-columns: 1fr 1fr;
+}
+
+.wairm-ops-grid {
+	grid-template-columns: repeat( 2, 1fr );
+}
+
+@media screen and ( max-width: 960px ) {
+	.wairm-card-grid,
+	.wairm-card-grid.wairm-two-col,
+	.wairm-ops-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* -------------------------------------------------------
+   Insight Cards – Card Base
+   ------------------------------------------------------- */
+.wairm-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.wairm-card-header {
+	padding: 12px 16px;
+	border-bottom: 1px solid #f0f0f1;
+	background: #f9f9f9;
+}
+
+.wairm-card-header h3 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.wairm-card-body {
+	padding: 14px 16px;
+}
+
+.wairm-card-body ul {
+	margin: 0 0 0 16px;
+	padding: 0;
+}
+
+.wairm-card-body li {
+	font-size: 13px;
+	line-height: 1.6;
+	color: #3c434a;
+	margin-bottom: 4px;
+}
+
+.wairm-card-body p {
+	font-size: 13px;
+	line-height: 1.6;
+	color: #3c434a;
+	margin: 4px 0;
+}
+
+.wairm-empty-item {
+	list-style: none;
+	color: #888;
+	font-style: italic;
+}
+
+/* -------------------------------------------------------
+   Insight Cards – Rating Badge
+   ------------------------------------------------------- */
+.wairm-rating-badge {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+	color: #fff;
+}
+
+.wairm-rating-positive { background: #2ecc71; }
+.wairm-rating-mixed    { background: #f39c12; }
+.wairm-rating-negative { background: #e74c3c; }
+.wairm-rating-nodata   { background: #a7aaad; }
+
+/* -------------------------------------------------------
+   Insight Cards – Product Cards
+   ------------------------------------------------------- */
+.wairm-product-card {
+	border-left: 3px solid #2271b1;
+}
+
+.wairm-product-meta {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.wairm-review-count {
+	font-size: 12px;
+	color: #646970;
+}
+
+.wairm-card-section {
+	margin-bottom: 10px;
+}
+
+.wairm-card-section h4 {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #646970;
+	margin: 0 0 4px;
+}
+
+.wairm-strengths h4 { color: #2e7d32; }
+.wairm-complaints h4 { color: #b71c1c; }
+
+.wairm-strengths ul { list-style: none; margin-left: 0; }
+.wairm-complaints ul { list-style: none; margin-left: 0; }
+
+.wairm-strengths li::before {
+	content: "\2713 ";
+	color: #2ecc71;
+	font-weight: 700;
+	margin-right: 4px;
+}
+
+.wairm-complaints li::before {
+	content: "\2717 ";
+	color: #e74c3c;
+	font-weight: 700;
+	margin-right: 4px;
+}
+
+.wairm-card-action {
+	margin-top: 10px;
+	padding: 8px 12px;
+	background: #fef8ee;
+	border: 1px solid #f0c33c;
+	border-radius: 4px;
+	font-size: 13px;
+	color: #6e4b00;
+}
+
+.wairm-card-action .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	line-height: 1;
+	vertical-align: middle;
+	color: #dba617;
+	margin-right: 2px;
+}
+
+/* -------------------------------------------------------
+   Insight Cards – Trends
+   ------------------------------------------------------- */
+.wairm-trend-overview {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 16px 20px;
+	margin-bottom: 16px;
+	background: #f9f9f9;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+}
+
+.wairm-trend-direction {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 16px;
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+.wairm-trend-arrow::before {
+	font-size: 20px;
+	line-height: 1;
+}
+
+.wairm-trend-improving .wairm-trend-arrow::before { content: "\2191"; }
+.wairm-trend-declining .wairm-trend-arrow::before { content: "\2193"; }
+.wairm-trend-mixed .wairm-trend-arrow::before { content: "\2194"; }
+
+.wairm-trend-improving { color: #2e7d32; }
+.wairm-trend-declining { color: #b71c1c; }
+.wairm-trend-mixed { color: #e65100; }
+
+.wairm-trend-summary {
+	font-size: 13px;
+	color: #3c434a;
+	margin: 0;
+	line-height: 1.5;
+}
+
+.wairm-issue-item,
+.wairm-shift-item {
+	padding: 10px 0;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.wairm-issue-item:last-child,
+.wairm-shift-item:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.wairm-issue-item:first-child,
+.wairm-shift-item:first-child {
+	padding-top: 0;
+}
+
+.wairm-issue-product,
+.wairm-shift-product {
+	display: inline-block;
+	font-size: 12px;
+	color: #2271b1;
+	background: #f0f6fc;
+	padding: 1px 8px;
+	border-radius: 10px;
+	margin-left: 8px;
+}
+
+.wairm-shift-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.wairm-shift-item p {
+	flex-basis: 100%;
+}
+
+/* -------------------------------------------------------
+   Insight Cards – Operational
+   ------------------------------------------------------- */
+.wairm-ops-card .wairm-ops-rating {
+	margin-bottom: 10px;
+}
+
+.wairm-priority-card {
+	margin-top: 0;
+	border-left: 3px solid #dba617;
+}
+
+.wairm-priority-list {
+	margin: 0 0 0 20px;
+	padding: 0;
+}
+
+.wairm-priority-list li {
+	font-size: 13px;
+	line-height: 1.6;
+	color: #3c434a;
+	margin-bottom: 6px;
+}
+
+/* -------------------------------------------------------
+   Insight Cards – Strategic
+   ------------------------------------------------------- */
+.wairm-feature-item {
+	padding: 10px 0;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.wairm-feature-item:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.wairm-feature-item:first-child {
+	padding-top: 0;
+}
+
+.wairm-feature-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.wairm-mention-count {
+	font-size: 12px;
+	color: #646970;
+	white-space: nowrap;
+}
+
+.wairm-feature-products {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 6px;
+}
+
+.wairm-tag {
+	display: inline-block;
+	font-size: 11px;
+	color: #2271b1;
+	background: #f0f6fc;
+	padding: 2px 8px;
+	border-radius: 10px;
+}
+
+.wairm-competitive-item {
+	padding: 10px 0;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.wairm-competitive-item:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.wairm-competitive-item:first-child {
+	padding-top: 0;
+}
+
+.wairm-quotes blockquote {
+	margin: 0 0 10px 0;
+	padding: 8px 14px;
+	background: #f9f9f9;
+	border-left: 3px solid #2271b1;
+	font-size: 13px;
+	font-style: italic;
+	color: #3c434a;
+	border-radius: 0 4px 4px 0;
+}
+
+.wairm-quotes blockquote:last-child {
+	margin-bottom: 0;
+}
+
+/* -------------------------------------------------------
+   Insight Cards – Summary Bar
+   ------------------------------------------------------- */
+.wairm-summary-bar {
+	margin-top: 16px;
+	padding: 12px 16px;
+	background: #f0f6fc;
+	border: 1px solid #c3d9ed;
+	border-radius: 6px;
+	font-size: 13px;
+	line-height: 1.6;
+	color: #1d2327;
+}
