@@ -2,16 +2,16 @@
 document.addEventListener( 'DOMContentLoaded', function () {
 	'use strict';
 
-	var container  = document.querySelector( '.wairm-insights-content' );
+	var container = document.querySelector( '.wairm-insights-content' );
 	if ( ! container ) {
 		return;
 	}
 
-	var output      = document.getElementById( 'wairm-insight-output' );
-	var generateBtn = document.getElementById( 'wairm-generate-insight' );
+	var output        = document.getElementById( 'wairm-insight-output' );
+	var generateBtn   = document.getElementById( 'wairm-generate-insight' );
 	var historySelect = document.getElementById( 'wairm-insight-history' );
-	var category    = container.getAttribute( 'data-category' );
-	var i18n        = wairmInsights.i18n;
+	var category      = container.getAttribute( 'data-category' );
+	var i18n          = wairmInsights.i18n;
 
 	function showLoading() {
 		output.innerHTML = '<div class="wairm-insight-loading">' +
@@ -34,9 +34,21 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		generateBtn.disabled = false;
 	}
 
+	function ajaxPost( params ) {
+		return fetch( wairmInsights.ajax_url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams( Object.assign( { nonce: wairmInsights.nonce }, params ) )
+		} ).then( function ( res ) { return res.json(); } );
+	}
+
+	function formatDate( mysqlDate ) {
+		var date = new Date( mysqlDate.replace( ' ', 'T' ) );
+		return date.toLocaleDateString() + ' ' + date.toLocaleTimeString( [], { hour: '2-digit', minute: '2-digit' } );
+	}
+
 	function updateHistory( history ) {
 		if ( ! historySelect ) {
-			// Create the select element if it doesn't exist yet.
 			historySelect = document.createElement( 'select' );
 			historySelect.id = 'wairm-insight-history';
 			historySelect.className = 'wairm-insight-history';
@@ -51,56 +63,17 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		history.forEach( function ( entry ) {
 			var option = document.createElement( 'option' );
 			option.value = entry.id;
-			var date = new Date( entry.generated_at.replace( ' ', 'T' ) );
-			var formatted = date.toLocaleDateString() + ' ' + date.toLocaleTimeString( [], { hour: '2-digit', minute: '2-digit' } );
-			option.textContent = formatted + ' (' + entry.review_count + ' ' + i18n.reviews + ')';
+			option.textContent = formatDate( entry.generated_at ) + ' (' + entry.review_count + ' ' + i18n.reviews + ')';
 			historySelect.appendChild( option );
 		} );
-	}
 
-	function generateInsight() {
-		showLoading();
-
-		fetch( wairmInsights.ajax_url, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: new URLSearchParams( {
-				action: 'wairm_generate_insight',
-				nonce: wairmInsights.nonce,
-				category: category
-			} )
-		} )
-			.then( function ( res ) { return res.json(); } )
-			.then( function ( data ) {
-				if ( data.success ) {
-					showResult( data.data );
-					updateHistory( data.data.history );
-
-					// Update button label after first generation.
-					var label = historySelect && historySelect.options.length > 0 ? 'Generate New' : 'Generate';
-					generateBtn.lastChild.textContent = ' ' + label;
-				} else {
-					showError( ( data.data && data.data.message ) || i18n.error );
-				}
-			} )
-			.catch( function () {
-				showError( i18n.error );
-			} );
+		generateBtn.lastChild.textContent = ' Generate New';
 	}
 
 	function loadInsight( insightId ) {
 		showLoading();
 
-		fetch( wairmInsights.ajax_url, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: new URLSearchParams( {
-				action: 'wairm_load_insight',
-				nonce: wairmInsights.nonce,
-				insight_id: insightId
-			} )
-		} )
-			.then( function ( res ) { return res.json(); } )
+		ajaxPost( { action: 'wairm_load_insight', insight_id: insightId } )
 			.then( function ( data ) {
 				if ( data.success ) {
 					showResult( data.data );
@@ -115,10 +88,23 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 	// Generate button.
 	generateBtn.addEventListener( 'click', function () {
-		generateInsight();
+		showLoading();
+
+		ajaxPost( { action: 'wairm_generate_insight', category: category } )
+			.then( function ( data ) {
+				if ( data.success ) {
+					showResult( data.data );
+					updateHistory( data.data.history );
+				} else {
+					showError( ( data.data && data.data.message ) || i18n.error );
+				}
+			} )
+			.catch( function () {
+				showError( i18n.error );
+			} );
 	} );
 
-	// History dropdown.
+	// History dropdown (only bound once here, not in updateHistory).
 	if ( historySelect ) {
 		historySelect.addEventListener( 'change', function () {
 			loadInsight( this.value );

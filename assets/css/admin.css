@@ -403,12 +403,6 @@
 	flex-shrink: 0;
 }
 
-.wairm-insights-meta {
-	color: #888;
-	font-size: 12px;
-	white-space: nowrap;
-}
-
 .wairm-insight-loading {
 	display: flex;
 	align-items: center;

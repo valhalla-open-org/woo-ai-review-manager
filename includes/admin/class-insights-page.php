@@ -25,12 +25,19 @@ final class Insights_Page {
 		'strategic'   => 'Strategic',
 	];
 
+	/** @var array<string, string> Tab descriptions. */
+	private const CATEGORY_DESCRIPTIONS = [
+		'product'     => 'Quality issues, strengths, and recurring patterns per product.',
+		'trends'      => 'Sentiment changes over time and emerging issues.',
+		'operational' => 'Shipping, fulfillment, price perception, and expectations vs reality.',
+		'strategic'   => 'Feature requests, product ideas, and competitive insights.',
+	];
+
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_submenu_page' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		add_action( 'wp_ajax_wairm_generate_insight', [ $this, 'ajax_generate_insight' ] );
 		add_action( 'wp_ajax_wairm_load_insight', [ $this, 'ajax_load_insight' ] );
-		add_action( 'wp_ajax_wairm_load_history', [ $this, 'ajax_load_history' ] );
 	}
 
 	public function add_submenu_page(): void {
@@ -71,11 +78,9 @@ final class Insights_Page {
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'nonce'    => wp_create_nonce( 'wairm_insights' ),
 				'i18n'     => [
-					'generating'   => __( 'Analyzing reviews...', 'woo-ai-review-manager' ),
-					'error'        => __( 'Failed to generate insights. Please try again.', 'woo-ai-review-manager' ),
-					'no_data'      => __( 'No insights generated yet for this category. Click "Generate" to create the first one.', 'woo-ai-review-manager' ),
-					'confirm_new'  => __( 'Generate a new insight analysis? This will use AI credits.', 'woo-ai-review-manager' ),
-					'reviews'      => __( 'reviews', 'woo-ai-review-manager' ),
+					'generating' => __( 'Analyzing reviews...', 'woo-ai-review-manager' ),
+					'error'      => __( 'Failed to generate insights. Please try again.', 'woo-ai-review-manager' ),
+					'reviews'    => __( 'reviews', 'woo-ai-review-manager' ),
 				],
 			]
 		);
@@ -116,13 +121,16 @@ final class Insights_Page {
 
 		global $wpdb;
 
+		$review_count = count( $reviews );
+		$generated_at = current_time( 'mysql' );
+
 		$wpdb->insert(
 			$wpdb->prefix . 'wairm_insights',
 			[
 				'category'     => $category,
 				'content'      => $html,
-				'review_count' => count( $reviews ),
-				'generated_at' => current_time( 'mysql' ),
+				'review_count' => $review_count,
+				'generated_at' => $generated_at,
 			],
 			[ '%s', '%s', '%d', '%s' ]
 		);
@@ -132,14 +140,13 @@ final class Insights_Page {
 			wp_send_json_error( [ 'message' => __( 'Failed to save insight.', 'woo-ai-review-manager' ) ] );
 		}
 
-		// Return the new insight plus updated history.
 		$history = $this->get_history( $category );
 
 		wp_send_json_success( [
 			'id'           => $insight_id,
 			'html'         => $html,
-			'review_count' => count( $reviews ),
-			'generated_at' => current_time( 'mysql' ),
+			'review_count' => $review_count,
+			'generated_at' => $generated_at,
 			'history'      => $history,
 		] );
 	}
@@ -163,7 +170,8 @@ final class Insights_Page {
 
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}wairm_insights WHERE id = %d",
+				"SELECT id, content, review_count, generated_at
+				 FROM {$wpdb->prefix}wairm_insights WHERE id = %d",
 				$insight_id
 			)
 		);
@@ -178,24 +186,6 @@ final class Insights_Page {
 			'review_count' => (int) $row->review_count,
 			'generated_at' => $row->generated_at,
 		] );
-	}
-
-	/**
-	 * AJAX: Load history list for a category.
-	 */
-	public function ajax_load_history(): void {
-		check_ajax_referer( 'wairm_insights', 'nonce' );
-
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
-		}
-
-		$category = sanitize_key( $_POST['category'] ?? '' );
-		if ( ! isset( self::CATEGORIES[ $category ] ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid category.', 'woo-ai-review-manager' ) ] );
-		}
-
-		wp_send_json_success( $this->get_history( $category ) );
 	}
 
 	/**
@@ -232,7 +222,7 @@ final class Insights_Page {
 	/**
 	 * Gather review data relevant to the insight category.
 	 *
-	 * @return array<int, array{product: string, author: string, content: string, sentiment: string, score: float, date: string, key_phrases: string}>
+	 * @return array<int, array{product: string, content: string, sentiment: string, score: float, date: string}>
 	 */
 	private function get_reviews_for_insights( string $category ): array {
 		global $wpdb;
@@ -242,8 +232,8 @@ final class Insights_Page {
 
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT s.sentiment, s.score, s.key_phrases, s.analyzed_at,
-				        c.comment_content, c.comment_author, c.comment_date,
+				"SELECT s.sentiment, s.score,
+				        c.comment_content, c.comment_date,
 				        p.post_title AS product_name
 				 FROM {$table} s
 				 JOIN {$wpdb->comments} c ON c.comment_ID = s.comment_id
@@ -257,13 +247,11 @@ final class Insights_Page {
 		$reviews = [];
 		foreach ( $rows as $row ) {
 			$reviews[] = [
-				'product'     => $row->product_name,
-				'author'      => $row->comment_author,
-				'content'     => wp_strip_all_tags( $row->comment_content ),
-				'sentiment'   => $row->sentiment,
-				'score'       => (float) $row->score,
-				'date'        => $row->comment_date,
-				'key_phrases' => $row->key_phrases,
+				'product'   => $row->product_name,
+				'content'   => wp_strip_all_tags( $row->comment_content ),
+				'sentiment' => $row->sentiment,
+				'score'     => (float) $row->score,
+				'date'      => $row->comment_date,
 			];
 		}
 
@@ -278,18 +266,20 @@ final class Insights_Page {
 			$active_tab = 'product';
 		}
 
-		// Get the latest insight and history for the active tab.
-		$latest = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}wairm_insights
-				 WHERE category = %s
-				 ORDER BY generated_at DESC
-				 LIMIT 1",
-				$active_tab
-			)
-		);
-
+		// Single query: fetch history (includes the latest as the first row).
 		$history = $this->get_history( $active_tab );
+		$has_insights = ! empty( $history );
+
+		// Load the latest insight content only if history exists.
+		$latest_content = null;
+		if ( $has_insights ) {
+			$latest_content = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT content FROM {$wpdb->prefix}wairm_insights WHERE id = %d",
+					$history[0]['id']
+				)
+			);
+		}
 
 		$base_url = admin_url( 'admin.php?page=wairm-insights' );
 		?>
@@ -310,10 +300,10 @@ final class Insights_Page {
 			<div class="wairm-insights-content" data-category="<?php echo esc_attr( $active_tab ); ?>">
 				<div class="wairm-insights-header">
 					<p class="wairm-insights-description">
-						<?php $this->render_tab_description( $active_tab ); ?>
+						<?php echo esc_html( self::CATEGORY_DESCRIPTIONS[ $active_tab ] ?? '' ); ?>
 					</p>
 					<div class="wairm-insights-actions">
-						<?php if ( ! empty( $history ) ) : ?>
+						<?php if ( $has_insights ) : ?>
 						<select id="wairm-insight-history" class="wairm-insight-history">
 							<?php foreach ( $history as $entry ) : ?>
 								<option value="<?php echo absint( $entry['id'] ); ?>">
@@ -329,15 +319,15 @@ final class Insights_Page {
 						<?php endif; ?>
 						<button type="button" class="button button-primary" id="wairm-generate-insight">
 							<span class="dashicons dashicons-update" style="line-height: 1.4;"></span>
-							<?php echo $latest ? esc_html__( 'Generate New', 'woo-ai-review-manager' ) : esc_html__( 'Generate', 'woo-ai-review-manager' ); ?>
+							<?php echo $has_insights ? esc_html__( 'Generate New', 'woo-ai-review-manager' ) : esc_html__( 'Generate', 'woo-ai-review-manager' ); ?>
 						</button>
 					</div>
 				</div>
 
 				<div id="wairm-insight-output" class="wairm-insight-output">
-					<?php if ( $latest ) : ?>
+					<?php if ( $latest_content ) : ?>
 						<div class="wairm-insight-body">
-							<?php echo wp_kses_post( $latest->content ); ?>
+							<?php echo wp_kses_post( $latest_content ); ?>
 						</div>
 					<?php else : ?>
 						<div class="wairm-insight-empty">
@@ -350,25 +340,5 @@ final class Insights_Page {
 			</div>
 		</div>
 		<?php
-	}
-
-	/**
-	 * Render the description text for each tab.
-	 */
-	private function render_tab_description( string $tab ): void {
-		switch ( $tab ) {
-			case 'product':
-				esc_html_e( 'Quality issues, strengths, and recurring patterns per product.', 'woo-ai-review-manager' );
-				break;
-			case 'trends':
-				esc_html_e( 'Sentiment changes over time and emerging issues.', 'woo-ai-review-manager' );
-				break;
-			case 'operational':
-				esc_html_e( 'Shipping, fulfillment, price perception, and expectations vs reality.', 'woo-ai-review-manager' );
-				break;
-			case 'strategic':
-				esc_html_e( 'Feature requests, product ideas, and competitive insights.', 'woo-ai-review-manager' );
-				break;
-		}
 	}
 }
