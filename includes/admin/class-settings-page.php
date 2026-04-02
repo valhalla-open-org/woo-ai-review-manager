@@ -16,6 +16,44 @@ final class Settings_Page {
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_submenu_page' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+		add_action( 'wp_ajax_wairm_send_test_email', [ $this, 'ajax_send_test_email' ] );
+	}
+
+	public function enqueue_assets( string $hook ): void {
+		if ( 'ai-reviews_page_wairm-settings' !== $hook ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'wairm-admin',
+			WAIRM_PLUGIN_URL . 'assets/css/admin.css',
+			[],
+			WAIRM_VERSION
+		);
+
+		wp_enqueue_script(
+			'wairm-settings',
+			WAIRM_PLUGIN_URL . 'assets/js/settings.js',
+			[],
+			WAIRM_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'wairm-settings',
+			'wairmSettings',
+			[
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'wairm_settings' ),
+				'i18n'     => [
+					'sending'    => __( 'Sending...', 'woo-ai-review-manager' ),
+					'send_test'  => __( 'Send Test Email', 'woo-ai-review-manager' ),
+					'sent'       => __( 'Test email sent!', 'woo-ai-review-manager' ),
+					'error'      => __( 'Failed to send test email.', 'woo-ai-review-manager' ),
+				],
+			]
+		);
 	}
 
 	public function add_submenu_page(): void {
@@ -30,20 +68,140 @@ final class Settings_Page {
 	}
 
 	public function register_settings(): void {
-		register_setting( 'wairm_settings', 'wairm_gemini_api_key' );
-		register_setting( 'wairm_settings', 'wairm_invitation_delay_days' );
-		register_setting( 'wairm_settings', 'wairm_reminder_enabled' );
-		register_setting( 'wairm_settings', 'wairm_reminder_delay_days' );
-		register_setting( 'wairm_settings', 'wairm_invitation_expiry_days' );
-		register_setting( 'wairm_settings', 'wairm_email_from_name' );
-		register_setting( 'wairm_settings', 'wairm_email_subject' );
-		register_setting( 'wairm_settings', 'wairm_auto_analyze' );
-		register_setting( 'wairm_settings', 'wairm_auto_respond_positive' );
-		register_setting( 'wairm_settings', 'wairm_negative_threshold' );
+		// API tab settings.
+		register_setting( 'wairm_settings_api', 'wairm_negative_threshold', [
+			'type'              => 'number',
+			'sanitize_callback' => [ $this, 'sanitize_threshold' ],
+			'default'           => 0.30,
+		] );
+		register_setting( 'wairm_settings_api', 'wairm_model_preference', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
+
+		// Email tab settings.
+		register_setting( 'wairm_settings_email', 'wairm_invitation_delay_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 7,
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_reminder_enabled', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'yes',
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_reminder_delay_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 14,
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_invitation_expiry_days', [
+			'type'              => 'integer',
+			'sanitize_callback' => 'absint',
+			'default'           => 30,
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_email_from_name', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
+		register_setting( 'wairm_settings_email', 'wairm_email_subject', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		] );
+
+		// General tab settings.
+		register_setting( 'wairm_settings_general', 'wairm_auto_analyze', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'yes',
+		] );
+		register_setting( 'wairm_settings_general', 'wairm_auto_respond_positive', [
+			'type'              => 'string',
+			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'default'           => 'no',
+		] );
+		register_setting( 'wairm_settings_general', 'wairm_reply_as', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_key',
+			'default'           => 'store',
+		] );
+		register_setting( 'wairm_settings_general', 'wairm_support_email', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_email',
+			'default'           => '',
+		] );
+	}
+
+	/**
+	 * Sanitize a yes/no checkbox value.
+	 */
+	public function sanitize_yes_no( $value ): string {
+		return 'yes' === $value ? 'yes' : 'no';
+	}
+
+	/**
+	 * Sanitize the negative sentiment threshold (0.0 to 1.0).
+	 */
+	public function sanitize_threshold( $value ): float {
+		$value = (float) $value;
+		return max( 0.0, min( 1.0, $value ) );
+	}
+
+	/**
+	 * AJAX: Send a test invitation email to the admin.
+	 */
+	public function ajax_send_test_email(): void {
+		check_ajax_referer( 'wairm_settings', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		$to = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
+		if ( empty( $to ) ) {
+			$to = wp_get_current_user()->user_email;
+		}
+
+		$from_name = get_option( 'wairm_email_from_name', '' );
+		if ( empty( $from_name ) ) {
+			$from_name = get_bloginfo( 'name' );
+		}
+
+		$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) );
+		$subject = str_replace(
+			[ '{customer_name}', '{store_name}' ],
+			[ __( 'Test Customer', 'woo-ai-review-manager' ), get_bloginfo( 'name' ) ],
+			$subject
+		);
+		$subject = '[TEST] ' . $subject;
+
+		$body = sprintf(
+			/* translators: 1: customer name, 2: store name, 3: review link */
+			__( "Hi %1\$s,\n\nThank you for your recent purchase at %2\$s! We'd love to hear about your experience.\n\nPlease click the link below to leave a review:\n%3\$s\n\nThank you!", 'woo-ai-review-manager' ),
+			__( 'Test Customer', 'woo-ai-review-manager' ),
+			get_bloginfo( 'name' ),
+			home_url( '?wairm_token=test-preview&action=review' )
+		);
+
+		$headers = [ 'From: ' . $from_name . ' <' . get_option( 'admin_email' ) . '>' ];
+		$sent    = wp_mail( $to, $subject, $body, $headers );
+
+		if ( $sent ) {
+			wp_send_json_success();
+		} else {
+			wp_send_json_error( [ 'message' => __( 'wp_mail() returned false. Check your mail configuration.', 'woo-ai-review-manager' ) ] );
+		}
 	}
 
 	public function render_page(): void {
 		$active_tab = sanitize_key( $_GET['tab'] ?? 'api' );
+		$valid_tabs = [ 'api', 'email', 'general' ];
+		if ( ! in_array( $active_tab, $valid_tabs, true ) ) {
+			$active_tab = 'api';
+		}
 		?>
 		<div class="wrap wairm-settings">
 			<h1><?php esc_html_e( 'AI Review Manager Settings', 'woo-ai-review-manager' ); ?></h1>
@@ -61,29 +219,139 @@ final class Settings_Page {
 			</nav>
 
 			<form method="post" action="options.php" class="wairm-settings-form">
-				<?php settings_fields( 'wairm_settings' ); ?>
+				<?php
+				$settings_group = match ( $active_tab ) {
+					'email'   => 'wairm_settings_email',
+					'general' => 'wairm_settings_general',
+					default   => 'wairm_settings_api',
+				};
+				settings_fields( $settings_group );
+				?>
 
 				<?php if ( 'api' === $active_tab ) : ?>
-					<h2><?php esc_html_e( 'Gemini API Configuration', 'woo-ai-review-manager' ); ?></h2>
+					<?php
+					$ai_available    = \WooAIReviewManager\AI_Client::is_available();
+					$text_supported  = \WooAIReviewManager\AI_Client::is_text_supported();
+					$providers       = \WooAIReviewManager\AI_Client::discover_providers();
+					$saved_model     = get_option( 'wairm_model_preference', '' );
+					?>
+					<h2><?php esc_html_e( 'AI Configuration', 'woo-ai-review-manager' ); ?></h2>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<label for="wairm_gemini_api_key"><?php esc_html_e( 'Gemini API Key', 'woo-ai-review-manager' ); ?></label>
+								<?php esc_html_e( 'AI Status', 'woo-ai-review-manager' ); ?>
 							</th>
 							<td>
-								<input type="password" id="wairm_gemini_api_key" name="wairm_gemini_api_key" value="<?php echo esc_attr( get_option( 'wairm_gemini_api_key', '' ) ); ?>" class="regular-text" />
+								<?php if ( ! $ai_available ) : ?>
+									<p>
+										<span class="wairm-ai-unavailable"><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></span>
+									</p>
+									<p class="description">
+										<?php esc_html_e( 'This plugin requires WordPress 7.0 or later with the AI Client API.', 'woo-ai-review-manager' ); ?>
+									</p>
+								<?php elseif ( ! $text_supported ) : ?>
+									<p>
+										<span class="wairm-ai-unavailable"><?php esc_html_e( 'No AI connectors are configured for text generation.', 'woo-ai-review-manager' ); ?></span>
+									</p>
+									<p class="description">
+										<?php
+										echo wp_kses(
+											sprintf(
+												/* translators: %s: link to Connectors settings */
+												__( 'Install and activate at least one AI provider connector in %s.', 'woo-ai-review-manager' ),
+												'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
+											),
+											[ 'a' => [ 'href' => [] ] ]
+										);
+										?>
+									</p>
+								<?php else : ?>
+									<p>
+										<span class="wairm-ai-available"><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></span>
+									</p>
+								<?php endif; ?>
+							</td>
+						</tr>
+
+						<?php if ( $ai_available && ! empty( $providers ) ) : ?>
+						<tr>
+							<th scope="row">
+								<?php esc_html_e( 'Connectors', 'woo-ai-review-manager' ); ?>
+							</th>
+							<td>
+								<ul class="wairm-connector-list">
+									<?php foreach ( $providers as $provider_id => $provider_data ) : ?>
+										<li>
+											<?php if ( $provider_data['configured'] ) : ?>
+												<span class="wairm-connector-check">&#10003;</span>
+											<?php else : ?>
+												<span class="wairm-connector-cross">&#10007;</span>
+											<?php endif; ?>
+											<strong><?php echo esc_html( $provider_data['name'] ); ?></strong>
+											<?php if ( $provider_data['configured'] && ! empty( $provider_data['models'] ) ) : ?>
+												<span class="wairm-connector-meta">&mdash;
+													<?php
+													printf(
+														/* translators: %d: number of models */
+														esc_html( _n( '%d model', '%d models', count( $provider_data['models'] ), 'woo-ai-review-manager' ) ),
+														count( $provider_data['models'] )
+													);
+													?>
+												</span>
+											<?php elseif ( ! $provider_data['configured'] ) : ?>
+												<span class="wairm-connector-meta">&mdash; <?php esc_html_e( 'not configured', 'woo-ai-review-manager' ); ?></span>
+											<?php endif; ?>
+										</li>
+									<?php endforeach; ?>
+								</ul>
 								<p class="description">
-									<?php printf(
-										/* translators: %s: Google AI Studio URL */
-										esc_html__( 'Get your API key from %s', 'woo-ai-review-manager' ),
-										'<a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a>'
-									); ?>
-								</p>
-								<p class="description">
-									<strong><?php esc_html_e( 'Required for sentiment analysis and AI response generation.', 'woo-ai-review-manager' ); ?></strong>
+									<?php
+									echo wp_kses(
+										sprintf(
+											/* translators: %s: link to Connectors settings */
+											__( 'Manage connectors in %s.', 'woo-ai-review-manager' ),
+											'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
+										),
+										[ 'a' => [ 'href' => [] ] ]
+									);
+									?>
 								</p>
 							</td>
 						</tr>
+
+						<tr>
+							<th scope="row">
+								<label for="wairm_model_preference"><?php esc_html_e( 'Preferred Model', 'woo-ai-review-manager' ); ?></label>
+							</th>
+							<td>
+								<?php
+								$configured_with_models = array_filter( $providers, static function ( $p ) {
+									return $p['configured'] && ! empty( $p['models'] );
+								} );
+								?>
+								<?php if ( ! empty( $configured_with_models ) ) : ?>
+								<select id="wairm_model_preference" name="wairm_model_preference">
+									<option value=""><?php esc_html_e( 'Automatic (first available)', 'woo-ai-review-manager' ); ?></option>
+									<?php foreach ( $configured_with_models as $provider_id => $provider_data ) : ?>
+										<optgroup label="<?php echo esc_attr( $provider_data['name'] ); ?>">
+											<?php foreach ( $provider_data['models'] as $model_id => $model_name ) : ?>
+												<option value="<?php echo esc_attr( $model_id ); ?>" <?php selected( $saved_model, $model_id ); ?>>
+													<?php echo esc_html( $model_name ); ?>
+												</option>
+											<?php endforeach; ?>
+										</optgroup>
+									<?php endforeach; ?>
+								</select>
+								<?php else : ?>
+								<input type="text" id="wairm_model_preference" name="wairm_model_preference" value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g. claude-sonnet-4-6', 'woo-ai-review-manager' ); ?>" />
+								<?php endif; ?>
+								<p class="description">
+									<?php esc_html_e( 'Choose a specific model or leave on "Automatic" to let WordPress pick the best available model.', 'woo-ai-review-manager' ); ?>
+								</p>
+							</td>
+						</tr>
+						<?php endif; ?>
+
 						<tr>
 							<th scope="row">
 								<label for="wairm_negative_threshold"><?php esc_html_e( 'Negative Sentiment Threshold', 'woo-ai-review-manager' ); ?></label>
@@ -171,6 +439,16 @@ final class Settings_Page {
 						</tr>
 					</table>
 
+					<h2><?php esc_html_e( 'Email Preview & Test', 'woo-ai-review-manager' ); ?></h2>
+					<div class="wairm-email-preview">
+						<p class="description"><?php esc_html_e( 'Send a test invitation email using the current settings.', 'woo-ai-review-manager' ); ?></p>
+						<div class="wairm-test-email-form">
+							<input type="email" id="wairm-test-email-address" value="<?php echo esc_attr( wp_get_current_user()->user_email ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Recipient email', 'woo-ai-review-manager' ); ?>">
+							<button type="button" class="button" id="wairm-send-test-email"><?php esc_html_e( 'Send Test Email', 'woo-ai-review-manager' ); ?></button>
+							<span id="wairm-test-email-result"></span>
+						</div>
+					</div>
+
 				<?php elseif ( 'general' === $active_tab ) : ?>
 					<h2><?php esc_html_e( 'General Settings', 'woo-ai-review-manager' ); ?></h2>
 					<table class="form-table">
@@ -184,7 +462,7 @@ final class Settings_Page {
 									<?php esc_html_e( 'Automatically analyze new reviews for sentiment', 'woo-ai-review-manager' ); ?>
 								</label>
 								<p class="description">
-									<?php esc_html_e( 'When enabled, all new WooCommerce reviews will be sent to Gemini for sentiment analysis.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'When enabled, all new WooCommerce reviews will be sent to the configured AI provider for sentiment analysis.', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -204,21 +482,57 @@ final class Settings_Page {
 						</tr>
 						<tr>
 							<th scope="row">
+								<label for="wairm_reply_as"><?php esc_html_e( 'Post Replies As', 'woo-ai-review-manager' ); ?></label>
+							</th>
+							<td>
+								<?php $reply_as = get_option( 'wairm_reply_as', 'store' ); ?>
+								<select id="wairm_reply_as" name="wairm_reply_as">
+									<option value="store" <?php selected( $reply_as, 'store' ); ?>>
+										<?php
+										$store_label = get_option( 'wairm_email_from_name', '' );
+										if ( empty( $store_label ) ) {
+											$store_label = get_bloginfo( 'name' );
+										}
+										printf(
+											/* translators: %s: store name */
+											esc_html__( 'Store name (%s)', 'woo-ai-review-manager' ),
+											esc_html( $store_label )
+										);
+										?>
+									</option>
+									<option value="user" <?php selected( $reply_as, 'user' ); ?>>
+										<?php esc_html_e( 'Logged-in user (your personal account)', 'woo-ai-review-manager' ); ?>
+									</option>
+								</select>
+								<p class="description">
+									<?php esc_html_e( 'Choose how reply comments appear on the product page. "Store name" uses the Email From Name setting (or site name).', 'woo-ai-review-manager' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="wairm_support_email"><?php esc_html_e( 'Support Email', 'woo-ai-review-manager' ); ?></label>
+							</th>
+							<td>
+								<input type="email" id="wairm_support_email" name="wairm_support_email" value="<?php echo esc_attr( get_option( 'wairm_support_email', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" />
+								<p class="description">
+									<?php esc_html_e( 'Email address for customer support. The AI will reference this in response suggestions when directing customers to reach out. Defaults to the site admin email if left empty.', 'woo-ai-review-manager' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
 								<?php esc_html_e( 'Data & Privacy', 'woo-ai-review-manager' ); ?>
 							</th>
 							<td>
 								<p>
-									<?php esc_html_e( 'This plugin sends review text to Google\'s Gemini API for sentiment analysis and response generation.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'This plugin sends review text to the AI provider configured in your WordPress Connectors for sentiment analysis and response generation.', 'woo-ai-review-manager' ); ?>
 								</p>
 								<p>
-									<?php printf(
-										/* translators: %s: Google privacy policy URL */
-										esc_html__( 'Review Google\'s %s for details on how they handle your data.', 'woo-ai-review-manager' ),
-										'<a href="https://policies.google.com/privacy" target="_blank">' . esc_html__( 'Privacy Policy', 'woo-ai-review-manager' ) . '</a>'
-									); ?>
+									<?php esc_html_e( 'Please review the privacy policy of your configured AI provider for details on how they handle your data.', 'woo-ai-review-manager' ); ?>
 								</p>
 								<p>
-									<?php esc_html_e( 'No customer personally identifiable information (PII) is sent to Gemini—only the review text and product name.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'No customer personally identifiable information (PII) is sent to the AI provider—only the review text and product name.', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>

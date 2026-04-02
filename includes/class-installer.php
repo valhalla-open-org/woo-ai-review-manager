@@ -18,13 +18,16 @@ final class Installer {
 		self::schedule_cron();
 		self::set_default_options();
 
+		// Clean up legacy cron that auto-analyzed all unanalyzed reviews.
+		wp_clear_scheduled_hook( 'wairm_process_pending_reviews' );
+
 		update_option( 'wairm_version', WAIRM_VERSION );
 		flush_rewrite_rules();
 	}
 
 	public static function deactivate(): void {
-		wp_clear_scheduled_hook( 'wairm_process_pending_reviews' );
 		wp_clear_scheduled_hook( 'wairm_send_review_invitations' );
+		wp_clear_scheduled_hook( 'wairm_expire_invitations' );
 	}
 
 	private static function create_tables(): void {
@@ -68,6 +71,17 @@ final class Installer {
 			KEY sentiment (sentiment)
 		) {$charset_collate};
 
+		CREATE TABLE {$wpdb->prefix}wairm_insights (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			category VARCHAR(20) NOT NULL,
+			period VARCHAR(10) NOT NULL DEFAULT 'all',
+			content LONGTEXT NOT NULL,
+			review_count INT UNSIGNED NOT NULL DEFAULT 0,
+			generated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY category_generated (category, generated_at)
+		) {$charset_collate};
+
 		CREATE TABLE {$wpdb->prefix}wairm_email_queue (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			invitation_id BIGINT UNSIGNED NOT NULL,
@@ -89,14 +103,7 @@ final class Installer {
 	}
 
 	private static function schedule_cron(): void {
-		if ( ! wp_next_scheduled( 'wairm_process_pending_reviews' ) ) {
-			wp_schedule_event( time(), 'hourly', 'wairm_process_pending_reviews' );
-		}
-		if ( ! wp_next_scheduled( 'wairm_send_review_invitations' ) ) {
-			wp_schedule_event( time(), 'every_five_minutes', 'wairm_send_review_invitations' );
-		}
-
-		// Register custom cron interval.
+		// Register custom cron interval first so it's available for scheduling.
 		add_filter(
 			'cron_schedules',
 			static function ( array $schedules ): array {
@@ -107,11 +114,17 @@ final class Installer {
 				return $schedules;
 			}
 		);
+
+		if ( ! wp_next_scheduled( 'wairm_send_review_invitations' ) ) {
+			wp_schedule_event( time(), 'every_five_minutes', 'wairm_send_review_invitations' );
+		}
+		if ( ! wp_next_scheduled( 'wairm_expire_invitations' ) ) {
+			wp_schedule_event( time(), 'daily', 'wairm_expire_invitations' );
+		}
 	}
 
 	private static function set_default_options(): void {
 		$defaults = [
-			'wairm_gemini_api_key'        => '',
 			'wairm_invitation_delay_days' => 7,
 			'wairm_reminder_enabled'      => 'yes',
 			'wairm_reminder_delay_days'   => 14,

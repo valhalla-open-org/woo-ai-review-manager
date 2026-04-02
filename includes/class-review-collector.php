@@ -18,7 +18,10 @@ final class Review_Collector {
 		add_action( 'woocommerce_order_status_completed', [ $this, 'schedule_invitation' ], 10, 1 );
 
 		// Hook into new WooCommerce reviews.
+		// comment_post fires from wp_new_comment() (front-end comment forms).
 		add_action( 'comment_post', [ $this, 'on_review_submitted' ], 10, 3 );
+		// wp_insert_comment fires from wp_insert_comment() (programmatic inserts like our form handler).
+		add_action( 'wp_insert_comment', [ $this, 'on_review_inserted' ], 10, 2 );
 	}
 
 	/**
@@ -115,11 +118,33 @@ final class Review_Collector {
 	}
 
 	/**
+	 * Handle reviews inserted via wp_insert_comment() (e.g. our invitation form).
+	 *
+	 * wp_insert_comment() fires the 'wp_insert_comment' action but NOT 'comment_post'.
+	 *
+	 * @param int         $comment_id The comment ID.
+	 * @param \WP_Comment $comment    The comment object.
+	 */
+	public function on_review_inserted( int $comment_id, \WP_Comment $comment ): void {
+		$this->maybe_queue_analysis( $comment_id, $comment );
+	}
+
+	/**
 	 * When a WooCommerce review is submitted, queue it for sentiment analysis.
 	 */
 	public function on_review_submitted( int $comment_id, int|string $comment_approved, array $comment_data ): void {
 		$comment = get_comment( $comment_id );
-		if ( ! $comment || 'review' !== $comment->comment_type ) {
+		if ( ! $comment ) {
+			return;
+		}
+		$this->maybe_queue_analysis( $comment_id, $comment );
+	}
+
+	/**
+	 * Check if a comment is a product review and queue it for analysis.
+	 */
+	private function maybe_queue_analysis( int $comment_id, \WP_Comment $comment ): void {
+		if ( 'review' !== $comment->comment_type ) {
 			return;
 		}
 
@@ -133,12 +158,28 @@ final class Review_Collector {
 			return;
 		}
 
-		// Queue for async sentiment analysis.
-		as_schedule_single_action(
-			time(),
-			'wairm_analyze_single_review',
-			[ 'comment_id' => $comment_id ],
-			'wairm'
+		// Prevent duplicate scheduling — check if already analyzed.
+		global $wpdb;
+		$already = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$wpdb->prefix}wairm_review_sentiment WHERE comment_id = %d",
+				$comment_id
+			)
 		);
+		if ( $already ) {
+			return;
+		}
+
+		// Queue for async sentiment analysis via Action Scheduler (bundled with WooCommerce).
+		if ( function_exists( 'as_enqueue_async_action' ) ) {
+			as_enqueue_async_action(
+				'wairm_analyze_single_review',
+				[ 'comment_id' => $comment_id ],
+				'wairm'
+			);
+		} else {
+			// Fallback: analyze synchronously if Action Scheduler is unavailable.
+			do_action( 'wairm_analyze_single_review', $comment_id );
+		}
 	}
 }
