@@ -109,10 +109,11 @@ final class Insights_Page {
 			'wairm-insights',
 			'wairmInsights',
 			[
-				'ajax_url'     => admin_url( 'admin-ajax.php' ),
-				'nonce'        => wp_create_nonce( 'wairm_insights' ),
-				'initial_data' => $initial_data,
-				'initial_html' => $initial_html,
+				'ajax_url'      => admin_url( 'admin-ajax.php' ),
+				'nonce'         => wp_create_nonce( 'wairm_insights' ),
+				'initial_data'  => $initial_data,
+				'initial_html'  => $initial_html,
+				'product_urls'  => $this->get_product_url_map(),
 				'i18n'         => [
 					'generating'       => __( 'Analyzing reviews...', 'woo-ai-review-manager' ),
 					'error'            => __( 'Failed to generate insights. Please try again.', 'woo-ai-review-manager' ),
@@ -324,7 +325,7 @@ final class Insights_Page {
 		// Fetch more than MAX_REVIEWS so we can sample proportionally.
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $date_filter built via prepare().
 		$rows = $wpdb->get_results(
-			"SELECT s.sentiment, s.score,
+			"SELECT s.sentiment, s.score, s.product_id,
 			        c.comment_content, c.comment_date,
 			        p.post_title AS product_name
 			 FROM {$table} s
@@ -337,11 +338,12 @@ final class Insights_Page {
 		$reviews = [];
 		foreach ( $rows as $row ) {
 			$reviews[] = [
-				'product'   => $row->product_name,
-				'content'   => wp_strip_all_tags( $row->comment_content ),
-				'sentiment' => $row->sentiment,
-				'score'     => (float) $row->score,
-				'date'      => $row->comment_date,
+				'product'    => $row->product_name,
+				'product_id' => (int) $row->product_id,
+				'content'    => wp_strip_all_tags( $row->comment_content ),
+				'sentiment'  => $row->sentiment,
+				'score'      => (float) $row->score,
+				'date'       => $row->comment_date,
 			];
 		}
 
@@ -402,6 +404,31 @@ final class Insights_Page {
 	 */
 	private static function period_label( string $period ): string {
 		return self::PERIODS[ $period ] ?? self::PERIODS['all'];
+	}
+
+	/**
+	 * Build a product name => URL map from reviewed products.
+	 */
+	private function get_product_url_map(): array {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'wairm_review_sentiment';
+
+		$rows = $wpdb->get_results(
+			"SELECT DISTINCT s.product_id, p.post_title AS product_name
+			 FROM {$table} s
+			 JOIN {$wpdb->posts} p ON p.ID = s.product_id"
+		);
+
+		$map = [];
+		foreach ( $rows as $row ) {
+			$url = get_permalink( (int) $row->product_id );
+			if ( $url ) {
+				$map[ $row->product_name ] = $url;
+			}
+		}
+
+		return $map;
 	}
 
 	public function render_page(): void {

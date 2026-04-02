@@ -13,6 +13,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	var periodSelect  = document.getElementById( 'wairm-insight-period' );
 	var category      = container.getAttribute( 'data-category' );
 	var i18n          = wairmInsights.i18n;
+	var productUrls   = wairmInsights.product_urls || {};
 
 	var periodLabels = {};
 	if ( periodSelect ) {
@@ -62,8 +63,20 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	/* -----------------------------------------------------------
 	   Category Renderers
 	   ----------------------------------------------------------- */
+	function productHeading( name ) {
+		var url = productUrls[ name ];
+		if ( url ) {
+			return '<h3><a href="' + esc( url ) + '" target="_blank">' + esc( name ) + '</a></h3>';
+		}
+		return '<h3>' + esc( name ) + '</h3>';
+	}
+
 	function renderProduct( data ) {
 		var html = '';
+
+		if ( data.summary ) {
+			html += '<div class="wairm-summary-bar">' + esc( data.summary ) + '</div>';
+		}
 
 		if ( data.products && data.products.length ) {
 			html += '<div class="wairm-card-grid">';
@@ -93,13 +106,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
 					inner += '<div class="wairm-card-action"><span class="dashicons dashicons-flag"></span> ' + esc( p.priority_action ) + '</div>';
 				}
 
-				html += card( 'wairm-product-card', '<h3>' + esc( p.name ) + '</h3>', inner );
+				html += card( 'wairm-product-card', productHeading( p.name ), inner );
 			} );
 			html += '</div>';
-		}
-
-		if ( data.summary ) {
-			html += '<div class="wairm-summary-bar">' + esc( data.summary ) + '</div>';
 		}
 
 		return html;
@@ -223,6 +232,10 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			html += card( 'wairm-competitive-card', '<h3>' + esc( i18n.competitive ) + '</h3>', compHtml );
 		}
 
+		if ( data.summary ) {
+			html += '<div class="wairm-summary-bar">' + esc( data.summary ) + '</div>';
+		}
+
 		// Two side-by-side cards.
 		var sideCards = '';
 		if ( data.repeat_signals && data.repeat_signals.length ) {
@@ -239,10 +252,6 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		}
 		if ( sideCards ) {
 			html += '<div class="wairm-card-grid wairm-two-col">' + sideCards + '</div>';
-		}
-
-		if ( data.summary ) {
-			html += '<div class="wairm-summary-bar">' + esc( data.summary ) + '</div>';
 		}
 
 		return html;
