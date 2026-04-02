@@ -202,6 +202,10 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	function renderStrategic( data ) {
 		var html = '';
 
+		if ( data.summary ) {
+			html += '<div class="wairm-summary-bar">' + esc( data.summary ) + '</div>';
+		}
+
 		// Feature requests.
 		if ( data.feature_requests && data.feature_requests.length ) {
 			var frHtml = '<div class="wairm-feature-list">';
@@ -232,10 +236,6 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			} );
 			compHtml += '</div>';
 			html += card( 'wairm-competitive-card', '<h3>' + esc( i18n.competitive ) + '</h3>', compHtml );
-		}
-
-		if ( data.summary ) {
-			html += '<div class="wairm-summary-bar">' + esc( data.summary ) + '</div>';
 		}
 
 		// Two side-by-side cards.

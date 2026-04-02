@@ -740,6 +740,11 @@
 	margin-left: 8px;
 }
 
+.wairm-issue-product:first-of-type,
+.wairm-shift-product:first-of-type {
+	margin-left: 0;
+}
+
 .wairm-shift-item {
 	display: flex;
 	flex-wrap: wrap;
@@ -759,7 +764,7 @@
 }
 
 .wairm-priority-card {
-	margin-top: 0;
+	margin-bottom: 16px;
 }
 
 .wairm-priority-list {
@@ -777,6 +782,11 @@
 /* -------------------------------------------------------
    Insight Cards – Strategic
    ------------------------------------------------------- */
+.wairm-feature-card,
+.wairm-competitive-card {
+	margin-bottom: 16px;
+}
+
 .wairm-feature-item {
 	padding: 10px 0;
 	border-bottom: 1px solid #f0f0f1;
