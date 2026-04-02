@@ -51,7 +51,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		history.forEach( function ( entry ) {
 			var option = document.createElement( 'option' );
 			option.value = entry.id;
-			option.textContent = entry.generated_at + ' (' + entry.review_count + ' ' + i18n.reviews + ')';
+			var date = new Date( entry.generated_at.replace( ' ', 'T' ) );
+			var formatted = date.toLocaleDateString() + ' ' + date.toLocaleTimeString( [], { hour: '2-digit', minute: '2-digit' } );
+			option.textContent = formatted + ' (' + entry.review_count + ' ' + i18n.reviews + ')';
 			historySelect.appendChild( option );
 		} );
 	}
@@ -74,9 +76,9 @@ document.addEventListener( 'DOMContentLoaded', function () {
 					showResult( data.data );
 					updateHistory( data.data.history );
 
-					// Update button text after first generation.
-					generateBtn.innerHTML = '<span class="dashicons dashicons-update" style="line-height: 1.4;"></span> ' +
-						( historySelect && historySelect.options.length > 0 ? 'Generate New' : 'Generate' );
+					// Update button label after first generation.
+					var label = historySelect && historySelect.options.length > 0 ? 'Generate New' : 'Generate';
+					generateBtn.lastChild.textContent = ' ' + label;
 				} else {
 					showError( ( data.data && data.data.message ) || i18n.error );
 				}

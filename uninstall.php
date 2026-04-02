@@ -27,6 +27,9 @@ $options = [
 	'wairm_auto_analyze',
 	'wairm_auto_respond_positive',
 	'wairm_negative_threshold',
+	'wairm_model_preference',
+	'wairm_support_email',
+	'wairm_reply_as',
 ];
 
 foreach ( $options as $option ) {

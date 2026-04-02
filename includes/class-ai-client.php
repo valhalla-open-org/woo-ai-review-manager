@@ -301,11 +301,12 @@ PROMPT;
 			);
 		}
 
-		$reviews_text = implode( "\n", $review_lines );
+		$review_count    = count( $reviews );
+		$reviews_text    = implode( "\n", $review_lines );
 		$category_prompt = $this->get_insight_prompt( $category );
 
 		$prompt = <<<PROMPT
-Analyze these {$reviews_text} customer reviews and provide insights.
+Analyze these {$review_count} customer reviews and provide insights.
 
 Category: {$category}
 

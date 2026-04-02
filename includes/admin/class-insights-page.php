@@ -109,6 +109,8 @@ final class Insights_Page {
 			$client = new \WooAIReviewManager\AI_Client();
 			$html   = $client->generate_insights( $reviews, $category );
 		} catch ( \RuntimeException $e ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( '[WAIRM] Insight generation failed for ' . $category . ': ' . $e->getMessage() );
 			wp_send_json_error( [ 'message' => $e->getMessage() ] );
 		}
 
