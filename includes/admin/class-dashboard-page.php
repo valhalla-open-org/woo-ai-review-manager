@@ -99,7 +99,7 @@ final class Dashboard_Page {
 			wp_send_json_error( [ 'message' => __( 'AI Client is not available. Please configure AI credentials first.', 'woo-ai-review-manager' ) ] );
 		}
 
-		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 10 );
+		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 1 );
 
 		wp_send_json_success( $result );
 	}
