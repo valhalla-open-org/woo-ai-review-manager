@@ -76,7 +76,6 @@ final class Plugin {
 		} );
 
 		// Cron.
-		add_action( 'wairm_process_pending_reviews', [ Sentiment_Analyzer::class, 'process_pending' ] );
 		add_action( 'wairm_send_review_invitations', [ Email_Sender::class, 'process_queue' ] );
 		add_action( 'wairm_expire_invitations', [ self::class, 'expire_stale_invitations' ] );
 	}
