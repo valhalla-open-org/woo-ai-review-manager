@@ -99,9 +99,47 @@ final class Dashboard_Page {
 			wp_send_json_error( [ 'message' => __( 'AI Client is not available. Please configure AI credentials first.', 'woo-ai-review-manager' ) ] );
 		}
 
-		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 1 );
+		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 5 );
 
 		wp_send_json_success( $result );
+	}
+
+	/**
+	 * Check setup completeness and return incomplete steps.
+	 *
+	 * @return array<string, array{label: string, url: string}>
+	 */
+	private function get_setup_checklist(): array {
+		$incomplete = [];
+
+		if ( ! \WooAIReviewManager\AI_Client::is_available() ) {
+			$incomplete['ai_client'] = [
+				'label' => __( 'WordPress 7.0+ with AI Client API required', 'woo-ai-review-manager' ),
+				'url'   => '',
+			];
+		} elseif ( ! \WooAIReviewManager\AI_Client::is_text_supported() ) {
+			$incomplete['ai_connector'] = [
+				'label' => __( 'Configure an AI connector for text generation', 'woo-ai-review-manager' ),
+				'url'   => admin_url( 'options-connectors.php' ),
+			];
+		}
+
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			$incomplete['woocommerce'] = [
+				'label' => __( 'WooCommerce must be installed and active', 'woo-ai-review-manager' ),
+				'url'   => admin_url( 'plugins.php' ),
+			];
+		}
+
+		$support_email = get_option( 'wairm_support_email', '' );
+		if ( empty( $support_email ) ) {
+			$incomplete['support_email'] = [
+				'label' => __( 'Set a support email for AI responses', 'woo-ai-review-manager' ),
+				'url'   => admin_url( 'admin.php?page=wairm-settings&tab=general' ),
+			];
+		}
+
+		return $incomplete;
 	}
 
 	public function render_page(): void {
@@ -109,7 +147,21 @@ final class Dashboard_Page {
 
 		$table = $wpdb->prefix . 'wairm_review_sentiment';
 
+		// Date range filter.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter parameter.
+		$period      = sanitize_key( $_GET['period'] ?? 'all' );
+		$valid_periods = [ '7', '30', '90', 'all' ];
+		if ( ! in_array( $period, $valid_periods, true ) ) {
+			$period = 'all';
+		}
+
+		$date_where = '';
+		if ( 'all' !== $period ) {
+			$date_where = $wpdb->prepare( ' AND s.analyzed_at >= %s', gmdate( 'Y-m-d H:i:s', strtotime( "-{$period} days" ) ) );
+		}
+
 		// Overall sentiment stats.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $date_where built with prepare().
 		$stats = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT
@@ -118,7 +170,8 @@ final class Dashboard_Page {
 					SUM(CASE WHEN sentiment = %s THEN 1 ELSE 0 END) as neutral,
 					SUM(CASE WHEN sentiment = %s THEN 1 ELSE 0 END) as negative,
 					AVG(score) as avg_score
-				 FROM {$table}",
+				 FROM {$table} s
+				 WHERE 1=1 {$date_where}",
 				'positive',
 				'neutral',
 				'negative'
@@ -139,7 +192,15 @@ final class Dashboard_Page {
 			)
 		);
 
+		// Failure stats for the error widget.
+		$failed_emails = (int) $wpdb->get_var(
+			"SELECT COUNT(*) FROM {$wpdb->prefix}wairm_email_queue WHERE status = 'failed'"
+		);
+
 		$this->localize_dashboard_data( $stats, $pending_count, $actionable_responses );
+
+		// Setup checklist.
+		$checklist = $this->get_setup_checklist();
 
 		// Recent reviews.
 		$recent = $wpdb->get_results(
@@ -154,14 +215,15 @@ final class Dashboard_Page {
 			)
 		);
 
-		// Top products.
+		// Top products (respects date filter).
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $date_where built with prepare().
 		$top_products = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT product_id, COUNT(*) as review_count, AVG(score) as avg_score,
 				        p.post_title as product_name
 				 FROM {$table} s
 				 JOIN {$wpdb->posts} p ON p.ID = s.product_id
-				 WHERE p.post_type = %s
+				 WHERE p.post_type = %s {$date_where}
 				 GROUP BY product_id
 				 ORDER BY review_count DESC
 				 LIMIT %d",
@@ -172,6 +234,63 @@ final class Dashboard_Page {
 		?>
 		<div class="wrap wairm-dashboard">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'AI Review Manager Dashboard', 'woo-ai-review-manager' ); ?></h1>
+
+			<?php if ( ! empty( $checklist ) ) : ?>
+			<div class="wairm-setup-checklist">
+				<h3><span class="dashicons dashicons-warning"></span> <?php esc_html_e( 'Setup Incomplete', 'woo-ai-review-manager' ); ?></h3>
+				<p><?php esc_html_e( 'Complete these steps to get the most out of AI Review Manager:', 'woo-ai-review-manager' ); ?></p>
+				<ul>
+					<?php foreach ( $checklist as $item ) : ?>
+						<li>
+							<?php if ( ! empty( $item['url'] ) ) : ?>
+								<a href="<?php echo esc_url( $item['url'] ); ?>"><?php echo esc_html( $item['label'] ); ?></a>
+							<?php else : ?>
+								<?php echo esc_html( $item['label'] ); ?>
+							<?php endif; ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+			<?php endif; ?>
+
+			<?php if ( $failed_emails > 0 ) : ?>
+			<div class="wairm-failure-widget">
+				<span class="dashicons dashicons-warning"></span>
+				<p>
+					<?php
+					printf(
+						/* translators: 1: count of failed emails, 2: link open, 3: link close */
+						esc_html( _n(
+							'%1$d email failed to send. %2$sView invitations%3$s to investigate.',
+							'%1$d emails failed to send. %2$sView invitations%3$s to investigate.',
+							$failed_emails,
+							'woo-ai-review-manager'
+						) ),
+						$failed_emails,
+						'<a href="' . esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ) . '">',
+						'</a>'
+					);
+					?>
+				</p>
+			</div>
+			<?php endif; ?>
+
+			<div class="wairm-period-filter">
+				<?php
+				$period_base = admin_url( 'admin.php?page=wairm-dashboard' );
+				$periods     = [
+					'7'   => __( 'Last 7 days', 'woo-ai-review-manager' ),
+					'30'  => __( 'Last 30 days', 'woo-ai-review-manager' ),
+					'90'  => __( 'Last 90 days', 'woo-ai-review-manager' ),
+					'all' => __( 'All time', 'woo-ai-review-manager' ),
+				];
+				foreach ( $periods as $key => $label ) :
+				?>
+					<a href="<?php echo esc_url( add_query_arg( 'period', $key, $period_base ) ); ?>" class="button <?php echo $period === $key ? 'button-primary' : ''; ?>">
+						<?php echo esc_html( $label ); ?>
+					</a>
+				<?php endforeach; ?>
+			</div>
 
 			<div class="wairm-stats-grid">
 				<div class="wairm-stat-card">
@@ -234,6 +353,19 @@ final class Dashboard_Page {
 						?>
 					</button>
 					<?php endif; ?>
+
+					<span class="wairm-export-links">
+						<?php esc_html_e( 'Export:', 'woo-ai-review-manager' ); ?>
+						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=reviews' ), 'wairm_export_csv' ) ); ?>" class="button button-small">
+							<?php esc_html_e( 'Reviews CSV', 'woo-ai-review-manager' ); ?>
+						</a>
+						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=invitations' ), 'wairm_export_csv' ) ); ?>" class="button button-small">
+							<?php esc_html_e( 'Invitations CSV', 'woo-ai-review-manager' ); ?>
+						</a>
+						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=responses' ), 'wairm_export_csv' ) ); ?>" class="button button-small">
+							<?php esc_html_e( 'Responses CSV', 'woo-ai-review-manager' ); ?>
+						</a>
+					</span>
 				</div>
 
 				<?php if ( $pending_count > 0 ) : ?>

@@ -21,6 +21,9 @@ final class Responses_Page {
 		add_action( 'wp_ajax_wairm_update_response', [ $this, 'ajax_update_response' ] );
 		add_action( 'wp_ajax_wairm_post_response', [ $this, 'ajax_post_response' ] );
 		add_action( 'wp_ajax_wairm_regenerate_response', [ $this, 'ajax_regenerate_response' ] );
+		add_action( 'wp_ajax_wairm_bulk_response', [ $this, 'ajax_bulk_response' ] );
+		add_action( 'wp_ajax_wairm_undo_dismiss', [ $this, 'ajax_undo_dismiss' ] );
+		add_action( 'wp_ajax_wairm_edit_posted_reply', [ $this, 'ajax_edit_posted_reply' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 	}
 
@@ -62,19 +65,28 @@ final class Responses_Page {
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'nonce'    => wp_create_nonce( 'wairm_responses' ),
 				'i18n'     => [
-					'confirm_dismiss'  => __( 'Dismiss this response suggestion?', 'woo-ai-review-manager' ),
-					'confirm_post'     => __( 'Post this as a reply to the review? This will be visible to customers.', 'woo-ai-review-manager' ),
-					'posted'           => __( 'Reply posted successfully.', 'woo-ai-review-manager' ),
-					'updated'          => __( 'Response updated.', 'woo-ai-review-manager' ),
-					'regenerating'     => __( 'Regenerating...', 'woo-ai-review-manager' ),
-					'regenerated'      => __( 'New suggestion generated.', 'woo-ai-review-manager' ),
-					'regenerate'       => __( 'Regenerate', 'woo-ai-review-manager' ),
-					'error'            => __( 'Something went wrong. Please try again.', 'woo-ai-review-manager' ),
-					'empty_response'   => __( 'Response text cannot be empty.', 'woo-ai-review-manager' ),
-					'status_approved'  => __( 'Approved', 'woo-ai-review-manager' ),
-					'status_dismissed' => __( 'Dismissed', 'woo-ai-review-manager' ),
-					'status_posted'    => __( 'Posted', 'woo-ai-review-manager' ),
-					'status_new'       => __( 'New', 'woo-ai-review-manager' ),
+					'confirm_dismiss'      => __( 'Dismiss this response suggestion?', 'woo-ai-review-manager' ),
+					'confirm_post'         => __( 'Post this as a reply to the review? This will be visible to customers.', 'woo-ai-review-manager' ),
+					'posted'               => __( 'Reply posted successfully.', 'woo-ai-review-manager' ),
+					'updated'              => __( 'Response updated.', 'woo-ai-review-manager' ),
+					'regenerating'         => __( 'Regenerating...', 'woo-ai-review-manager' ),
+					'regenerated'          => __( 'New suggestion generated.', 'woo-ai-review-manager' ),
+					'regenerate'           => __( 'Regenerate', 'woo-ai-review-manager' ),
+					'error'                => __( 'Something went wrong. Please try again.', 'woo-ai-review-manager' ),
+					'empty_response'       => __( 'Response text cannot be empty.', 'woo-ai-review-manager' ),
+					'status_approved'      => __( 'Approved', 'woo-ai-review-manager' ),
+					'status_dismissed'     => __( 'Dismissed', 'woo-ai-review-manager' ),
+					'status_posted'        => __( 'Posted', 'woo-ai-review-manager' ),
+					'status_new'           => __( 'New', 'woo-ai-review-manager' ),
+					'bulk_confirm_approve' => __( 'Approve all selected responses?', 'woo-ai-review-manager' ),
+					'bulk_confirm_dismiss' => __( 'Dismiss all selected responses?', 'woo-ai-review-manager' ),
+					'bulk_confirm_post'    => __( 'Post all selected responses as replies? They will be visible to customers.', 'woo-ai-review-manager' ),
+					'bulk_done'            => __( 'Bulk action completed.', 'woo-ai-review-manager' ),
+					'no_selection'         => __( 'No responses selected.', 'woo-ai-review-manager' ),
+					'undo_dismiss'         => __( 'Undo Dismiss', 'woo-ai-review-manager' ),
+					'undo_success'         => __( 'Response restored.', 'woo-ai-review-manager' ),
+					'reply_updated'        => __( 'Posted reply updated.', 'woo-ai-review-manager' ),
+					'edit_reply'           => __( 'Update Reply', 'woo-ai-review-manager' ),
 				],
 			]
 		);
@@ -277,6 +289,210 @@ final class Responses_Page {
 		wp_send_json_success( [ 'suggestion' => $suggestion ] );
 	}
 
+	/**
+	 * AJAX: Bulk action on multiple responses.
+	 */
+	public function ajax_bulk_response(): void {
+		check_ajax_referer( 'wairm_responses', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		global $wpdb;
+
+		$ids    = array_map( 'absint', (array) ( $_POST['ids'] ?? [] ) );
+		$ids    = array_filter( $ids );
+		$action = sanitize_key( $_POST['bulk_action'] ?? '' );
+
+		if ( empty( $ids ) || ! in_array( $action, [ 'approved', 'dismissed', 'post' ], true ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+		}
+
+		$table     = $wpdb->prefix . 'wairm_review_sentiment';
+		$succeeded = 0;
+
+		foreach ( $ids as $id ) {
+			if ( 'post' === $action ) {
+				// Simulate individual post — reuse post logic.
+				$_POST['sentiment_id'] = $id;
+				$row = $wpdb->get_row( $wpdb->prepare(
+					"SELECT s.*, s.ai_response_suggestion AS text FROM {$table} s WHERE s.id = %d",
+					$id
+				) );
+				if ( $row && in_array( $row->ai_response_status, [ 'generated', 'approved' ], true ) && ! empty( $row->text ) ) {
+					$_POST['response_text'] = $row->text;
+					// Use internal post logic.
+					$this->post_single_response( $id, $row->text );
+					$succeeded++;
+				}
+			} else {
+				$current = $wpdb->get_var( $wpdb->prepare(
+					"SELECT ai_response_status FROM {$table} WHERE id = %d",
+					$id
+				) );
+				if ( in_array( $current, [ 'generated', 'approved' ], true ) ) {
+					$wpdb->update( $table, [ 'ai_response_status' => $action ], [ 'id' => $id ], [ '%s' ], [ '%d' ] );
+					$succeeded++;
+				}
+			}
+		}
+
+		wp_send_json_success( [ 'updated' => $succeeded ] );
+	}
+
+	/**
+	 * Post a single response as a WooCommerce reply (shared logic).
+	 */
+	private function post_single_response( int $id, string $text ): bool {
+		global $wpdb;
+
+		$row = $wpdb->get_row( $wpdb->prepare(
+			"SELECT comment_id, product_id, ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment WHERE id = %d",
+			$id
+		) );
+
+		if ( ! $row || ! in_array( $row->ai_response_status, [ 'generated', 'approved' ], true ) ) {
+			return false;
+		}
+
+		$current_user = wp_get_current_user();
+		$reply_as     = get_option( 'wairm_reply_as', 'store' );
+
+		if ( 'user' === $reply_as ) {
+			$author_name  = $current_user->display_name;
+			$author_email = $current_user->user_email;
+		} else {
+			$author_name = get_option( 'wairm_email_from_name', '' );
+			if ( empty( $author_name ) ) {
+				$author_name = get_bloginfo( 'name' );
+			}
+			$author_email = get_option( 'wairm_support_email', '' );
+			if ( empty( $author_email ) ) {
+				$author_email = get_option( 'admin_email' );
+			}
+		}
+
+		$comment_id = wp_insert_comment( [
+			'comment_post_ID'      => (int) $row->product_id,
+			'comment_parent'       => (int) $row->comment_id,
+			'comment_content'      => $text,
+			'comment_type'         => 'comment',
+			'comment_approved'     => 1,
+			'user_id'              => $current_user->ID,
+			'comment_author'       => $author_name,
+			'comment_author_email' => $author_email,
+		] );
+
+		if ( ! $comment_id ) {
+			return false;
+		}
+
+		$wpdb->update(
+			$wpdb->prefix . 'wairm_review_sentiment',
+			[
+				'ai_response_suggestion' => $text,
+				'ai_response_status'     => 'sent',
+			],
+			[ 'id' => $id ],
+			[ '%s', '%s' ],
+			[ '%d' ]
+		);
+
+		return true;
+	}
+
+	/**
+	 * AJAX: Undo a dismissed response (restore to generated).
+	 */
+	public function ajax_undo_dismiss(): void {
+		check_ajax_referer( 'wairm_responses', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		global $wpdb;
+		$id = absint( $_POST['sentiment_id'] ?? 0 );
+
+		if ( ! $id ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+		}
+
+		$current = $wpdb->get_var( $wpdb->prepare(
+			"SELECT ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment WHERE id = %d",
+			$id
+		) );
+
+		if ( 'dismissed' !== $current ) {
+			wp_send_json_error( [ 'message' => __( 'This response is not dismissed.', 'woo-ai-review-manager' ) ] );
+		}
+
+		$wpdb->update(
+			$wpdb->prefix . 'wairm_review_sentiment',
+			[ 'ai_response_status' => 'generated' ],
+			[ 'id' => $id ],
+			[ '%s' ],
+			[ '%d' ]
+		);
+
+		wp_send_json_success( [ 'status' => 'generated' ] );
+	}
+
+	/**
+	 * AJAX: Edit an already-posted reply comment.
+	 */
+	public function ajax_edit_posted_reply(): void {
+		check_ajax_referer( 'wairm_responses', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		global $wpdb;
+
+		$id   = absint( $_POST['sentiment_id'] ?? 0 );
+		$text = sanitize_textarea_field( wp_unslash( $_POST['response_text'] ?? '' ) );
+
+		if ( ! $id || empty( $text ) ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+		}
+
+		$row = $wpdb->get_row( $wpdb->prepare(
+			"SELECT comment_id, ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment WHERE id = %d",
+			$id
+		) );
+
+		if ( ! $row || 'sent' !== $row->ai_response_status ) {
+			wp_send_json_error( [ 'message' => __( 'This response has not been posted yet.', 'woo-ai-review-manager' ) ] );
+		}
+
+		// Find the reply comment (child of the review comment).
+		$reply_id = $wpdb->get_var( $wpdb->prepare(
+			"SELECT comment_ID FROM {$wpdb->comments} WHERE comment_parent = %d ORDER BY comment_ID DESC LIMIT 1",
+			(int) $row->comment_id
+		) );
+
+		if ( ! $reply_id ) {
+			wp_send_json_error( [ 'message' => __( 'Reply comment not found.', 'woo-ai-review-manager' ) ] );
+		}
+
+		wp_update_comment( [
+			'comment_ID'      => (int) $reply_id,
+			'comment_content' => $text,
+		] );
+
+		$wpdb->update(
+			$wpdb->prefix . 'wairm_review_sentiment',
+			[ 'ai_response_suggestion' => $text ],
+			[ 'id' => $id ],
+			[ '%s' ],
+			[ '%d' ]
+		);
+
+		wp_send_json_success();
+	}
+
 	public function render_page(): void {
 		global $wpdb;
 
@@ -415,9 +631,20 @@ final class Responses_Page {
 					</p>
 				</div>
 			<?php else : ?>
+				<div class="wairm-bulk-bar" id="wairm-bulk-bar" style="display:none;">
+					<label><input type="checkbox" id="wairm-select-all"> <?php esc_html_e( 'Select all', 'woo-ai-review-manager' ); ?></label>
+					<span class="wairm-bulk-count"></span>
+					<button type="button" class="button wairm-bulk-approve"><?php esc_html_e( 'Approve', 'woo-ai-review-manager' ); ?></button>
+					<button type="button" class="button button-primary wairm-bulk-post"><?php esc_html_e( 'Post Reply', 'woo-ai-review-manager' ); ?></button>
+					<button type="button" class="button wairm-bulk-dismiss"><?php esc_html_e( 'Dismiss', 'woo-ai-review-manager' ); ?></button>
+				</div>
+
 				<div class="wairm-response-list">
 					<?php foreach ( $rows as $row ) : ?>
 					<div class="wairm-response-card" data-id="<?php echo absint( $row->id ); ?>" data-status="<?php echo esc_attr( $row->ai_response_status ); ?>">
+						<?php if ( in_array( $row->ai_response_status, [ 'generated', 'approved' ], true ) ) : ?>
+						<label class="wairm-bulk-check"><input type="checkbox" class="wairm-card-checkbox" value="<?php echo absint( $row->id ); ?>"></label>
+						<?php endif; ?>
 						<div class="wairm-response-header">
 							<span class="sentiment-badge sentiment-<?php echo esc_attr( $row->sentiment ); ?>"><?php echo esc_html( ucfirst( $row->sentiment ) ); ?></span>
 							<span class="wairm-badge-base wairm-response-status status-<?php echo esc_attr( $row->ai_response_status ); ?>">
@@ -463,7 +690,15 @@ final class Responses_Page {
 									<?php esc_html_e( 'Regenerate', 'woo-ai-review-manager' ); ?>
 								</button>
 							<?php endif; ?>
+							<?php if ( 'dismissed' === $row->ai_response_status ) : ?>
+								<button type="button" class="button wairm-action-undo-dismiss" title="<?php esc_attr_e( 'Restore this suggestion', 'woo-ai-review-manager' ); ?>">
+									<?php esc_html_e( 'Undo Dismiss', 'woo-ai-review-manager' ); ?>
+								</button>
+							<?php endif; ?>
 							<?php if ( 'sent' === $row->ai_response_status ) : ?>
+								<button type="button" class="button wairm-action-edit-reply" title="<?php esc_attr_e( 'Edit the posted reply', 'woo-ai-review-manager' ); ?>">
+									<?php esc_html_e( 'Edit Reply', 'woo-ai-review-manager' ); ?>
+								</button>
 								<span class="wairm-posted-label dashicons-before dashicons-yes-alt">
 									<?php esc_html_e( 'Reply posted', 'woo-ai-review-manager' ); ?>
 								</span>

@@ -17,6 +17,7 @@ final class Settings_Page {
 		add_action( 'admin_menu', [ $this, 'add_submenu_page' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+		add_action( 'wp_ajax_wairm_send_test_email', [ $this, 'ajax_send_test_email' ] );
 	}
 
 	public function enqueue_assets( string $hook ): void {
@@ -29,6 +30,29 @@ final class Settings_Page {
 			WAIRM_PLUGIN_URL . 'assets/css/admin.css',
 			[],
 			WAIRM_VERSION
+		);
+
+		wp_enqueue_script(
+			'wairm-settings',
+			WAIRM_PLUGIN_URL . 'assets/js/settings.js',
+			[],
+			WAIRM_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'wairm-settings',
+			'wairmSettings',
+			[
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'wairm_settings' ),
+				'i18n'     => [
+					'sending'    => __( 'Sending...', 'woo-ai-review-manager' ),
+					'send_test'  => __( 'Send Test Email', 'woo-ai-review-manager' ),
+					'sent'       => __( 'Test email sent!', 'woo-ai-review-manager' ),
+					'error'      => __( 'Failed to send test email.', 'woo-ai-review-manager' ),
+				],
+			]
 		);
 	}
 
@@ -124,6 +148,52 @@ final class Settings_Page {
 	public function sanitize_threshold( $value ): float {
 		$value = (float) $value;
 		return max( 0.0, min( 1.0, $value ) );
+	}
+
+	/**
+	 * AJAX: Send a test invitation email to the admin.
+	 */
+	public function ajax_send_test_email(): void {
+		check_ajax_referer( 'wairm_settings', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		$to = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
+		if ( empty( $to ) ) {
+			$to = wp_get_current_user()->user_email;
+		}
+
+		$from_name = get_option( 'wairm_email_from_name', '' );
+		if ( empty( $from_name ) ) {
+			$from_name = get_bloginfo( 'name' );
+		}
+
+		$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) );
+		$subject = str_replace(
+			[ '{customer_name}', '{store_name}' ],
+			[ __( 'Test Customer', 'woo-ai-review-manager' ), get_bloginfo( 'name' ) ],
+			$subject
+		);
+		$subject = '[TEST] ' . $subject;
+
+		$body = sprintf(
+			/* translators: 1: customer name, 2: store name, 3: review link */
+			__( "Hi %1\$s,\n\nThank you for your recent purchase at %2\$s! We'd love to hear about your experience.\n\nPlease click the link below to leave a review:\n%3\$s\n\nThank you!", 'woo-ai-review-manager' ),
+			__( 'Test Customer', 'woo-ai-review-manager' ),
+			get_bloginfo( 'name' ),
+			home_url( '?wairm_token=test-preview&action=review' )
+		);
+
+		$headers = [ 'From: ' . $from_name . ' <' . get_option( 'admin_email' ) . '>' ];
+		$sent    = wp_mail( $to, $subject, $body, $headers );
+
+		if ( $sent ) {
+			wp_send_json_success();
+		} else {
+			wp_send_json_error( [ 'message' => __( 'wp_mail() returned false. Check your mail configuration.', 'woo-ai-review-manager' ) ] );
+		}
 	}
 
 	public function render_page(): void {
@@ -368,6 +438,16 @@ final class Settings_Page {
 							</td>
 						</tr>
 					</table>
+
+					<h2><?php esc_html_e( 'Email Preview & Test', 'woo-ai-review-manager' ); ?></h2>
+					<div class="wairm-email-preview">
+						<p class="description"><?php esc_html_e( 'Send a test invitation email using the current settings.', 'woo-ai-review-manager' ); ?></p>
+						<div class="wairm-test-email-form">
+							<input type="email" id="wairm-test-email-address" value="<?php echo esc_attr( wp_get_current_user()->user_email ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Recipient email', 'woo-ai-review-manager' ); ?>">
+							<button type="button" class="button" id="wairm-send-test-email"><?php esc_html_e( 'Send Test Email', 'woo-ai-review-manager' ); ?></button>
+							<span id="wairm-test-email-result"></span>
+						</div>
+					</div>
 
 				<?php elseif ( 'general' === $active_tab ) : ?>
 					<h2><?php esc_html_e( 'General Settings', 'woo-ai-review-manager' ); ?></h2>

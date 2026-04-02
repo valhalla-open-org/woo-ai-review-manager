@@ -2173,3 +2173,335 @@
 		font-size: 12px;
 	}
 }
+
+/* -------------------------------------------------------
+   Dashboard – Setup Checklist Banner
+   ------------------------------------------------------- */
+.wairm-setup-checklist {
+	background: var(--mixed-bg);
+	border: 1px solid var(--mixed-border);
+	border-left: 4px solid var(--mixed);
+	border-radius: var(--radius-sm);
+	padding: 16px 20px;
+	margin: 16px 0;
+	font-family: var(--font-body);
+}
+
+.wairm-setup-checklist h3 {
+	margin: 0 0 6px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--mixed);
+}
+
+.wairm-setup-checklist h3 .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	margin-right: 4px;
+	vertical-align: text-bottom;
+}
+
+.wairm-setup-checklist p {
+	margin: 0 0 8px;
+	font-size: 13px;
+	color: var(--ink-soft);
+}
+
+.wairm-setup-checklist ul {
+	margin: 0 0 0 18px;
+	padding: 0;
+}
+
+.wairm-setup-checklist li {
+	font-size: 13px;
+	color: var(--ink-soft);
+	margin-bottom: 4px;
+}
+
+.wairm-setup-checklist a {
+	color: var(--accent);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.wairm-setup-checklist a:hover {
+	text-decoration: underline;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Failure Widget
+   ------------------------------------------------------- */
+.wairm-failure-widget {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	background: var(--negative-bg);
+	border: 1px solid var(--negative-border);
+	border-left: 4px solid var(--negative);
+	border-radius: var(--radius-sm);
+	padding: 14px 20px;
+	margin: 16px 0;
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--ink-soft);
+}
+
+.wairm-failure-widget .dashicons {
+	color: var(--negative);
+	flex-shrink: 0;
+}
+
+.wairm-failure-widget p {
+	margin: 0;
+}
+
+.wairm-failure-widget a {
+	color: var(--accent);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Period Filter
+   ------------------------------------------------------- */
+.wairm-period-filter {
+	display: flex;
+	gap: 6px;
+	margin: 16px 0 8px;
+	font-family: var(--font-body);
+}
+
+.wairm-period-filter .button {
+	font-size: 12px;
+	font-weight: 500;
+	border-radius: var(--radius-sm);
+}
+
+/* -------------------------------------------------------
+   Dashboard – Export Links
+   ------------------------------------------------------- */
+.wairm-export-links {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+	font-family: var(--font-body);
+	font-size: 12px;
+	color: var(--ink-muted);
+}
+
+.wairm-export-links .button-small {
+	font-size: 11px;
+	font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   Responses – Bulk Action Bar
+   ------------------------------------------------------- */
+.wairm-bulk-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 16px;
+	margin: 16px 0 0;
+	background: var(--surface-raised);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	font-family: var(--font-body);
+	font-size: 13px;
+}
+
+.wairm-bulk-bar label {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.wairm-bulk-count {
+	color: var(--ink-muted);
+	font-size: 12px;
+}
+
+.wairm-bulk-check {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+}
+
+.wairm-response-card {
+	position: relative;
+}
+
+/* -------------------------------------------------------
+   Invitations – Filters
+   ------------------------------------------------------- */
+.wairm-invitation-filters {
+	margin: 16px 0 0;
+}
+
+.wairm-invitation-filters form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	font-family: var(--font-body);
+	font-size: 13px;
+}
+
+.wairm-invitation-filters label {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: var(--ink-muted);
+	font-size: 12px;
+}
+
+.wairm-search-input {
+	width: 200px;
+	font-family: var(--font-body);
+	font-size: 13px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	padding: 4px 10px;
+}
+
+.wairm-invitation-filters input[type="date"] {
+	font-family: var(--font-body);
+	font-size: 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	padding: 4px 8px;
+}
+
+/* -------------------------------------------------------
+   Invitations – Email Log Modal
+   ------------------------------------------------------- */
+.wairm-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.wairm-modal-content {
+	background: var(--surface);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-lg);
+	width: 90%;
+	max-width: 600px;
+	max-height: 80vh;
+	overflow: auto;
+}
+
+.wairm-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--border);
+}
+
+.wairm-modal-header h3 {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: 18px;
+	font-weight: 400;
+	color: var(--ink);
+}
+
+.wairm-modal-close {
+	background: none;
+	border: none;
+	font-size: 24px;
+	color: var(--ink-muted);
+	cursor: pointer;
+	line-height: 1;
+	padding: 0 4px;
+}
+
+.wairm-modal-close:hover {
+	color: var(--negative);
+}
+
+.wairm-modal-body {
+	padding: 20px;
+}
+
+.wairm-modal-body .widefat {
+	font-family: var(--font-body);
+	font-size: 13px;
+}
+
+/* -------------------------------------------------------
+   Settings – Email Preview & Test
+   ------------------------------------------------------- */
+.wairm-email-preview {
+	margin-top: 16px;
+	padding: 16px 20px;
+	background: var(--surface-raised);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+}
+
+.wairm-test-email-form {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.wairm-test-success {
+	color: var(--positive);
+	font-family: var(--font-body);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.wairm-test-error {
+	color: var(--negative);
+	font-family: var(--font-body);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   Responsive – New Components
+   ------------------------------------------------------- */
+@media screen and (max-width: 600px) {
+	.wairm-bulk-bar {
+		flex-wrap: wrap;
+	}
+
+	.wairm-invitation-filters form {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.wairm-search-input {
+		width: 100%;
+	}
+
+	.wairm-period-filter {
+		flex-wrap: wrap;
+	}
+
+	.wairm-export-links {
+		flex-wrap: wrap;
+		margin-left: 0;
+		margin-top: 8px;
+	}
+
+	.wairm-test-email-form {
+		flex-direction: column;
+		align-items: stretch;
+	}
+}

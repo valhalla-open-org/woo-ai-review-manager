@@ -73,6 +73,7 @@ final class Plugin {
 			new Admin\Invitations_Page();
 			new Admin\Insights_Page();
 			new Admin\Settings_Page();
+			new Admin\CSV_Export();
 		}
 
 		// Core modules.

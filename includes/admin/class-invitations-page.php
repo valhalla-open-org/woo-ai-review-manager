@@ -20,6 +20,7 @@ final class Invitations_Page {
 		add_action( 'admin_menu', [ $this, 'add_submenu_page' ] );
 		add_action( 'wp_ajax_wairm_send_invitation', [ $this, 'ajax_send_invitation' ] );
 		add_action( 'wp_ajax_wairm_resend_invitation', [ $this, 'ajax_resend_invitation' ] );
+		add_action( 'wp_ajax_wairm_email_log', [ $this, 'ajax_email_log' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 	}
 
@@ -73,6 +74,10 @@ final class Invitations_Page {
 					'status_clicked'  => __( 'Clicked', 'woo-ai-review-manager' ),
 					'status_reviewed' => __( 'Reviewed', 'woo-ai-review-manager' ),
 					'status_expired'  => __( 'Expired', 'woo-ai-review-manager' ),
+					'email_log'       => __( 'Email Log', 'woo-ai-review-manager' ),
+					'close'           => __( 'Close', 'woo-ai-review-manager' ),
+					'loading'         => __( 'Loading...', 'woo-ai-review-manager' ),
+					'no_emails'       => __( 'No emails found for this invitation.', 'woo-ai-review-manager' ),
 				],
 			]
 		);
@@ -245,11 +250,56 @@ final class Invitations_Page {
 		}
 	}
 
+	/**
+	 * AJAX: Fetch detailed email log for an invitation.
+	 */
+	public function ajax_email_log(): void {
+		check_ajax_referer( 'wairm_invitations', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		global $wpdb;
+		$invitation_id = absint( $_POST['invitation_id'] ?? 0 );
+
+		if ( ! $invitation_id ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+		}
+
+		$emails = $wpdb->get_results( $wpdb->prepare(
+			"SELECT id, email_type, status, scheduled_at, sent_at
+			 FROM {$wpdb->prefix}wairm_email_queue
+			 WHERE invitation_id = %d
+			 ORDER BY scheduled_at DESC",
+			$invitation_id
+		) );
+
+		$rows = [];
+		foreach ( $emails as $email ) {
+			$rows[] = [
+				'type'         => $email->email_type,
+				'status'       => $email->status,
+				'scheduled_at' => $email->scheduled_at ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $email->scheduled_at ) ) : '',
+				'sent_at'      => $email->sent_at ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $email->sent_at ) ) : '—',
+			];
+		}
+
+		wp_send_json_success( [ 'emails' => $rows ] );
+	}
+
 	public function render_page(): void {
 		global $wpdb;
 
 		$table  = $wpdb->prefix . 'wairm_review_invitations';
 		$filter = sanitize_key( $_GET['status'] ?? 'all' );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only search/filter parameters.
+		$search   = sanitize_text_field( wp_unslash( $_GET['s'] ?? '' ) );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$date_from = sanitize_text_field( $_GET['date_from'] ?? '' );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$date_to   = sanitize_text_field( $_GET['date_to'] ?? '' );
 
 		// Count by status.
 		$counts = $wpdb->get_results(
@@ -268,7 +318,20 @@ final class Invitations_Page {
 		$where = '1=1';
 		$valid_statuses = [ 'pending', 'sent', 'clicked', 'reviewed', 'expired' ];
 		if ( in_array( $filter, $valid_statuses, true ) ) {
-			$where = $wpdb->prepare( 'i.status = %s', $filter );
+			$where .= $wpdb->prepare( ' AND i.status = %s', $filter );
+		}
+
+		if ( ! empty( $search ) ) {
+			$like   = '%' . $wpdb->esc_like( $search ) . '%';
+			$where .= $wpdb->prepare( ' AND (i.customer_name LIKE %s OR i.customer_email LIKE %s)', $like, $like );
+		}
+
+		if ( ! empty( $date_from ) && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_from ) ) {
+			$where .= $wpdb->prepare( ' AND i.created_at >= %s', $date_from . ' 00:00:00' );
+		}
+
+		if ( ! empty( $date_to ) && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
+			$where .= $wpdb->prepare( ' AND i.created_at <= %s', $date_to . ' 23:59:59' );
 		}
 
 		$pagination = Admin_Helpers::parse_pagination();
@@ -329,6 +392,24 @@ final class Invitations_Page {
 			</ul>
 
 			<br class="clear">
+
+			<div class="wairm-invitation-filters">
+				<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
+					<input type="hidden" name="page" value="wairm-invitations">
+					<input type="hidden" name="status" value="<?php echo esc_attr( $filter ); ?>">
+					<input type="text" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search customer...', 'woo-ai-review-manager' ); ?>" class="wairm-search-input">
+					<label><?php esc_html_e( 'From:', 'woo-ai-review-manager' ); ?>
+						<input type="date" name="date_from" value="<?php echo esc_attr( $date_from ); ?>">
+					</label>
+					<label><?php esc_html_e( 'To:', 'woo-ai-review-manager' ); ?>
+						<input type="date" name="date_to" value="<?php echo esc_attr( $date_to ); ?>">
+					</label>
+					<button type="submit" class="button"><?php esc_html_e( 'Filter', 'woo-ai-review-manager' ); ?></button>
+					<?php if ( ! empty( $search ) || ! empty( $date_from ) || ! empty( $date_to ) ) : ?>
+						<a href="<?php echo esc_url( add_query_arg( 'status', $filter, $base_url ) ); ?>" class="button"><?php esc_html_e( 'Reset', 'woo-ai-review-manager' ); ?></a>
+					<?php endif; ?>
+				</form>
+			</div>
 
 			<?php if ( empty( $rows ) ) : ?>
 				<div class="wairm-empty-state">
@@ -422,6 +503,10 @@ final class Invitations_Page {
 									echo '<span class="wairm-email-queued">' . esc_html__( 'Queued', 'woo-ai-review-manager' ) . '</span>';
 								}
 								?>
+								<br>
+								<button type="button" class="button-link wairm-view-email-log" data-id="<?php echo absint( $row->id ); ?>">
+									<?php esc_html_e( 'View log', 'woo-ai-review-manager' ); ?>
+								</button>
 							</td>
 							<td><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $row->created_at ) ) ); ?></td>
 							<td>
@@ -470,6 +555,16 @@ final class Invitations_Page {
 				</div>
 				<?php endif; ?>
 			<?php endif; ?>
+
+			<div id="wairm-email-log-modal" class="wairm-modal" style="display:none;">
+				<div class="wairm-modal-content">
+					<div class="wairm-modal-header">
+						<h3><?php esc_html_e( 'Email Log', 'woo-ai-review-manager' ); ?></h3>
+						<button type="button" class="wairm-modal-close">&times;</button>
+					</div>
+					<div class="wairm-modal-body" id="wairm-email-log-body"></div>
+				</div>
+			</div>
 		</div>
 		<?php
 	}

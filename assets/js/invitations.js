@@ -133,4 +133,54 @@
 		} );
 	} );
 
+	// Email Log Modal.
+	var $modal = $( '#wairm-email-log-modal' );
+	var $modalBody = $( '#wairm-email-log-body' );
+
+	$( document ).on( 'click', '.wairm-view-email-log', function () {
+		var id = $( this ).data( 'id' );
+		$modalBody.html( '<p>' + ( i18n.loading || 'Loading...') + '</p>' );
+		$modal.show();
+
+		$.post( wairmInvitations.ajax_url, {
+			action:        'wairm_email_log',
+			nonce:         wairmInvitations.nonce,
+			invitation_id: id
+		} )
+		.done( function ( response ) {
+			if ( response.success && response.data.emails.length > 0 ) {
+				var html = '<table class="widefat striped"><thead><tr>';
+				html += '<th>Type</th><th>Status</th><th>Scheduled</th><th>Sent</th>';
+				html += '</tr></thead><tbody>';
+				response.data.emails.forEach( function ( email ) {
+					html += '<tr>';
+					html += '<td>' + $( '<span>' ).text( email.type ).html() + '</td>';
+					html += '<td>' + $( '<span>' ).text( email.status ).html() + '</td>';
+					html += '<td>' + $( '<span>' ).text( email.scheduled_at ).html() + '</td>';
+					html += '<td>' + $( '<span>' ).text( email.sent_at ).html() + '</td>';
+					html += '</tr>';
+				} );
+				html += '</tbody></table>';
+				$modalBody.html( html );
+			} else if ( response.success ) {
+				$modalBody.html( '<p>' + ( i18n.no_emails || 'No emails found.') + '</p>' );
+			} else {
+				$modalBody.html( '<p class="wairm-inline-notice notice-error">' + ( response.data.message || i18n.error ) + '</p>' );
+			}
+		} )
+		.fail( function () {
+			$modalBody.html( '<p class="wairm-inline-notice notice-error">' + i18n.error + '</p>' );
+		} );
+	} );
+
+	$modal.on( 'click', '.wairm-modal-close', function () {
+		$modal.hide();
+	} );
+
+	$modal.on( 'click', function ( e ) {
+		if ( $( e.target ).is( $modal ) ) {
+			$modal.hide();
+		}
+	} );
+
 })( jQuery );
