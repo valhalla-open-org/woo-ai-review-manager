@@ -13,6 +13,7 @@ global $wpdb;
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_email_queue" );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_review_invitations" );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_review_sentiment" );
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_insights" );
 
 // Delete plugin options.
 $options = [

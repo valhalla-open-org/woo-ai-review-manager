@@ -2,24 +2,23 @@
 document.addEventListener( 'DOMContentLoaded', function () {
 	'use strict';
 
-	var container = document.querySelector( '.wairm-insights-content' );
+	var container  = document.querySelector( '.wairm-insights-content' );
 	if ( ! container ) {
 		return;
 	}
 
-	var output     = document.getElementById( 'wairm-insight-output' );
-	var meta       = document.getElementById( 'wairm-insight-meta' );
-	var refreshBtn = document.getElementById( 'wairm-refresh-insight' );
-	var category   = container.getAttribute( 'data-category' );
-	var i18n       = wairmInsights.i18n;
+	var output      = document.getElementById( 'wairm-insight-output' );
+	var generateBtn = document.getElementById( 'wairm-generate-insight' );
+	var historySelect = document.getElementById( 'wairm-insight-history' );
+	var category    = container.getAttribute( 'data-category' );
+	var i18n        = wairmInsights.i18n;
 
 	function showLoading() {
 		output.innerHTML = '<div class="wairm-insight-loading">' +
 			'<span class="spinner is-active" style="float: none; margin: 0 8px 0 0;"></span>' +
 			i18n.generating +
 			'</div>';
-		meta.textContent = '';
-		refreshBtn.disabled = true;
+		generateBtn.disabled = true;
 	}
 
 	function showError( message ) {
@@ -27,37 +26,77 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			'<span class="dashicons dashicons-warning" style="color: #d63638; margin-right: 6px;"></span>' +
 			message +
 			'</div>';
-		refreshBtn.disabled = false;
+		generateBtn.disabled = false;
 	}
 
 	function showResult( data ) {
 		output.innerHTML = '<div class="wairm-insight-body">' + data.html + '</div>';
-
-		if ( data.generated ) {
-			meta.textContent = i18n.last_updated + ' ' + data.generated +
-				' (' + data.review_count + ' reviews)';
-		}
-
-		refreshBtn.disabled = false;
+		generateBtn.disabled = false;
 	}
 
-	function loadInsight( forceRefresh ) {
-		showLoading();
+	function updateHistory( history ) {
+		if ( ! historySelect ) {
+			// Create the select element if it doesn't exist yet.
+			historySelect = document.createElement( 'select' );
+			historySelect.id = 'wairm-insight-history';
+			historySelect.className = 'wairm-insight-history';
+			generateBtn.parentNode.insertBefore( historySelect, generateBtn );
 
-		var body = new URLSearchParams( {
-			action: 'wairm_generate_insight',
-			nonce: wairmInsights.nonce,
-			category: category
-		} );
-
-		if ( forceRefresh ) {
-			body.append( 'refresh', '1' );
+			historySelect.addEventListener( 'change', function () {
+				loadInsight( this.value );
+			} );
 		}
+
+		historySelect.innerHTML = '';
+		history.forEach( function ( entry ) {
+			var option = document.createElement( 'option' );
+			option.value = entry.id;
+			option.textContent = entry.generated_at + ' (' + entry.review_count + ' ' + i18n.reviews + ')';
+			historySelect.appendChild( option );
+		} );
+	}
+
+	function generateInsight() {
+		showLoading();
 
 		fetch( wairmInsights.ajax_url, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: body
+			body: new URLSearchParams( {
+				action: 'wairm_generate_insight',
+				nonce: wairmInsights.nonce,
+				category: category
+			} )
+		} )
+			.then( function ( res ) { return res.json(); } )
+			.then( function ( data ) {
+				if ( data.success ) {
+					showResult( data.data );
+					updateHistory( data.data.history );
+
+					// Update button text after first generation.
+					generateBtn.innerHTML = '<span class="dashicons dashicons-update" style="line-height: 1.4;"></span> ' +
+						( historySelect && historySelect.options.length > 0 ? 'Generate New' : 'Generate' );
+				} else {
+					showError( ( data.data && data.data.message ) || i18n.error );
+				}
+			} )
+			.catch( function () {
+				showError( i18n.error );
+			} );
+	}
+
+	function loadInsight( insightId ) {
+		showLoading();
+
+		fetch( wairmInsights.ajax_url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams( {
+				action: 'wairm_load_insight',
+				nonce: wairmInsights.nonce,
+				insight_id: insightId
+			} )
 		} )
 			.then( function ( res ) { return res.json(); } )
 			.then( function ( data ) {
@@ -72,11 +111,15 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			} );
 	}
 
-	// Load on page load (uses cache if available).
-	loadInsight( false );
-
-	// Refresh button.
-	refreshBtn.addEventListener( 'click', function () {
-		loadInsight( true );
+	// Generate button.
+	generateBtn.addEventListener( 'click', function () {
+		generateInsight();
 	} );
+
+	// History dropdown.
+	if ( historySelect ) {
+		historySelect.addEventListener( 'change', function () {
+			loadInsight( this.value );
+		} );
+	}
 } );

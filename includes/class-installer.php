@@ -71,6 +71,16 @@ final class Installer {
 			KEY sentiment (sentiment)
 		) {$charset_collate};
 
+		CREATE TABLE {$wpdb->prefix}wairm_insights (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			category VARCHAR(20) NOT NULL,
+			content LONGTEXT NOT NULL,
+			review_count INT UNSIGNED NOT NULL DEFAULT 0,
+			generated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			KEY category_generated (category, generated_at)
+		) {$charset_collate};
+
 		CREATE TABLE {$wpdb->prefix}wairm_email_queue (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			invitation_id BIGINT UNSIGNED NOT NULL,
