@@ -317,8 +317,8 @@ final class Insights_Page {
 							<?php endforeach; ?>
 						</select>
 						<?php endif; ?>
-						<button type="button" class="button button-primary" id="wairm-generate-insight">
-							<span class="dashicons dashicons-update" style="line-height: 1.4;"></span>
+						<button type="button" class="button button-primary" id="wairm-generate-insight" style="display: inline-flex; align-items: center; gap: 4px;">
+							<span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
 							<?php echo $has_insights ? esc_html__( 'Generate New', 'woo-ai-review-manager' ) : esc_html__( 'Generate', 'woo-ai-review-manager' ); ?>
 						</button>
 					</div>
