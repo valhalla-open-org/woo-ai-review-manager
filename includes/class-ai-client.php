@@ -331,12 +331,20 @@ PROMPT;
 			'- If there is not enough data for a particular insight, say so briefly rather than speculating.',
 		] );
 
+		// Extend HTTP timeout for insight generation (large prompt + long response).
+		$extend_timeout = static function () {
+			return 120;
+		};
+		add_filter( 'http_request_timeout', $extend_timeout );
+
 		$builder = wp_ai_client_prompt( $prompt )
 			->using_system_instruction( $system )
 			->using_temperature( 0.5 )
-			->using_max_tokens( 2000 );
+			->using_max_tokens( 1500 );
 
 		$result = self::apply_model_preference( $builder )->generate_text();
+
+		remove_filter( 'http_request_timeout', $extend_timeout );
 
 		if ( is_wp_error( $result ) ) {
 			throw new \RuntimeException( 'AI insight generation failed: ' . $result->get_error_message() );

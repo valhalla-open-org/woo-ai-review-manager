@@ -228,7 +228,7 @@ final class Insights_Page {
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'wairm_review_sentiment';
-		$limit = 'product' === $category ? 100 : 50;
+		$limit = 'product' === $category ? 40 : 30;
 
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(

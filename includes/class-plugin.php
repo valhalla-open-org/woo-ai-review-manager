@@ -23,7 +23,18 @@ final class Plugin {
 	}
 
 	private function __construct() {
+		$this->maybe_upgrade();
 		$this->init_hooks();
+	}
+
+	/**
+	 * Run the installer if the DB version is outdated (e.g. new tables added).
+	 */
+	private function maybe_upgrade(): void {
+		$db_version = get_option( 'wairm_version', '0' );
+		if ( version_compare( $db_version, WAIRM_VERSION, '<' ) ) {
+			Installer::activate();
+		}
 	}
 
 	/**
