@@ -155,15 +155,15 @@ final class Settings_Page {
 							</th>
 							<td>
 								<?php if ( ! $ai_available ) : ?>
-									<p style="color: #e74c3c;">
-										<strong><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></strong>
+									<p>
+										<span class="wairm-ai-unavailable"><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></span>
 									</p>
 									<p class="description">
 										<?php esc_html_e( 'This plugin requires WordPress 7.0 or later with the AI Client API.', 'woo-ai-review-manager' ); ?>
 									</p>
 								<?php elseif ( ! $text_supported ) : ?>
-									<p style="color: #e74c3c;">
-										<strong><?php esc_html_e( 'No AI connectors are configured for text generation.', 'woo-ai-review-manager' ); ?></strong>
+									<p>
+										<span class="wairm-ai-unavailable"><?php esc_html_e( 'No AI connectors are configured for text generation.', 'woo-ai-review-manager' ); ?></span>
 									</p>
 									<p class="description">
 										<?php printf(
@@ -173,8 +173,8 @@ final class Settings_Page {
 										); ?>
 									</p>
 								<?php else : ?>
-									<p style="color: #2ecc71;">
-										<strong><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></strong>
+									<p>
+										<span class="wairm-ai-available"><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></span>
 									</p>
 								<?php endif; ?>
 							</td>
@@ -186,17 +186,17 @@ final class Settings_Page {
 								<?php esc_html_e( 'Connectors', 'woo-ai-review-manager' ); ?>
 							</th>
 							<td>
-								<ul style="margin: 0;">
+								<ul class="wairm-connector-list">
 									<?php foreach ( $providers as $provider_id => $provider_data ) : ?>
 										<li>
 											<?php if ( $provider_data['configured'] ) : ?>
-												<span style="color: #2ecc71;">&#10003;</span>
+												<span class="wairm-connector-check">&#10003;</span>
 											<?php else : ?>
-												<span style="color: #ccc;">&#10007;</span>
+												<span class="wairm-connector-cross">&#10007;</span>
 											<?php endif; ?>
 											<strong><?php echo esc_html( $provider_data['name'] ); ?></strong>
 											<?php if ( $provider_data['configured'] && ! empty( $provider_data['models'] ) ) : ?>
-												<span style="color: #888;">&mdash;
+												<span class="wairm-connector-meta">&mdash;
 													<?php
 													printf(
 														/* translators: %d: number of models */
@@ -206,7 +206,7 @@ final class Settings_Page {
 													?>
 												</span>
 											<?php elseif ( ! $provider_data['configured'] ) : ?>
-												<span style="color: #888;">&mdash; <?php esc_html_e( 'not configured', 'woo-ai-review-manager' ); ?></span>
+												<span class="wairm-connector-meta">&mdash; <?php esc_html_e( 'not configured', 'woo-ai-review-manager' ); ?></span>
 											<?php endif; ?>
 										</li>
 									<?php endforeach; ?>

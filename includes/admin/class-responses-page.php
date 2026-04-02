@@ -348,7 +348,8 @@ final class Responses_Page {
 			<hr class="wp-header-end">
 
 			<?php if ( $pending_analysis > 0 ) : ?>
-			<div class="notice notice-warning" style="margin: 15px 0;">
+			<div class="wairm-notice-bar">
+				<span class="dashicons dashicons-info"></span>
 				<p>
 					<?php
 					printf(
@@ -398,8 +399,8 @@ final class Responses_Page {
 			<br class="clear">
 
 			<?php if ( empty( $rows ) ) : ?>
-				<div class="wairm-empty-state" style="text-align: center; padding: 60px 20px; background: #fff; border: 1px solid #ccd0d4; margin-top: 20px;">
-					<p style="font-size: 16px; color: #666;">
+				<div class="wairm-empty-state">
+					<p>
 						<?php
 						if ( 'actionable' === $filter ) {
 							esc_html_e( 'No responses need your attention right now.', 'woo-ai-review-manager' );
@@ -464,7 +465,7 @@ final class Responses_Page {
 								</button>
 							<?php endif; ?>
 							<?php if ( 'sent' === $row->ai_response_status ) : ?>
-								<span class="wairm-posted-label dashicons-before dashicons-yes-alt" style="color: #2ecc71;">
+								<span class="wairm-posted-label dashicons-before dashicons-yes-alt">
 									<?php esc_html_e( 'Reply posted', 'woo-ai-review-manager' ); ?>
 								</span>
 							<?php endif; ?>

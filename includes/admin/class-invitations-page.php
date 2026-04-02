@@ -331,23 +331,24 @@ final class Invitations_Page {
 
 			<?php if ( empty( $rows ) ) : ?>
 				<div class="wairm-empty-state">
-					<p style="font-size: 16px; color: #666;">
+					<p>
 						<?php esc_html_e( 'No invitations found.', 'woo-ai-review-manager' ); ?>
 					</p>
 				</div>
 			<?php else : ?>
-				<table class="wp-list-table widefat fixed striped" style="margin-top: 16px;">
+				<div class="wairm-table-scroll">
+				<table class="wp-list-table widefat striped">
 					<thead>
 						<tr>
-							<th scope="col" style="width: 60px;"><?php esc_html_e( 'ID', 'woo-ai-review-manager' ); ?></th>
+							<th scope="col" class="column-id"><?php esc_html_e( 'ID', 'woo-ai-review-manager' ); ?></th>
 							<th scope="col"><?php esc_html_e( 'Customer', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" style="width: 100px;"><?php esc_html_e( 'Order', 'woo-ai-review-manager' ); ?></th>
+							<th scope="col" class="column-order"><?php esc_html_e( 'Order', 'woo-ai-review-manager' ); ?></th>
 							<th scope="col"><?php esc_html_e( 'Products', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" style="width: 110px;"><?php esc_html_e( 'Status', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col"><?php esc_html_e( 'Emails', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" style="width: 140px;"><?php esc_html_e( 'Created', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" style="width: 140px;"><?php esc_html_e( 'Expires', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" style="width: 140px;"><?php esc_html_e( 'Actions', 'woo-ai-review-manager' ); ?></th>
+							<th scope="col" class="column-status"><?php esc_html_e( 'Status', 'woo-ai-review-manager' ); ?></th>
+							<th scope="col" class="column-emails"><?php esc_html_e( 'Emails', 'woo-ai-review-manager' ); ?></th>
+							<th scope="col" class="column-date"><?php esc_html_e( 'Created', 'woo-ai-review-manager' ); ?></th>
+							<th scope="col" class="column-date"><?php esc_html_e( 'Expires', 'woo-ai-review-manager' ); ?></th>
+							<th scope="col" class="column-date"><?php esc_html_e( 'Actions', 'woo-ai-review-manager' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -356,7 +357,7 @@ final class Invitations_Page {
 							<td><?php echo absint( $row->id ); ?></td>
 							<td>
 								<strong><?php echo esc_html( $row->customer_name ); ?></strong><br>
-								<span style="color: #888; font-size: 12px;"><?php echo esc_html( $row->customer_email ); ?></span>
+								<span class="wairm-customer-email"><?php echo esc_html( $row->customer_email ); ?></span>
 							</td>
 							<td>
 								<?php
@@ -412,7 +413,7 @@ final class Invitations_Page {
 									if ( $sent_count > 0 ) {
 										echo ', ';
 									}
-									echo '<span style="color: #e74c3c;">';
+									echo '<span class="wairm-email-failed">';
 									printf(
 										/* translators: %d: number of emails failed */
 										esc_html( _n( '%d failed', '%d failed', $failed_count, 'woo-ai-review-manager' ) ),
@@ -421,7 +422,7 @@ final class Invitations_Page {
 									echo '</span>';
 								}
 								if ( 0 === $sent_count && 0 === $failed_count ) {
-									echo '<span style="color: #888;">' . esc_html__( 'Queued', 'woo-ai-review-manager' ) . '</span>';
+									echo '<span class="wairm-email-queued">' . esc_html__( 'Queued', 'woo-ai-review-manager' ) . '</span>';
 								}
 								?>
 							</td>
@@ -432,7 +433,7 @@ final class Invitations_Page {
 								$expires_formatted = wp_date( get_option( 'date_format' ), strtotime( $row->expires_at ) );
 								if ( $is_expired && 'reviewed' !== $row->status ) :
 								?>
-									<span style="color: #e74c3c;"><?php echo esc_html( $expires_formatted ); ?></span>
+									<span class="wairm-date-expired"><?php echo esc_html( $expires_formatted ); ?></span>
 								<?php else : ?>
 									<?php echo esc_html( $expires_formatted ); ?>
 								<?php endif; ?>
@@ -447,13 +448,14 @@ final class Invitations_Page {
 										<?php esc_html_e( 'Resend', 'woo-ai-review-manager' ); ?>
 									</button>
 								<?php elseif ( 'reviewed' === $row->status ) : ?>
-									<span class="dashicons dashicons-yes-alt" style="color: #2ecc71; line-height: 1.8;" title="<?php esc_attr_e( 'Review submitted', 'woo-ai-review-manager' ); ?>"></span>
+									<span class="dashicons dashicons-yes-alt" title="<?php esc_attr_e( 'Review submitted', 'woo-ai-review-manager' ); ?>"></span>
 								<?php endif; ?>
 							</td>
 						</tr>
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+				</div>
 
 				<?php if ( $total_pages > 1 ) : ?>
 				<div class="tablenav bottom">

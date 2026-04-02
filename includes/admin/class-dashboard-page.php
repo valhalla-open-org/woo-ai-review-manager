@@ -173,22 +173,6 @@ final class Dashboard_Page {
 		<div class="wrap wairm-dashboard">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'AI Review Manager Dashboard', 'woo-ai-review-manager' ); ?></h1>
 
-			<?php if ( $actionable_responses > 0 ) : ?>
-			<div class="notice notice-info" style="margin: 15px 0;">
-				<p>
-					<?php
-					printf(
-						/* translators: 1: count, 2: link open, 3: link close */
-						esc_html__( 'You have %1$s AI response suggestions waiting for review. %2$sManage Responses%3$s', 'woo-ai-review-manager' ),
-						'<strong>' . esc_html( (string) $actionable_responses ) . '</strong>',
-						'<a href="' . esc_url( admin_url( 'admin.php?page=wairm-responses' ) ) . '">',
-						'</a>'
-					);
-					?>
-				</p>
-			</div>
-			<?php endif; ?>
-
 			<div class="wairm-stats-grid">
 				<div class="wairm-stat-card">
 					<h3><?php esc_html_e( 'Total Analyzed', 'woo-ai-review-manager' ); ?></h3>
@@ -253,11 +237,11 @@ final class Dashboard_Page {
 				</div>
 
 				<?php if ( $pending_count > 0 ) : ?>
-				<div id="wairm-analyze-progress" style="display: none; margin-top: 10px;">
-					<div style="background: #e0e0e0; border-radius: 4px; overflow: hidden; height: 20px;">
-						<div id="wairm-progress-bar" style="background: #3498db; height: 100%; width: 0%; transition: width 0.3s;"></div>
+				<div id="wairm-analyze-progress" class="wairm-progress-wrap" style="display: none;">
+					<div class="wairm-progress-track">
+						<div id="wairm-progress-bar" class="wairm-progress-fill"></div>
 					</div>
-					<p id="wairm-progress-text" style="margin: 5px 0; font-size: 13px; color: #666;"></p>
+					<p id="wairm-progress-text" class="wairm-progress-text"></p>
 				</div>
 				<?php endif; ?>
 			</div>
@@ -271,7 +255,7 @@ final class Dashboard_Page {
 							<div class="wairm-review-card sentiment-<?php echo esc_attr( $review->sentiment ); ?>">
 								<div class="review-header">
 									<span class="product-name"><?php echo esc_html( $review->product_name ); ?></span>
-									<span class="sentiment-badge"><?php echo esc_html( ucfirst( $review->sentiment ) ); ?></span>
+									<span class="sentiment-badge sentiment-<?php echo esc_attr( $review->sentiment ); ?>"><?php echo esc_html( ucfirst( $review->sentiment ) ); ?></span>
 									<span class="review-date"><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $review->comment_date ) ) ); ?></span>
 								</div>
 								<div class="review-excerpt"><?php echo esc_html( wp_trim_words( $review->comment_content, 30 ) ); ?></div>
@@ -283,7 +267,7 @@ final class Dashboard_Page {
 											<?php esc_html_e( 'Respond', 'woo-ai-review-manager' ); ?>
 										</a>
 									<?php elseif ( 'sent' === $review->ai_response_status ) : ?>
-										<span class="dashicons dashicons-yes-alt" style="color: #2ecc71;" title="<?php esc_attr_e( 'Reply posted', 'woo-ai-review-manager' ); ?>"></span>
+										<span class="dashicons dashicons-yes-alt" title="<?php esc_attr_e( 'Reply posted', 'woo-ai-review-manager' ); ?>"></span>
 									<?php endif; ?>
 								</div>
 							</div>
@@ -312,8 +296,11 @@ final class Dashboard_Page {
 									<td><?php echo absint( $product->review_count ); ?></td>
 									<td>
 										<?php echo esc_html( number_format( (float) $product->avg_score, 2 ) ); ?>
-										<span class="score-bar" style="display: inline-block; width: 50px; height: 6px; background: #e0e0e0; margin-left: 10px; vertical-align: middle;">
-											<span style="display: block; width: <?php echo esc_attr( $product->avg_score * 100 ); ?>%; height: 100%; background: <?php echo $product->avg_score > 0.65 ? '#2ecc71' : ( $product->avg_score > 0.35 ? '#f39c12' : '#e74c3c' ); ?>;"></span>
+										<?php
+										$score_class = $product->avg_score > 0.65 ? 'score-positive' : ( $product->avg_score > 0.35 ? 'score-mixed' : 'score-negative' );
+										?>
+										<span class="wairm-score-bar-track">
+											<span class="wairm-score-bar-fill <?php echo esc_attr( $score_class ); ?>" style="width: <?php echo esc_attr( (string) round( (float) $product->avg_score * 100 ) ); ?>%;"></span>
 										</span>
 									</td>
 								</tr>
@@ -329,11 +316,11 @@ final class Dashboard_Page {
 					$dash_providers  = \WooAIReviewManager\AI_Client::discover_providers();
 					$dash_model_pref = get_option( 'wairm_model_preference', '' );
 					?>
-					<div class="wairm-api-status" style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+					<div class="wairm-api-status">
 						<h3><?php esc_html_e( 'AI Status', 'woo-ai-review-manager' ); ?></h3>
 						<?php if ( $text_supported ) : ?>
-							<p style="color: #2ecc71;">
-								<strong><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></strong>
+							<p>
+								<span class="wairm-ai-available"><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></span>
 							</p>
 							<?php
 							$configured_providers = array_filter( $dash_providers, static function ( $p ) {
@@ -364,15 +351,15 @@ final class Dashboard_Page {
 								</p>
 							<?php endif; ?>
 						<?php elseif ( \WooAIReviewManager\AI_Client::is_available() ) : ?>
-							<p style="color: #e74c3c;">
-								<strong><?php esc_html_e( 'No AI connectors configured for text generation.', 'woo-ai-review-manager' ); ?></strong>
+							<p>
+								<span class="wairm-ai-unavailable"><?php esc_html_e( 'No AI connectors configured for text generation.', 'woo-ai-review-manager' ); ?></span>
 							</p>
 							<a href="<?php echo esc_url( admin_url( 'options-connectors.php' ) ); ?>" class="button button-secondary">
 								<?php esc_html_e( 'Configure AI Connectors', 'woo-ai-review-manager' ); ?>
 							</a>
 						<?php else : ?>
-							<p style="color: #e74c3c;">
-								<strong><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></strong>
+							<p>
+								<span class="wairm-ai-unavailable"><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></span>
 							</p>
 							<p><?php esc_html_e( 'This plugin requires WordPress 7.0 or later.', 'woo-ai-review-manager' ); ?></p>
 						<?php endif; ?>

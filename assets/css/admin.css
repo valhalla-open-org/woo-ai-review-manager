@@ -7,46 +7,106 @@
  */
 
 /* -------------------------------------------------------
+   Dashboard – Page Shell
+   ------------------------------------------------------- */
+.wairm-dashboard h1 {
+	font-family: var(--font-display);
+	font-size: 28px;
+	font-weight: 400;
+	color: var(--ink);
+	letter-spacing: -0.01em;
+}
+
+.wairm-dashboard .wairm-notice-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 16px 0 20px;
+	padding: 14px 20px;
+	background: var(--accent-light);
+	border: 1.5px solid var(--accent);
+	border-radius: var(--radius-sm);
+	font-family: var(--font-body);
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--ink-soft);
+}
+
+.wairm-dashboard .wairm-notice-bar a {
+	color: var(--accent);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.wairm-dashboard .wairm-notice-bar a:hover {
+	color: var(--accent-dark);
+	text-decoration: underline;
+}
+
+/* -------------------------------------------------------
    Dashboard – Stats Grid
    ------------------------------------------------------- */
 .wairm-stats-grid {
 	display: grid;
-	grid-template-columns: repeat( auto-fill, minmax( 180px, 1fr ) );
+	grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
 	gap: 16px;
 	margin: 20px 0;
 }
 
 .wairm-stat-card {
-	background: #fff;
-	border: 1px solid #ccd0d4;
-	border-radius: 6px;
-	padding: 20px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 22px 20px;
 	text-align: center;
+	box-shadow: var(--shadow-sm);
+	transition: box-shadow 0.2s, transform 0.2s;
+	animation: wairm-card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.wairm-stat-card:nth-child(1) { animation-delay: 0s; }
+.wairm-stat-card:nth-child(2) { animation-delay: 0.06s; }
+.wairm-stat-card:nth-child(3) { animation-delay: 0.12s; }
+.wairm-stat-card:nth-child(4) { animation-delay: 0.18s; }
+
+.wairm-stat-card:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-2px);
 }
 
 .wairm-stat-card h3 {
 	margin: 0 0 8px;
-	font-size: 13px;
-	color: #666;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--ink-muted);
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
+	letter-spacing: 0.06em;
 }
 
 .wairm-stat-card .stat-number {
-	font-size: 36px;
-	font-weight: 600;
-	line-height: 1.2;
+	font-family: var(--font-display);
+	font-size: 38px;
+	font-weight: 400;
+	line-height: 1.1;
+	color: var(--ink);
 }
 
 .wairm-stat-card .stat-percent {
-	font-size: 14px;
-	color: #888;
-	margin-top: 4px;
+	font-family: var(--font-body);
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--ink-muted);
+	margin-top: 6px;
 }
 
-.wairm-stat-card.positive .stat-number { color: #2ecc71; }
-.wairm-stat-card.neutral  .stat-number { color: #f39c12; }
-.wairm-stat-card.negative .stat-number { color: #e74c3c; }
+.wairm-stat-card.positive { border-top: 3px solid var(--positive); }
+.wairm-stat-card.neutral  { border-top: 3px solid var(--mixed); }
+.wairm-stat-card.negative { border-top: 3px solid var(--negative); }
+
+.wairm-stat-card.positive .stat-number { color: var(--positive); }
+.wairm-stat-card.neutral  .stat-number { color: var(--mixed); }
+.wairm-stat-card.negative .stat-number { color: var(--negative); }
 
 /* -------------------------------------------------------
    Dashboard – Two-Column Layout
@@ -54,18 +114,23 @@
 .wairm-two-column {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 24px;
-	margin-top: 20px;
+	gap: 28px;
+	margin-top: 24px;
 }
 
-@media screen and ( max-width: 960px ) {
+@media screen and (max-width: 960px) {
 	.wairm-two-column {
 		grid-template-columns: 1fr;
 	}
 }
 
 .wairm-column h2 {
-	margin-top: 0;
+	margin: 0 0 16px;
+	font-family: var(--font-display);
+	font-size: 20px;
+	font-weight: 400;
+	color: var(--ink);
+	letter-spacing: -0.005em;
 }
 
 /* -------------------------------------------------------
@@ -74,20 +139,28 @@
 .wairm-recent-reviews {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 10px;
 }
 
 .wairm-review-card {
-	background: #fff;
-	border: 1px solid #ccd0d4;
-	border-left: 4px solid #ccd0d4;
-	border-radius: 4px;
-	padding: 14px 16px;
+	background: var(--surface);
+	border: 1.5px solid var(--border);
+	border-radius: var(--radius-sm);
+	padding: 16px 18px;
+	box-shadow: var(--shadow-sm);
+	transition: box-shadow 0.2s, transform 0.15s;
 }
 
-.wairm-review-card.sentiment-positive { border-left-color: #2ecc71; }
-.wairm-review-card.sentiment-neutral  { border-left-color: #f39c12; }
-.wairm-review-card.sentiment-negative { border-left-color: #e74c3c; }
+.wairm-review-card:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-1px);
+}
+
+.wairm-review-card.sentiment-positive,
+.wairm-review-card.sentiment-neutral,
+.wairm-review-card.sentiment-negative {
+	border-color: var(--border);
+}
 
 .wairm-review-card .review-header {
 	display: flex;
@@ -98,20 +171,25 @@
 }
 
 .wairm-review-card .product-name {
+	font-family: var(--font-body);
 	font-weight: 600;
+	font-size: 13px;
+	color: var(--ink);
 }
 
 .wairm-review-card .review-date {
-	color: #888;
+	color: var(--ink-muted);
+	font-family: var(--font-body);
 	font-size: 12px;
 	margin-left: auto;
 }
 
 .wairm-review-card .review-excerpt {
-	color: #444;
+	color: var(--ink-soft);
+	font-family: var(--font-body);
 	font-size: 13px;
-	line-height: 1.5;
-	margin-bottom: 8px;
+	line-height: 1.6;
+	margin-bottom: 10px;
 }
 
 .wairm-review-card .review-meta {
@@ -119,41 +197,89 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 10px;
+	font-family: var(--font-body);
 	font-size: 12px;
-	color: #888;
+	color: var(--ink-muted);
+}
+
+.wairm-review-card .review-meta .button-small {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 600;
+	border-radius: 4px;
+}
+
+.wairm-review-card .review-meta .dashicons-yes-alt {
+	color: var(--positive);
 }
 
 /* -------------------------------------------------------
    Shared – Sentiment Badge
    ------------------------------------------------------- */
 .sentiment-badge {
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
 	padding: 2px 10px;
-	border-radius: 12px;
-	font-size: 12px;
+	border-radius: 20px;
+	font-family: var(--font-body);
+	font-size: 11px;
 	font-weight: 600;
-	line-height: 1.6;
-	color: #fff;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	line-height: 1.5;
 }
 
-.sentiment-badge.sentiment-positive { background: #2ecc71; }
-.sentiment-badge.sentiment-neutral  { background: #f39c12; }
-.sentiment-badge.sentiment-negative { background: #e74c3c; }
+.sentiment-badge::before {
+	content: '';
+	display: block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.sentiment-badge.sentiment-positive {
+	background: var(--positive-bg);
+	color: var(--positive);
+	border: 1px solid var(--positive-border);
+}
+.sentiment-badge.sentiment-positive::before { background: var(--positive); }
+
+.sentiment-badge.sentiment-neutral {
+	background: var(--mixed-bg);
+	color: var(--mixed);
+	border: 1px solid var(--mixed-border);
+}
+.sentiment-badge.sentiment-neutral::before { background: var(--mixed); }
+
+.sentiment-badge.sentiment-negative {
+	background: var(--negative-bg);
+	color: var(--negative);
+	border: 1px solid var(--negative-border);
+}
+.sentiment-badge.sentiment-negative::before { background: var(--negative); }
 
 /* -------------------------------------------------------
    Dashboard – Quick Actions
    ------------------------------------------------------- */
 .wairm-quick-actions-section {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-	padding: 16px 20px;
-	margin-bottom: 20px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 20px 24px;
+	margin-bottom: 24px;
+	box-shadow: var(--shadow-sm);
 }
 
 .wairm-quick-actions-section h2 {
-	margin: 0 0 12px;
-	font-size: 14px;
+	margin: 0 0 14px;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ink-muted);
 }
 
 .wairm-quick-actions {
@@ -164,22 +290,46 @@
 }
 
 .wairm-quick-actions .button {
+	font-family: var(--font-body);
+	font-size: 13px;
+	font-weight: 500;
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
+	border-radius: var(--radius-sm);
+	transition: box-shadow 0.15s, transform 0.1s;
+}
+
+.wairm-quick-actions .button:hover {
+	transform: translateY(-1px);
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-quick-actions .button-primary {
+	background: var(--accent);
+	border-color: var(--accent-dark);
+	color: #fff;
+}
+
+.wairm-quick-actions .button-primary:hover {
+	background: var(--accent-dark);
 }
 
 .wairm-badge {
-	display: inline-block;
-	background: #d63638;
-	color: #fff;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	background: #fff;
+	color: var(--accent);
+	font-family: var(--font-body);
 	font-size: 11px;
-	font-weight: 600;
+	font-weight: 700;
 	line-height: 1;
-	padding: 3px 6px;
+	padding: 0 5px;
 	border-radius: 10px;
 	margin-left: 4px;
-	vertical-align: middle;
 }
 
 /* -------------------------------------------------------
@@ -189,51 +339,628 @@
 	flex-basis: 100%;
 }
 
-#wairm-analyze-progress {
-	margin-top: 10px;
+.wairm-progress-wrap {
+	margin-top: 14px;
 }
+
+.wairm-progress-track {
+	background: var(--surface-sunken);
+	border: 1px solid var(--border-light);
+	border-radius: 20px;
+	overflow: hidden;
+	height: 22px;
+}
+
+.wairm-progress-fill {
+	background: linear-gradient(90deg, var(--accent) 0%, var(--accent-dark) 100%);
+	height: 100%;
+	width: 0%;
+	border-radius: 20px;
+	transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wairm-progress-text {
+	margin: 6px 0 0;
+	font-family: var(--font-body);
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--ink-muted);
+}
+
+/* -------------------------------------------------------
+   Dashboard – Top Products Table
+   ------------------------------------------------------- */
+.wairm-dashboard .wp-list-table {
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	overflow: hidden;
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-dashboard .wp-list-table thead th {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ink-muted);
+	background: var(--surface-raised);
+	border-bottom: 1px solid var(--border);
+	padding: 10px 14px;
+}
+
+.wairm-dashboard .wp-list-table td {
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--ink-soft);
+	padding: 10px 14px;
+	border-bottom: 1px solid var(--border-light);
+}
+
+.wairm-dashboard .wp-list-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.wairm-dashboard .wp-list-table tbody tr:hover td {
+	background: var(--surface-raised);
+}
+
+.wairm-score-bar-track {
+	display: inline-block;
+	width: 52px;
+	height: 6px;
+	background: var(--surface-sunken);
+	border-radius: 3px;
+	margin-left: 10px;
+	vertical-align: middle;
+	overflow: hidden;
+}
+
+.wairm-score-bar-fill {
+	display: block;
+	height: 100%;
+	border-radius: 3px;
+	transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wairm-score-bar-fill.score-positive { background: var(--positive); }
+.wairm-score-bar-fill.score-mixed    { background: var(--mixed); }
+.wairm-score-bar-fill.score-negative { background: var(--negative); }
 
 /* -------------------------------------------------------
    Dashboard – AI Status
    ------------------------------------------------------- */
 .wairm-api-status {
-	margin-top: 30px;
-	padding: 15px;
-	background: #f5f5f5;
-	border-radius: 4px;
+	margin-top: 28px;
+	padding: 20px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-sm);
 }
 
 .wairm-api-status h3 {
-	margin-top: 0;
+	margin: 0 0 10px;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ink-muted);
+}
+
+.wairm-api-status p {
+	font-family: var(--font-body);
+	font-size: 13px;
+	line-height: 1.6;
+	color: var(--ink-soft);
+	margin: 6px 0;
+}
+
+.wairm-api-status .wairm-ai-available {
+	color: var(--positive);
+	font-weight: 600;
+}
+
+.wairm-api-status .wairm-ai-unavailable {
+	color: var(--negative);
+	font-weight: 600;
+}
+
+.wairm-api-status code {
+	font-size: 12px;
+	background: var(--surface-sunken);
+	padding: 2px 6px;
+	border-radius: 4px;
+	color: var(--accent);
+}
+
+.wairm-api-status .button {
+	font-family: var(--font-body);
+	font-weight: 500;
+	border-radius: var(--radius-sm);
+	margin-top: 4px;
+}
+
+/* -------------------------------------------------------
+   Invitations Page – Shell
+   ------------------------------------------------------- */
+.wairm-invitations h1 {
+	font-family: var(--font-display);
+	font-size: 28px;
+	font-weight: 400;
+	color: var(--ink);
+	letter-spacing: -0.01em;
+}
+
+.wairm-invitations .subsubsub {
+	font-family: var(--font-body);
+	margin-bottom: 12px;
+}
+
+.wairm-invitations .subsubsub a {
+	font-weight: 500;
+	color: var(--ink-muted);
+	transition: color 0.15s;
+}
+
+.wairm-invitations .subsubsub a:hover {
+	color: var(--accent);
+}
+
+.wairm-invitations .subsubsub a.current {
+	color: var(--accent);
+	font-weight: 600;
+}
+
+.wairm-invitations .subsubsub .count {
+	color: var(--ink-muted);
+	font-weight: 400;
 }
 
 /* -------------------------------------------------------
    Invitations Page – Status Badges
    ------------------------------------------------------- */
 .wairm-invitation-status {
-	display: inline-block;
-	padding: 2px 10px;
-	border-radius: 12px;
-	font-size: 12px;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 11px;
+	border-radius: 20px;
+	font-family: var(--font-body);
+	font-size: 11px;
 	font-weight: 600;
-	line-height: 1.6;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	line-height: 1.5;
 }
 
-.wairm-invitation-status.status-pending  { background: #fef3cd; color: #856404; }
-.wairm-invitation-status.status-sent     { background: #e8f4fd; color: #0073aa; }
-.wairm-invitation-status.status-clicked  { background: #e7f5e7; color: #2e7d32; }
-.wairm-invitation-status.status-reviewed { background: #d4edda; color: #155724; }
-.wairm-invitation-status.status-expired  { background: #f5f5f5; color: #888; }
+.wairm-invitation-status::before {
+	content: '';
+	display: block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
 
-.wairm-invitations .subsubsub {
-	margin-bottom: 10px;
+.wairm-invitation-status.status-pending {
+	background: var(--mixed-bg);
+	color: var(--mixed);
+	border: 1px solid var(--mixed-border);
+}
+.wairm-invitation-status.status-pending::before { background: var(--mixed); }
+
+.wairm-invitation-status.status-sent {
+	background: var(--accent-light);
+	color: var(--accent);
+	border: 1px solid #d4cbf7;
+}
+.wairm-invitation-status.status-sent::before { background: var(--accent); }
+
+.wairm-invitation-status.status-clicked {
+	background: #e8f4fd;
+	color: #0369a1;
+	border: 1px solid #b3d9f2;
+}
+.wairm-invitation-status.status-clicked::before { background: #0369a1; }
+
+.wairm-invitation-status.status-reviewed {
+	background: var(--positive-bg);
+	color: var(--positive);
+	border: 1px solid var(--positive-border);
+}
+.wairm-invitation-status.status-reviewed::before { background: var(--positive); }
+
+.wairm-invitation-status.status-expired {
+	background: var(--surface-sunken);
+	color: var(--ink-muted);
+	border: 1px solid var(--border);
+}
+.wairm-invitation-status.status-expired::before { background: var(--ink-muted); }
+
+/* -------------------------------------------------------
+   Invitations Page – Table
+   ------------------------------------------------------- */
+.wairm-invitations .wp-list-table {
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	overflow: hidden;
+	box-shadow: var(--shadow-sm);
+	margin-top: 16px;
+}
+
+.wairm-invitations .wp-list-table thead th {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ink-muted);
+	background: var(--surface-raised);
+	border-bottom: 1px solid var(--border);
+	padding: 10px 14px;
+}
+
+.wairm-invitations .wp-list-table td {
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--ink-soft);
+	padding: 12px 14px;
+	border-bottom: 1px solid var(--border-light);
+	vertical-align: middle;
+}
+
+.wairm-invitations .wp-list-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.wairm-invitations .wp-list-table tbody tr:hover td {
+	background: var(--surface-raised);
+}
+
+.wairm-invitations .wp-list-table td strong {
+	color: var(--ink);
+}
+
+.wairm-invitations .wairm-customer-email {
+	color: var(--ink-muted);
+	font-size: 12px;
+}
+
+.wairm-invitations .wairm-email-failed {
+	color: var(--negative);
+	font-weight: 500;
+}
+
+.wairm-invitations .wairm-email-queued {
+	color: var(--ink-muted);
+}
+
+.wairm-invitations .wairm-date-expired {
+	color: var(--negative);
+	font-weight: 500;
+}
+
+.wairm-invitations .wp-list-table .button-small {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 600;
+	border-radius: 4px;
+	transition: box-shadow 0.15s, transform 0.1s;
+}
+
+.wairm-invitations .wp-list-table .button-small:hover {
+	transform: translateY(-1px);
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-invitations .dashicons-yes-alt {
+	color: var(--positive);
+	line-height: 1;
+}
+
+/* -------------------------------------------------------
+   Invitations Page – Empty State
+   ------------------------------------------------------- */
+.wairm-invitations .wairm-empty-state {
+	font-family: var(--font-body);
+}
+
+.wairm-invitations .wairm-empty-state p {
+	font-size: 15px;
+	color: var(--ink-muted);
+}
+
+/* -------------------------------------------------------
+   Invitations Page – Pagination
+   ------------------------------------------------------- */
+.wairm-invitations .tablenav {
+	font-family: var(--font-body);
+}
+
+.wairm-invitations .tablenav-pages a,
+.wairm-invitations .tablenav-pages span.current {
+	border-radius: var(--radius-sm);
+}
+
+.wairm-invitations .tablenav-pages span.current {
+	background: var(--accent);
+	border-color: var(--accent-dark);
+	color: #fff;
+}
+
+/* -------------------------------------------------------
+   Settings Page – Shell
+   ------------------------------------------------------- */
+.wairm-settings h1 {
+	font-family: var(--font-display);
+	font-size: 28px;
+	font-weight: 400;
+	color: var(--ink);
+	letter-spacing: -0.01em;
+}
+
+.wairm-settings .nav-tab-wrapper {
+	border-bottom: 2px solid var(--border);
+}
+
+.wairm-settings .nav-tab {
+	font-family: var(--font-body);
+	font-weight: 500;
+	font-size: 13px;
+	letter-spacing: 0.02em;
+	color: var(--ink-muted);
+	border: none;
+	border-bottom: 2px solid transparent;
+	background: transparent;
+	padding: 10px 18px;
+	margin-bottom: -2px;
+	transition: color 0.2s, border-color 0.2s;
+}
+
+.wairm-settings .nav-tab:hover {
+	color: var(--accent);
+	background: transparent;
+}
+
+.wairm-settings .nav-tab-active,
+.wairm-settings .nav-tab-active:hover {
+	color: var(--accent);
+	border-bottom-color: var(--accent);
+	background: transparent;
+	font-weight: 600;
+}
+
+/* -------------------------------------------------------
+   Settings Page – Form
+   ------------------------------------------------------- */
+.wairm-settings h2 {
+	font-family: var(--font-display);
+	font-size: 20px;
+	font-weight: 400;
+	color: var(--ink);
+	letter-spacing: -0.005em;
+	margin: 24px 0 0;
+}
+
+.wairm-settings .form-table {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+
+.wairm-settings .form-table th {
+	font-family: var(--font-body);
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ink);
+	padding: 20px 10px 20px 0;
+	vertical-align: top;
+}
+
+.wairm-settings .form-table td {
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--ink-soft);
+	padding: 16px 10px;
+}
+
+.wairm-settings .form-table tr {
+	border-bottom: 1px solid var(--border-light);
+}
+
+.wairm-settings .form-table tr:last-child {
+	border-bottom: none;
+}
+
+.wairm-settings .form-table input[type="text"],
+.wairm-settings .form-table input[type="email"],
+.wairm-settings .form-table input[type="number"],
+.wairm-settings .form-table select {
+	font-family: var(--font-body);
+	font-size: 13px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	padding: 6px 10px;
+	color: var(--ink-soft);
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.wairm-settings .form-table input:focus,
+.wairm-settings .form-table select:focus {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent-light);
+	outline: none;
+}
+
+.wairm-settings .form-table .description {
+	font-size: 12px;
+	color: var(--ink-muted);
+	margin-top: 6px;
+	line-height: 1.5;
+}
+
+.wairm-settings .form-table label {
+	font-family: var(--font-body);
+}
+
+.wairm-settings .form-table input[type="checkbox"] {
+	border: 1px solid var(--border);
+	border-radius: 3px;
+}
+
+.wairm-settings .form-table input[type="checkbox"]:checked {
+	background: var(--accent);
+	border-color: var(--accent-dark);
+}
+
+/* -------------------------------------------------------
+   Settings Page – AI Status & Connectors
+   ------------------------------------------------------- */
+.wairm-settings .wairm-ai-available {
+	color: var(--positive);
+	font-weight: 600;
+}
+
+.wairm-settings .wairm-ai-unavailable {
+	color: var(--negative);
+	font-weight: 600;
+}
+
+.wairm-settings .wairm-connector-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.wairm-settings .wairm-connector-list li {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 0;
+	font-family: var(--font-body);
+	font-size: 13px;
+}
+
+.wairm-settings .wairm-connector-list li + li {
+	border-top: 1px solid var(--border-light);
+}
+
+.wairm-settings .wairm-connector-check {
+	color: var(--positive);
+	font-weight: 700;
+}
+
+.wairm-settings .wairm-connector-cross {
+	color: var(--border);
+	font-weight: 700;
+}
+
+.wairm-settings .wairm-connector-meta {
+	color: var(--ink-muted);
+}
+
+.wairm-settings .wairm-connector-list strong {
+	color: var(--ink);
+}
+
+.wairm-settings code {
+	font-size: 12px;
+	background: var(--surface-sunken);
+	padding: 2px 6px;
+	border-radius: 4px;
+	color: var(--accent);
+}
+
+/* -------------------------------------------------------
+   Settings Page – Submit Button
+   ------------------------------------------------------- */
+.wairm-settings .submit .button-primary {
+	font-family: var(--font-body);
+	font-weight: 600;
+	font-size: 13px;
+	background: var(--accent);
+	border-color: var(--accent-dark);
+	color: #fff;
+	border-radius: var(--radius-sm);
+	padding: 6px 24px;
+	transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-settings .submit .button-primary:hover {
+	background: var(--accent-dark);
+	box-shadow: var(--shadow-md);
+	transform: translateY(-1px);
+}
+
+.wairm-settings .submit .button-primary:active {
+	transform: translateY(0);
+}
+
+/* -------------------------------------------------------
+   Responses Page – Shell
+   ------------------------------------------------------- */
+.wairm-responses h1 {
+	font-family: var(--font-display);
+	font-size: 28px;
+	font-weight: 400;
+	color: var(--ink);
+	letter-spacing: -0.01em;
+}
+
+.wairm-responses .wairm-notice-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 16px 0 20px;
+	padding: 14px 20px;
+	background: var(--mixed-bg);
+	border: 1.5px solid var(--mixed);
+	border-radius: var(--radius-sm);
+	font-family: var(--font-body);
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--ink-soft);
+}
+
+.wairm-responses .wairm-notice-bar a {
+	color: var(--accent);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.wairm-responses .wairm-notice-bar a:hover {
+	color: var(--accent-dark);
+	text-decoration: underline;
 }
 
 /* -------------------------------------------------------
    Responses Page – Filter Tabs
    ------------------------------------------------------- */
 .wairm-responses .subsubsub {
-	margin-bottom: 10px;
+	font-family: var(--font-body);
+	margin-bottom: 12px;
+}
+
+.wairm-responses .subsubsub a {
+	font-weight: 500;
+	color: var(--ink-muted);
+	transition: color 0.15s;
+}
+
+.wairm-responses .subsubsub a:hover {
+	color: var(--accent);
+}
+
+.wairm-responses .subsubsub a.current {
+	color: var(--accent);
+	font-weight: 600;
+}
+
+.wairm-responses .subsubsub .count {
+	color: var(--ink-muted);
+	font-weight: 400;
 }
 
 /* -------------------------------------------------------
@@ -247,11 +974,17 @@
 }
 
 .wairm-response-card {
-	background: #fff;
-	border: 1px solid #ccd0d4;
-	border-radius: 6px;
-	padding: 16px 20px;
-	transition: opacity 0.3s;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 20px 24px;
+	box-shadow: var(--shadow-sm);
+	transition: opacity 0.3s, box-shadow 0.2s, transform 0.15s;
+}
+
+.wairm-response-card:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-1px);
 }
 
 .wairm-response-header {
@@ -259,61 +992,161 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
-	margin-bottom: 12px;
+	margin-bottom: 14px;
 }
 
 .wairm-response-status {
-	display: inline-block;
-	padding: 2px 10px;
-	border-radius: 12px;
-	font-size: 12px;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 11px;
+	border-radius: 20px;
+	font-family: var(--font-body);
+	font-size: 11px;
 	font-weight: 600;
-	line-height: 1.6;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	line-height: 1.5;
 }
 
-.wairm-response-status.status-generated { background: #e8f4fd; color: #0073aa; }
-.wairm-response-status.status-approved  { background: #e7f5e7; color: #2e7d32; }
-.wairm-response-status.status-sent      { background: #eee;    color: #555; }
-.wairm-response-status.status-dismissed { background: #fce4e4; color: #b71c1c; }
+.wairm-response-status::before {
+	content: '';
+	display: block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.wairm-response-status.status-generated {
+	background: var(--accent-light);
+	color: var(--accent);
+	border: 1px solid #d4cbf7;
+}
+.wairm-response-status.status-generated::before { background: var(--accent); }
+
+.wairm-response-status.status-approved {
+	background: var(--positive-bg);
+	color: var(--positive);
+	border: 1px solid var(--positive-border);
+}
+.wairm-response-status.status-approved::before { background: var(--positive); }
+
+.wairm-response-status.status-sent {
+	background: var(--surface-sunken);
+	color: var(--ink-muted);
+	border: 1px solid var(--border);
+}
+.wairm-response-status.status-sent::before { background: var(--ink-muted); }
+
+.wairm-response-status.status-dismissed {
+	background: var(--negative-bg);
+	color: var(--negative);
+	border: 1px solid var(--negative-border);
+}
+.wairm-response-status.status-dismissed::before { background: var(--negative); }
 
 .wairm-response-meta {
 	margin-left: auto;
+	font-family: var(--font-body);
 	font-size: 12px;
-	color: #888;
+	color: var(--ink-muted);
 }
 
+.wairm-response-meta a {
+	color: var(--accent);
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.wairm-response-meta a:hover {
+	color: var(--accent-dark);
+	text-decoration: underline;
+}
+
+/* -------------------------------------------------------
+   Responses Page – Review Quote
+   ------------------------------------------------------- */
 .wairm-response-review {
-	background: #f9f9f9;
-	border-left: 3px solid #ddd;
-	padding: 10px 14px;
-	margin-bottom: 12px;
-	border-radius: 3px;
+	position: relative;
+	background: var(--surface-sunken);
+	border: 1.5px solid var(--border);
+	padding: 14px 18px 14px 34px;
+	margin-bottom: 14px;
+	border-radius: var(--radius-sm);
+}
+
+.wairm-response-review::before {
+	content: "\201C";
+	position: absolute;
+	left: 12px;
+	top: 8px;
+	font-family: var(--font-display);
+	font-size: 26px;
+	color: var(--accent);
+	line-height: 1;
+	opacity: 0.4;
+}
+
+.wairm-response-review strong {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ink-muted);
 }
 
 .wairm-response-review p {
-	margin: 6px 0 4px;
-	color: #333;
-	line-height: 1.6;
+	margin: 6px 0 6px;
+	font-family: var(--font-display);
+	font-size: 14px;
+	font-style: italic;
+	color: var(--ink-soft);
+	line-height: 1.65;
 }
 
 .wairm-response-review .review-score {
-	font-size: 12px;
-	color: #888;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--ink-muted);
 }
 
+/* -------------------------------------------------------
+   Responses Page – Suggestion Textarea
+   ------------------------------------------------------- */
 .wairm-response-suggestion {
-	margin-bottom: 12px;
+	margin-bottom: 14px;
 }
 
 .wairm-response-suggestion strong {
 	display: block;
-	margin-bottom: 6px;
+	margin-bottom: 8px;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ink-muted);
 }
 
 .wairm-response-text.large-text {
 	width: 100%;
+	font-family: var(--font-body);
 	font-size: 13px;
-	line-height: 1.6;
+	line-height: 1.65;
+	color: var(--ink-soft);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	padding: 10px 14px;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.wairm-response-text.large-text:focus {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent-light);
+	outline: none;
 }
 
 /* -------------------------------------------------------
@@ -324,157 +1157,368 @@
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
-	padding-top: 8px;
-	border-top: 1px solid #eee;
+	padding-top: 12px;
+	border-top: 1px solid var(--border-light);
+}
+
+.wairm-response-actions .button {
+	font-family: var(--font-body);
+	font-size: 12px;
+	font-weight: 600;
+	border-radius: var(--radius-sm);
+	transition: box-shadow 0.15s, transform 0.1s;
+}
+
+.wairm-response-actions .button:hover {
+	transform: translateY(-1px);
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-response-actions .button-primary {
+	background: var(--accent);
+	border-color: var(--accent-dark);
+	color: #fff;
+}
+
+.wairm-response-actions .button-primary:hover {
+	background: var(--accent-dark);
 }
 
 .wairm-posted-label {
+	font-family: var(--font-body);
 	font-weight: 600;
 	font-size: 13px;
+	color: var(--positive);
+}
+
+.wairm-posted-label.dashicons-before::before {
+	line-height: 1;
+	margin-right: 2px;
 }
 
 /* -------------------------------------------------------
    Responses Page – Inline Notices
    ------------------------------------------------------- */
 .wairm-inline-notice {
+	font-family: var(--font-body);
 	padding: 6px 12px;
-	border-radius: 4px;
-	font-size: 13px;
+	border-radius: var(--radius-sm);
+	font-size: 12px;
+	font-weight: 500;
 	animation: wairm-fade-in 0.2s ease;
 }
 
 .wairm-inline-notice.notice-success {
-	background: #e7f5e7;
-	color: #2e7d32;
+	background: var(--positive-bg);
+	color: var(--positive);
 }
 
 .wairm-inline-notice.notice-error {
-	background: #fce4e4;
-	color: #b71c1c;
+	background: var(--negative-bg);
+	color: var(--negative);
 }
 
 @keyframes wairm-fade-in {
-	from { opacity: 0; transform: translateY( -4px ); }
-	to   { opacity: 1; transform: translateY( 0 ); }
+	from { opacity: 0; transform: translateY(-4px); }
+	to   { opacity: 1; transform: translateY(0); }
 }
 
 /* -------------------------------------------------------
-   Responses Page – Empty State
+   Responses Page – Pagination
+   ------------------------------------------------------- */
+.wairm-responses .tablenav {
+	font-family: var(--font-body);
+}
+
+.wairm-responses .tablenav-pages a,
+.wairm-responses .tablenav-pages span.current {
+	border-radius: var(--radius-sm);
+}
+
+.wairm-responses .tablenav-pages span.current {
+	background: var(--accent);
+	border-color: var(--accent-dark);
+	color: #fff;
+}
+
+/* -------------------------------------------------------
+   Shared – Empty State
    ------------------------------------------------------- */
 .wairm-empty-state {
 	text-align: center;
-	padding: 60px 20px;
-	background: #fff;
-	border: 1px solid #ccd0d4;
+	padding: 72px 20px;
+	background: var(--surface);
+	border: 1px solid var(--border);
 	margin-top: 20px;
-	border-radius: 6px;
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-empty-state p {
+	font-family: var(--font-body);
+	font-size: 15px;
+	color: var(--ink-muted);
+	margin: 0;
 }
 
 /* -------------------------------------------------------
-   Insights Page
+   Insights Page – Design Tokens
    ------------------------------------------------------- */
-.wairm-insights-content {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-top: none;
-	padding: 20px 24px;
-	min-height: 300px;
+.wairm-dashboard,
+.wairm-insights,
+.wairm-invitations,
+.wairm-responses,
+.wairm-settings {
+	--ink: #0f0a1e;
+	--ink-soft: #3d3654;
+	--ink-muted: #6b6380;
+	--surface: #ffffff;
+	--surface-raised: #faf9fc;
+	--surface-sunken: #f3f1f7;
+	--border: #e4e0ed;
+	--border-light: #efecf5;
+	--accent: #6d3beb;
+	--accent-light: #ede8fd;
+	--accent-dark: #4a1fba;
+	--positive: #0d9264;
+	--positive-bg: #edfaf4;
+	--positive-border: #b6ead1;
+	--mixed: #c27a09;
+	--mixed-bg: #fef9ed;
+	--mixed-border: #f2dca0;
+	--negative: #c9303e;
+	--negative-bg: #fdf0f1;
+	--negative-border: #f0b8be;
+	--radius: 10px;
+	--radius-sm: 6px;
+	--shadow-sm: 0 1px 2px rgba(15,10,30,.05);
+	--shadow-md: 0 2px 8px rgba(15,10,30,.07), 0 1px 2px rgba(15,10,30,.04);
+	--shadow-lg: 0 8px 24px rgba(15,10,30,.09), 0 2px 6px rgba(15,10,30,.04);
+	--font-display: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+	--font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
+/* -------------------------------------------------------
+   Insights Page – Shell
+   ------------------------------------------------------- */
+.wairm-insights h1 {
+	font-family: var(--font-display);
+	font-size: 30px;
+	font-weight: 400;
+	color: var(--ink);
+	letter-spacing: -0.01em;
+}
+
+.wairm-insights .nav-tab-wrapper {
+	border-bottom: 2px solid var(--border);
+	margin-bottom: 0;
+}
+
+.wairm-insights .nav-tab {
+	font-family: var(--font-body);
+	font-weight: 500;
+	font-size: 13px;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--ink-muted);
+	border: none;
+	border-bottom: 2px solid transparent;
+	background: transparent;
+	padding: 10px 18px;
+	margin-bottom: -2px;
+	transition: color 0.2s, border-color 0.2s;
+}
+
+.wairm-insights .nav-tab:hover {
+	color: var(--accent);
+	background: transparent;
+}
+
+.wairm-insights .nav-tab-active,
+.wairm-insights .nav-tab-active:hover {
+	color: var(--accent);
+	border-bottom-color: var(--accent);
+	background: transparent;
+	font-weight: 600;
+}
+
+.wairm-insights-content {
+	font-family: var(--font-body);
+	background: var(--surface-raised);
+	border: 1px solid var(--border);
+	border-top: none;
+	border-radius: 0 0 var(--radius) var(--radius);
+	padding: 28px 32px;
+	min-height: 340px;
+}
+
+/* -------------------------------------------------------
+   Insights Page – Header Bar
+   ------------------------------------------------------- */
 .wairm-insights-header {
 	display: flex;
 	justify-content: space-between;
-	align-items: flex-start;
-	margin-bottom: 20px;
-	padding-bottom: 16px;
-	border-bottom: 1px solid #e0e0e0;
+	align-items: center;
+	margin-bottom: 24px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid var(--border-light);
 }
 
 .wairm-insights-description {
 	margin: 0;
-	color: #646970;
-	font-size: 13px;
+	color: var(--ink-muted);
+	font-family: var(--font-body);
+	font-size: 14px;
+	line-height: 1.5;
 }
 
 .wairm-insights-actions {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 10px;
 	flex-shrink: 0;
 }
 
+.wairm-insights-actions select {
+	font-family: var(--font-body);
+	font-size: 13px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	padding: 6px 28px 6px 10px;
+	background-color: var(--surface);
+	color: var(--ink-soft);
+	transition: border-color 0.15s;
+}
+
+.wairm-insights-actions select:focus {
+	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent-light);
+	outline: none;
+}
+
+.wairm-insights #wairm-generate-insight {
+	font-family: var(--font-body);
+	font-weight: 600;
+	font-size: 13px;
+	letter-spacing: 0.01em;
+	background: var(--accent);
+	border-color: var(--accent-dark);
+	color: #fff;
+	border-radius: var(--radius-sm);
+	padding: 6px 18px;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-insights #wairm-generate-insight:hover {
+	background: var(--accent-dark);
+	box-shadow: var(--shadow-md);
+	transform: translateY(-1px);
+}
+
+.wairm-insights #wairm-generate-insight:active {
+	transform: translateY(0);
+}
+
+.wairm-insights #wairm-generate-insight .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 1;
+}
+
+/* -------------------------------------------------------
+   Insights Page – Loading & Errors
+   ------------------------------------------------------- */
 .wairm-insight-loading {
 	display: flex;
 	align-items: center;
-	padding: 40px 0;
-	color: #646970;
+	justify-content: center;
+	padding: 60px 0;
+	color: var(--ink-muted);
+	font-family: var(--font-body);
 	font-size: 14px;
+	gap: 10px;
 }
 
 .wairm-insight-error {
 	display: flex;
-	align-items: center;
-	padding: 20px;
-	background: #fcf0f1;
-	border: 1px solid #d63638;
-	border-radius: 4px;
-	color: #d63638;
+	align-items: flex-start;
+	padding: 16px 20px;
+	background: var(--negative-bg);
+	border: 1.5px solid var(--negative);
+	border-radius: var(--radius-sm);
+	color: var(--negative);
+	font-family: var(--font-body);
 	font-size: 13px;
+	line-height: 1.5;
 }
 
+.wairm-insight-error .dashicons {
+	margin-right: 8px;
+	margin-top: 1px;
+}
+
+/* -------------------------------------------------------
+   Insights Page – Legacy Body (pre-JSON)
+   ------------------------------------------------------- */
 .wairm-insight-body h3 {
-	font-size: 15px;
-	margin: 24px 0 10px;
-	padding-bottom: 6px;
-	border-bottom: 1px solid #f0f0f0;
-	color: #1d2327;
+	font-family: var(--font-display);
+	font-size: 18px;
+	font-weight: 400;
+	margin: 28px 0 10px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--border-light);
+	color: var(--ink);
 }
 
-.wairm-insight-body h3:first-child {
-	margin-top: 0;
-}
+.wairm-insight-body h3:first-child { margin-top: 0; }
+.wairm-insight-body p { font-size: 13px; line-height: 1.7; color: var(--ink-soft); margin: 8px 0; }
+.wairm-insight-body ul { margin: 8px 0 8px 20px; }
+.wairm-insight-body li { font-size: 13px; line-height: 1.7; color: var(--ink-soft); margin-bottom: 4px; }
+.wairm-insight-body em { color: var(--ink-muted); }
+.wairm-insight-body strong { color: var(--ink); }
 
-.wairm-insight-body p {
-	font-size: 13px;
-	line-height: 1.6;
-	color: #3c434a;
-	margin: 8px 0;
-}
-
-.wairm-insight-body ul {
-	margin: 8px 0 8px 20px;
-}
-
-.wairm-insight-body li {
-	font-size: 13px;
-	line-height: 1.6;
-	color: #3c434a;
-	margin-bottom: 4px;
-}
-
-.wairm-insight-body em {
-	color: #646970;
-	font-style: italic;
-}
-
-.wairm-insight-body strong {
-	color: #1d2327;
-}
-
+/* -------------------------------------------------------
+   Insights Page – Empty State
+   ------------------------------------------------------- */
 .wairm-insight-empty {
 	text-align: center;
-	padding: 60px 20px;
-	color: #646970;
+	padding: 80px 20px;
+	color: var(--ink-muted);
+}
+
+.wairm-insight-empty-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, var(--accent-light) 0%, var(--surface-sunken) 100%);
+	margin-bottom: 20px;
+}
+
+.wairm-insight-empty-icon .dashicons {
+	font-size: 32px;
+	width: 32px;
+	height: 32px;
+	color: var(--accent);
 }
 
 .wairm-insight-empty p {
-	margin: 12px 0 0;
-	font-size: 14px;
+	margin: 10px 0 0;
+	font-family: var(--font-body);
+	font-size: 15px;
+	color: var(--ink-soft);
 }
 
 .wairm-insight-empty .description {
 	font-size: 13px;
-	color: #888;
+	color: var(--ink-muted);
 }
 
 .wairm-insight-history {
@@ -486,17 +1530,45 @@
 }
 
 /* -------------------------------------------------------
-   Insight Cards – Layout
+   Insight Cards – Entrance Animations
    ------------------------------------------------------- */
-.wairm-insight-cards {
-	animation: wairm-fade-in 0.3s ease;
+@keyframes wairm-card-enter {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
+.wairm-insight-cards {
+	animation: wairm-fade-in 0.25s ease;
+}
+
+.wairm-insight-cards .wairm-card,
+.wairm-insight-cards .wairm-summary-bar,
+.wairm-insight-cards .wairm-trend-overview,
+.wairm-insight-cards .wairm-priority-card {
+	animation: wairm-card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.wairm-insight-cards .wairm-card:nth-child(1) { animation-delay: 0.04s; }
+.wairm-insight-cards .wairm-card:nth-child(2) { animation-delay: 0.1s; }
+.wairm-insight-cards .wairm-card:nth-child(3) { animation-delay: 0.16s; }
+.wairm-insight-cards .wairm-card:nth-child(4) { animation-delay: 0.22s; }
+.wairm-insight-cards .wairm-card:nth-child(5) { animation-delay: 0.28s; }
+.wairm-insight-cards .wairm-card:nth-child(6) { animation-delay: 0.34s; }
+
+/* -------------------------------------------------------
+   Insight Cards – Grid Layout
+   ------------------------------------------------------- */
 .wairm-card-grid {
 	display: grid;
-	grid-template-columns: repeat( auto-fill, minmax( 320px, 1fr ) );
-	gap: 16px;
-	margin-bottom: 16px;
+	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+	gap: 20px;
+	margin-bottom: 20px;
 }
 
 .wairm-card-grid.wairm-two-col {
@@ -504,10 +1576,12 @@
 }
 
 .wairm-ops-grid {
-	grid-template-columns: repeat( 2, 1fr );
+	grid-template-columns: repeat(2, 1fr);
 }
 
-@media screen and ( max-width: 960px ) {
+@media screen and (max-width: 960px) {
+	.wairm-insights-content { padding: 20px 16px; }
+	.wairm-insights-header { flex-direction: column; gap: 12px; }
 	.wairm-card-grid,
 	.wairm-card-grid.wairm-two-col,
 	.wairm-ops-grid {
@@ -519,27 +1593,36 @@
    Insight Cards – Card Base
    ------------------------------------------------------- */
 .wairm-card {
-	background: #fff;
-	border: 1px solid #dcdcde;
-	border-radius: 6px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
 	overflow: hidden;
+	box-shadow: var(--shadow-sm);
+	transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.wairm-card:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-2px);
 }
 
 .wairm-card-header {
-	padding: 12px 16px;
-	border-bottom: 1px solid #f0f0f1;
-	background: #f9f9f9;
+	padding: 14px 20px;
+	border-bottom: 1px solid var(--border-light);
+	background: var(--surface);
 }
 
 .wairm-card-header h3 {
 	margin: 0;
-	font-size: 14px;
-	font-weight: 600;
-	color: #1d2327;
+	font-family: var(--font-display);
+	font-size: 17px;
+	font-weight: 400;
+	color: var(--ink);
+	letter-spacing: -0.005em;
 }
 
 .wairm-card-body {
-	padding: 14px 16px;
+	padding: 18px 20px;
 }
 
 .wairm-card-body ul {
@@ -550,21 +1633,25 @@
 
 .wairm-card-body li {
 	font-size: 13px;
-	line-height: 1.6;
-	color: #3c434a;
-	margin-bottom: 4px;
+	line-height: 1.7;
+	color: var(--ink-soft);
+	margin-bottom: 5px;
+}
+
+.wairm-card-body li::marker {
+	color: var(--border);
 }
 
 .wairm-card-body p {
 	font-size: 13px;
-	line-height: 1.6;
-	color: #3c434a;
+	line-height: 1.7;
+	color: var(--ink-soft);
 	margin: 4px 0;
 }
 
 .wairm-empty-item {
 	list-style: none;
-	color: #888;
+	color: var(--ink-muted);
 	font-style: italic;
 }
 
@@ -572,29 +1659,71 @@
    Insight Cards – Rating Badge
    ------------------------------------------------------- */
 .wairm-rating-badge {
-	display: inline-block;
-	padding: 2px 10px;
-	border-radius: 12px;
-	font-size: 12px;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 12px;
+	border-radius: 20px;
+	font-family: var(--font-body);
+	font-size: 11px;
 	font-weight: 600;
-	line-height: 1.6;
-	color: #fff;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	line-height: 1.5;
 }
 
-.wairm-rating-positive { background: #2ecc71; }
-.wairm-rating-mixed    { background: #f39c12; }
-.wairm-rating-negative { background: #e74c3c; }
-.wairm-rating-nodata   { background: #a7aaad; }
+.wairm-rating-badge::before {
+	content: '';
+	display: block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.wairm-rating-positive {
+	background: var(--positive-bg);
+	color: var(--positive);
+	border: 1px solid var(--positive-border);
+}
+.wairm-rating-positive::before { background: var(--positive); }
+
+.wairm-rating-mixed {
+	background: var(--mixed-bg);
+	color: var(--mixed);
+	border: 1px solid var(--mixed-border);
+}
+.wairm-rating-mixed::before { background: var(--mixed); }
+
+.wairm-rating-negative {
+	background: var(--negative-bg);
+	color: var(--negative);
+	border: 1px solid var(--negative-border);
+}
+.wairm-rating-negative::before { background: var(--negative); }
+
+.wairm-rating-nodata {
+	background: var(--surface-sunken);
+	color: var(--ink-muted);
+	border: 1px solid var(--border);
+}
+.wairm-rating-nodata::before { background: var(--ink-muted); }
 
 /* -------------------------------------------------------
    Insight Cards – Product Cards
    ------------------------------------------------------- */
+.wairm-product-card {
+	border-top: 3px solid var(--accent-light);
+}
+
 .wairm-product-card .wairm-card-header a {
-	color: #2271b1;
+	color: var(--accent);
 	text-decoration: none;
+	transition: color 0.15s;
 }
 
 .wairm-product-card .wairm-card-header a:hover {
+	color: var(--accent-dark);
 	text-decoration: underline;
 }
 
@@ -602,54 +1731,70 @@
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	margin-bottom: 12px;
+	margin-bottom: 16px;
 }
 
 .wairm-review-count {
 	font-size: 12px;
-	color: #646970;
+	color: var(--ink-muted);
+	font-weight: 500;
 }
 
 .wairm-card-section {
-	margin-bottom: 10px;
+	margin-bottom: 14px;
 }
 
 .wairm-card-section h4 {
-	font-size: 12px;
-	font-weight: 600;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	color: #646970;
-	margin: 0 0 4px;
+	letter-spacing: 0.06em;
+	color: var(--ink-muted);
+	margin: 0 0 6px;
 }
 
-.wairm-strengths h4 { color: #2e7d32; }
-.wairm-complaints h4 { color: #b71c1c; }
+.wairm-strengths h4 { color: var(--positive); }
+.wairm-complaints h4 { color: var(--negative); }
 
-.wairm-strengths ul { list-style: none; margin-left: 0; }
-.wairm-complaints ul { list-style: none; margin-left: 0; }
+.wairm-strengths ul,
+.wairm-complaints ul {
+	list-style: none;
+	margin-left: 0;
+}
+
+.wairm-strengths li,
+.wairm-complaints li {
+	padding: 3px 0;
+	padding-left: 20px;
+	position: relative;
+}
+
+.wairm-strengths li::before,
+.wairm-complaints li::before {
+	position: absolute;
+	left: 0;
+	font-weight: 700;
+}
 
 .wairm-strengths li::before {
-	content: "\2713 ";
-	color: #2ecc71;
-	font-weight: 700;
-	margin-right: 4px;
+	content: "\2713";
+	color: var(--positive);
 }
 
 .wairm-complaints li::before {
-	content: "\2717 ";
-	color: #e74c3c;
-	font-weight: 700;
-	margin-right: 4px;
+	content: "\2717";
+	color: var(--negative);
 }
 
 .wairm-card-action {
-	margin-top: 10px;
-	padding: 8px 12px;
-	background: #fef8ee;
-	border: 1px solid #f0c33c;
-	border-radius: 4px;
+	margin-top: 14px;
+	padding: 10px 14px;
+	background: linear-gradient(135deg, #fef9ed 0%, #fdf3dd 100%);
+	border: 1.5px solid var(--mixed);
+	border-radius: var(--radius-sm);
 	font-size: 13px;
+	line-height: 1.5;
 	color: #6e4b00;
 }
 
@@ -659,8 +1804,8 @@
 	height: 14px;
 	line-height: 1;
 	vertical-align: middle;
-	color: #dba617;
-	margin-right: 2px;
+	color: var(--mixed);
+	margin-right: 4px;
 }
 
 /* -------------------------------------------------------
@@ -669,25 +1814,49 @@
 .wairm-trend-overview {
 	display: flex;
 	align-items: center;
-	gap: 16px;
-	padding: 16px 20px;
-	margin-bottom: 16px;
-	background: #f9f9f9;
-	border: 1px solid #dcdcde;
-	border-radius: 6px;
+	gap: 20px;
+	padding: 22px 28px;
+	margin-bottom: 20px;
+	background: var(--ink);
+	border: none;
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-lg);
+	animation: wairm-card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .wairm-trend-direction {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	font-size: 16px;
-	font-weight: 600;
+	gap: 10px;
 	flex-shrink: 0;
 }
 
+.wairm-trend-arrow {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	font-size: 22px;
+	line-height: 1;
+}
+
+.wairm-trend-improving .wairm-trend-arrow {
+	background: rgba(13, 146, 100, 0.2);
+	color: #4ade80;
+}
+.wairm-trend-declining .wairm-trend-arrow {
+	background: rgba(201, 48, 62, 0.2);
+	color: #fca5a5;
+}
+.wairm-trend-mixed .wairm-trend-arrow {
+	background: rgba(194, 122, 9, 0.2);
+	color: #fcd34d;
+}
+
 .wairm-trend-arrow::before {
-	font-size: 20px;
+	font-size: 22px;
 	line-height: 1;
 }
 
@@ -695,27 +1864,30 @@
 .wairm-trend-declining .wairm-trend-arrow::before { content: "\2193"; }
 .wairm-trend-mixed .wairm-trend-arrow::before { content: "\2194"; }
 
-.wairm-trend-improving { color: #2e7d32; }
-.wairm-trend-declining { color: #b71c1c; }
-.wairm-trend-mixed { color: #e65100; }
+.wairm-trend-label {
+	font-family: var(--font-display);
+	font-size: 20px;
+	font-weight: 400;
+	color: #fff;
+}
 
 .wairm-trend-summary {
-	font-size: 13px;
-	color: #3c434a;
+	font-size: 14px;
+	color: rgba(255, 255, 255, 0.72);
 	margin: 0;
-	line-height: 1.5;
+	line-height: 1.6;
 }
 
 .wairm-issues-card,
 .wairm-shifts-card,
 .wairm-patterns-card {
-	margin-bottom: 16px;
+	margin-bottom: 20px;
 }
 
 .wairm-issue-item,
 .wairm-shift-item {
-	padding: 10px 0;
-	border-bottom: 1px solid #f0f0f1;
+	padding: 12px 0;
+	border-bottom: 1px solid var(--border-light);
 }
 
 .wairm-issue-item:last-child,
@@ -729,15 +1901,23 @@
 	padding-top: 0;
 }
 
+.wairm-issue-item strong,
+.wairm-shift-item strong {
+	color: var(--ink);
+}
+
 .wairm-issue-product,
 .wairm-shift-product {
 	display: inline-block;
-	font-size: 12px;
-	color: #2271b1;
-	background: #f0f6fc;
-	padding: 1px 8px;
-	border-radius: 10px;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+	background: var(--accent-light);
+	padding: 2px 10px;
+	border-radius: 20px;
 	margin-left: 8px;
+	letter-spacing: 0.01em;
 }
 
 .wairm-issue-product:first-of-type,
@@ -759,24 +1939,52 @@
 /* -------------------------------------------------------
    Insight Cards – Operational
    ------------------------------------------------------- */
+.wairm-ops-card {
+	border-top: 3px solid var(--border-light);
+}
+
 .wairm-ops-card .wairm-ops-rating {
-	margin-bottom: 10px;
+	margin-bottom: 12px;
 }
 
 .wairm-priority-card {
-	margin-bottom: 16px;
+	margin-bottom: 20px;
+	border: 1.5px solid var(--accent);
 }
 
 .wairm-priority-list {
-	margin: 0 0 0 20px;
+	margin: 0;
 	padding: 0;
+	list-style: none;
+	counter-reset: priority;
 }
 
 .wairm-priority-list li {
 	font-size: 13px;
-	line-height: 1.6;
-	color: #3c434a;
-	margin-bottom: 6px;
+	line-height: 1.7;
+	color: var(--ink-soft);
+	margin-bottom: 8px;
+	padding-left: 32px;
+	position: relative;
+	counter-increment: priority;
+}
+
+.wairm-priority-list li::before {
+	content: counter(priority);
+	position: absolute;
+	left: 0;
+	top: 1px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: var(--accent-light);
+	color: var(--accent);
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
 }
 
 /* -------------------------------------------------------
@@ -784,12 +1992,12 @@
    ------------------------------------------------------- */
 .wairm-feature-card,
 .wairm-competitive-card {
-	margin-bottom: 16px;
+	margin-bottom: 20px;
 }
 
 .wairm-feature-item {
-	padding: 10px 0;
-	border-bottom: 1px solid #f0f0f1;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--border-light);
 }
 
 .wairm-feature-item:last-child {
@@ -808,31 +2016,51 @@
 	gap: 8px;
 }
 
+.wairm-feature-header strong {
+	color: var(--ink);
+}
+
 .wairm-mention-count {
-	font-size: 12px;
-	color: #646970;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--accent);
+	background: var(--accent-light);
+	padding: 2px 10px;
+	border-radius: 20px;
 	white-space: nowrap;
+	letter-spacing: 0.01em;
 }
 
 .wairm-feature-products {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 4px;
-	margin-top: 6px;
+	gap: 5px;
+	margin-top: 8px;
 }
 
 .wairm-tag {
 	display: inline-block;
+	font-family: var(--font-body);
 	font-size: 11px;
-	color: #2271b1;
-	background: #f0f6fc;
-	padding: 2px 8px;
-	border-radius: 10px;
+	font-weight: 500;
+	color: var(--ink-muted);
+	background: var(--surface-sunken);
+	padding: 3px 10px;
+	border-radius: 20px;
+	border: 1px solid var(--border-light);
+	transition: background 0.15s;
+}
+
+.wairm-tag:hover {
+	background: var(--accent-light);
+	color: var(--accent);
+	border-color: transparent;
 }
 
 .wairm-competitive-item {
-	padding: 10px 0;
-	border-bottom: 1px solid #f0f0f1;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--border-light);
 }
 
 .wairm-competitive-item:last-child {
@@ -844,15 +2072,36 @@
 	padding-top: 0;
 }
 
+.wairm-competitive-item strong {
+	color: var(--ink);
+	font-weight: 600;
+}
+
 .wairm-quotes blockquote {
-	margin: 0 0 10px 0;
-	padding: 8px 14px;
-	background: #f9f9f9;
-	border: none;
-	font-size: 13px;
+	position: relative;
+	margin: 0 0 12px 0;
+	padding: 14px 18px 14px 36px;
+	background: var(--surface-sunken);
+	border: 1.5px solid var(--accent-light);
+	font-family: var(--font-display);
+	font-size: 15px;
 	font-style: italic;
-	color: #3c434a;
-	border-radius: 4px;
+	font-weight: 400;
+	color: var(--ink-soft);
+	border-radius: var(--radius-sm);
+	line-height: 1.6;
+}
+
+.wairm-quotes blockquote::before {
+	content: "\201C";
+	position: absolute;
+	left: 12px;
+	top: 8px;
+	font-family: var(--font-display);
+	font-size: 28px;
+	color: var(--accent);
+	line-height: 1;
+	opacity: 0.5;
 }
 
 .wairm-quotes blockquote:last-child {
@@ -863,13 +2112,125 @@
    Insight Cards – Summary Bar
    ------------------------------------------------------- */
 .wairm-summary-bar {
-	margin-bottom: 16px;
-	padding: 24px;
-	background: #d8dbeb;
-	border: 1px solid #c3c9ed;
-	border-radius: 6px;
-	font-size: 16px;
-	font-weight: 500;
-	line-height: 1.6;
-	color: #1d2327;
+	margin-bottom: 20px;
+	padding: 28px 32px;
+	background: linear-gradient(135deg, var(--ink) 0%, #2d1f5e 50%, var(--accent-dark) 100%);
+	border: none;
+	border-radius: var(--radius);
+	font-family: var(--font-display);
+	font-size: 18px;
+	font-weight: 400;
+	line-height: 1.65;
+	color: #fff;
+	box-shadow: var(--shadow-lg);
+	letter-spacing: -0.005em;
+}
+
+/* -------------------------------------------------------
+   Responsive – Invitations Table
+   ------------------------------------------------------- */
+.wairm-invitations .wp-list-table {
+	/* Override WP's fixed layout so columns can size to content */
+	table-layout: auto;
+}
+
+.wairm-invitations .wairm-table-scroll {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	margin-top: 16px;
+}
+
+.wairm-invitations .wairm-table-scroll .wp-list-table {
+	min-width: 720px;
+	margin-top: 0;
+}
+
+/* At medium widths: hide ID and Emails columns */
+@media screen and (max-width: 1100px) {
+	.wairm-invitations .wp-list-table .column-id {
+		display: none;
+	}
+	.wairm-invitations .wp-list-table td:first-child {
+		display: none;
+	}
+}
+
+@media screen and (max-width: 860px) {
+	.wairm-invitations .wp-list-table .column-emails {
+		display: none;
+	}
+	/* 6th column = Emails */
+	.wairm-invitations .wp-list-table td:nth-child(6) {
+		display: none;
+	}
+}
+
+/* -------------------------------------------------------
+   Responsive – Dashboard
+   ------------------------------------------------------- */
+@media screen and (max-width: 600px) {
+	.wairm-stats-grid {
+		grid-template-columns: 1fr 1fr;
+		gap: 10px;
+	}
+
+	.wairm-stat-card {
+		padding: 16px 14px;
+	}
+
+	.wairm-stat-card .stat-number {
+		font-size: 28px;
+	}
+
+	.wairm-quick-actions {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.wairm-quick-actions .button {
+		text-align: center;
+		justify-content: center;
+	}
+
+	.wairm-dashboard .wp-list-table {
+		table-layout: auto;
+	}
+}
+
+/* -------------------------------------------------------
+   Responsive – Responses
+   ------------------------------------------------------- */
+@media screen and (max-width: 600px) {
+	.wairm-response-card {
+		padding: 16px;
+	}
+
+	.wairm-response-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.wairm-response-meta {
+		margin-left: 0;
+	}
+
+	.wairm-response-actions {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.wairm-response-actions .button {
+		text-align: center;
+		justify-content: center;
+	}
+}
+
+/* -------------------------------------------------------
+   Responsive – Settings
+   ------------------------------------------------------- */
+@media screen and (max-width: 782px) {
+	.wairm-settings .nav-tab {
+		padding: 8px 12px;
+		font-size: 12px;
+	}
 }

@@ -127,7 +127,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 					card.querySelector( '.wairm-response-status' ).className = 'wairm-response-status status-sent';
 					card.querySelector( '.wairm-response-text' ).readOnly = true;
 					card.querySelector( '.wairm-response-actions' ).innerHTML =
-						'<span class="wairm-posted-label dashicons-before dashicons-yes-alt" style="color: #2ecc71;"> ' + i18n.posted + '</span>';
+						'<span class="wairm-posted-label dashicons-before dashicons-yes-alt"> ' + i18n.posted + '</span>';
 				} else {
 					enableCard( card );
 					showNotice( card, i18n.error, 'error' );

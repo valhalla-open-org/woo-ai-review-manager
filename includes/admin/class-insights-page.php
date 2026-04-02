@@ -506,8 +506,8 @@ final class Insights_Page {
 						</select>
 						<?php endif; ?>
 
-						<button type="button" class="button button-primary" id="wairm-generate-insight" style="display: inline-flex; align-items: center; gap: 6px;">
-							<span class="dashicons dashicons-update" style="line-height: 1;"></span>
+						<button type="button" class="button button-primary" id="wairm-generate-insight">
+							<span class="dashicons dashicons-update"></span>
 							<?php echo $has_insights ? esc_html__( 'Generate New', 'woo-ai-review-manager' ) : esc_html__( 'Generate', 'woo-ai-review-manager' ); ?>
 						</button>
 					</div>
@@ -522,7 +522,9 @@ final class Insights_Page {
 						</div>
 					<?php else : ?>
 						<div class="wairm-insight-empty">
-							<span class="dashicons dashicons-lightbulb" style="font-size: 48px; width: 48px; height: 48px; color: #c3c4c7;"></span>
+							<div class="wairm-insight-empty-icon">
+								<span class="dashicons dashicons-lightbulb"></span>
+							</div>
 							<p><?php esc_html_e( 'No insights generated yet for this category.', 'woo-ai-review-manager' ); ?></p>
 							<p class="description"><?php esc_html_e( 'Select a time period and click "Generate" to analyze your reviews.', 'woo-ai-review-manager' ); ?></p>
 						</div>

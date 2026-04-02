@@ -117,7 +117,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	function renderTrends( data ) {
 		var html = '';
 
-		// Overall direction.
+		// Overall direction — dark hero banner.
 		html += '<div class="wairm-trend-overview">' +
 			'<div class="wairm-trend-direction wairm-trend-' + ratingClass( data.overall_direction ) + '">' +
 			'<span class="wairm-trend-arrow"></span>' +
@@ -277,7 +277,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 	function showLoading() {
 		output.innerHTML = '<div class="wairm-insight-loading">' +
-			'<span class="spinner is-active" style="float: none; margin: 0 8px 0 0;"></span>' +
+			'<span class="spinner is-active" style="float: none; margin: 0;"></span>' +
 			i18n.generating +
 			'</div>';
 		generateBtn.disabled = true;
@@ -285,7 +285,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 	function showError( message ) {
 		output.innerHTML = '<div class="wairm-insight-error">' +
-			'<span class="dashicons dashicons-warning" style="color: #d63638; margin-right: 6px;"></span>' +
+			'<span class="dashicons dashicons-warning"></span>' +
 			message +
 			'</div>';
 		generateBtn.disabled = false;
