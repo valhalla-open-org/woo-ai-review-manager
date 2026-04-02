@@ -165,6 +165,16 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	}
 
 	function renderOperational( data ) {
+		var html = '';
+
+		if ( data.priority_actions && data.priority_actions.length ) {
+			html += card( 'wairm-priority-card', '<h3>' + esc( i18n.priority_actions ) + '</h3>',
+				'<ol class="wairm-priority-list">' + data.priority_actions.map( function ( a ) {
+					return '<li>' + esc( a ) + '</li>';
+				} ).join( '' ) + '</ol>'
+			);
+		}
+
 		var sections = [
 			{ key: 'shipping', label: i18n.shipping },
 			{ key: 'expectations', label: i18n.expectations },
@@ -172,7 +182,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			{ key: 'support', label: i18n.support },
 		];
 
-		var html = '<div class="wairm-card-grid wairm-ops-grid">';
+		html += '<div class="wairm-card-grid wairm-ops-grid">';
 		sections.forEach( function ( section ) {
 			var d = data[ section.key ];
 			if ( ! d ) return;
@@ -185,14 +195,6 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			html += card( 'wairm-ops-card', '<h3>' + esc( section.label ) + '</h3>', inner );
 		} );
 		html += '</div>';
-
-		if ( data.priority_actions && data.priority_actions.length ) {
-			html += card( 'wairm-priority-card', '<h3>' + esc( i18n.priority_actions ) + '</h3>',
-				'<ol class="wairm-priority-list">' + data.priority_actions.map( function ( a ) {
-					return '<li>' + esc( a ) + '</li>';
-				} ).join( '' ) + '</ol>'
-			);
-		}
 
 		return html;
 	}
