@@ -25,6 +25,8 @@ final class Sentiment_Analyzer {
 
 		$comment = get_comment( $comment_id );
 		if ( ! $comment ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( '[WAIRM] Analysis skipped for comment ' . $comment_id . ': comment not found.' );
 			return;
 		}
 
@@ -40,6 +42,8 @@ final class Sentiment_Analyzer {
 		}
 
 		if ( ! AI_Client::is_available() ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( '[WAIRM] Analysis skipped for comment ' . $comment_id . ': AI Client not available.' );
 			return;
 		}
 
@@ -51,6 +55,8 @@ final class Sentiment_Analyzer {
 		$review_text  = wp_strip_all_tags( $comment->comment_content );
 
 		if ( empty( $review_text ) ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( '[WAIRM] Analysis skipped for comment ' . $comment_id . ': empty review text.' );
 			return;
 		}
 

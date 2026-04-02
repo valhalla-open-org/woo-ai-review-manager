@@ -645,6 +645,13 @@ final class Email_Sender {
 			$content    = sanitize_textarea_field( $reviews[ $product_id ] ?? '' );
 
 			if ( $rating < 1 || $rating > 5 || empty( $content ) ) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				error_log( sprintf(
+					'[WAIRM] Review skipped for product %d (invitation %d): invalid rating (%d) or empty content.',
+					$product_id,
+					$invitation_id,
+					$rating
+				) );
 				continue;
 			}
 
@@ -663,6 +670,14 @@ final class Email_Sender {
 			);
 
 			if ( $existing ) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				error_log( sprintf(
+					'[WAIRM] Review skipped for product %d (invitation %d): duplicate review exists (comment %s) for %s.',
+					$product_id,
+					$invitation_id,
+					$existing,
+					$invitation->customer_email
+				) );
 				continue;
 			}
 
@@ -679,6 +694,13 @@ final class Email_Sender {
 
 			if ( $new_comment_id ) {
 				update_comment_meta( $new_comment_id, 'rating', $rating );
+			} else {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				error_log( sprintf(
+					'[WAIRM] Review insert failed for product %d (invitation %d): wp_insert_comment returned false.',
+					$product_id,
+					$invitation_id
+				) );
 			}
 		}
 

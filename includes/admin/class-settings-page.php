@@ -16,6 +16,20 @@ final class Settings_Page {
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_submenu_page' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+	}
+
+	public function enqueue_assets( string $hook ): void {
+		if ( 'ai-reviews_page_wairm-settings' !== $hook ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'wairm-admin',
+			WAIRM_PLUGIN_URL . 'assets/css/admin.css',
+			[],
+			WAIRM_VERSION
+		);
 	}
 
 	public function add_submenu_page(): void {
