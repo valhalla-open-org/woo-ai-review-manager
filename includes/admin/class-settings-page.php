@@ -178,15 +178,12 @@ final class Settings_Page {
 		);
 		$subject = '[TEST] ' . $subject;
 
-		$body = sprintf(
-			/* translators: 1: customer name, 2: store name, 3: review link */
-			__( "Hi %1\$s,\n\nThank you for your recent purchase at %2\$s! We'd love to hear about your experience.\n\nPlease click the link below to leave a review:\n%3\$s\n\nThank you!", 'woo-ai-review-manager' ),
-			__( 'Test Customer', 'woo-ai-review-manager' ),
-			get_bloginfo( 'name' ),
-			home_url( '?wairm_token=test-preview&action=review' )
-		);
+		$body = \WooAIReviewManager\Email_Sender::build_test_email_body();
 
-		$headers = [ 'From: ' . $from_name . ' <' . get_option( 'admin_email' ) . '>' ];
+		$headers = [
+			'Content-Type: text/html; charset=UTF-8',
+			'From: ' . $from_name . ' <' . get_option( 'admin_email' ) . '>',
+		];
 		$sent    = wp_mail( $to, $subject, $body, $headers );
 
 		if ( $sent ) {

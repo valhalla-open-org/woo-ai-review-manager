@@ -361,7 +361,12 @@ final class Invitations_Page {
 		$base_url    = admin_url( 'admin.php?page=wairm-invitations' );
 		?>
 		<div class="wrap wairm-invitations">
-			<h1><?php esc_html_e( 'Review Invitations', 'woo-ai-review-manager' ); ?></h1>
+			<div class="wairm-page-header">
+				<h1><?php esc_html_e( 'Review Invitations', 'woo-ai-review-manager' ); ?></h1>
+				<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=invitations' ), 'wairm_export_csv' ) ); ?>" class="page-title-action">
+					<?php esc_html_e( 'Export CSV', 'woo-ai-review-manager' ); ?>
+				</a>
+			</div>
 			<hr class="wp-header-end">
 
 			<ul class="subsubsub">

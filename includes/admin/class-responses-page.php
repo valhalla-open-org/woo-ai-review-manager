@@ -561,7 +561,12 @@ final class Responses_Page {
 		?>
 		<?php $pending_analysis = \WooAIReviewManager\Sentiment_Analyzer::count_pending(); ?>
 		<div class="wrap wairm-responses">
-			<h1><?php esc_html_e( 'AI Response Suggestions', 'woo-ai-review-manager' ); ?></h1>
+			<div class="wairm-page-header">
+				<h1><?php esc_html_e( 'AI Response Suggestions', 'woo-ai-review-manager' ); ?></h1>
+				<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=responses' ), 'wairm_export_csv' ) ); ?>" class="page-title-action">
+					<?php esc_html_e( 'Export CSV', 'woo-ai-review-manager' ); ?>
+				</a>
+			</div>
 			<hr class="wp-header-end">
 
 			<?php if ( $pending_analysis > 0 ) : ?>

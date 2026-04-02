@@ -233,7 +233,12 @@ final class Dashboard_Page {
 		);
 		?>
 		<div class="wrap wairm-dashboard">
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'AI Review Manager Dashboard', 'woo-ai-review-manager' ); ?></h1>
+			<div class="wairm-page-header">
+				<h1><?php esc_html_e( 'AI Review Manager Dashboard', 'woo-ai-review-manager' ); ?></h1>
+				<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=reviews' ), 'wairm_export_csv' ) ); ?>" class="page-title-action">
+					<?php esc_html_e( 'Export Reviews CSV', 'woo-ai-review-manager' ); ?>
+				</a>
+			</div>
 
 			<?php if ( ! empty( $checklist ) ) : ?>
 			<div class="wairm-setup-checklist">
@@ -354,18 +359,6 @@ final class Dashboard_Page {
 					</button>
 					<?php endif; ?>
 
-					<span class="wairm-export-links">
-						<?php esc_html_e( 'Export:', 'woo-ai-review-manager' ); ?>
-						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=reviews' ), 'wairm_export_csv' ) ); ?>" class="button button-small">
-							<?php esc_html_e( 'Reviews CSV', 'woo-ai-review-manager' ); ?>
-						</a>
-						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=invitations' ), 'wairm_export_csv' ) ); ?>" class="button button-small">
-							<?php esc_html_e( 'Invitations CSV', 'woo-ai-review-manager' ); ?>
-						</a>
-						<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=responses' ), 'wairm_export_csv' ) ); ?>" class="button button-small">
-							<?php esc_html_e( 'Responses CSV', 'woo-ai-review-manager' ); ?>
-						</a>
-					</span>
 				</div>
 
 				<?php if ( $pending_count > 0 ) : ?>

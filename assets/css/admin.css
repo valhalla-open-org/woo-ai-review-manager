@@ -9,6 +9,19 @@
 /* -------------------------------------------------------
    Dashboard – Page Shell
    ------------------------------------------------------- */
+.wairm-dashboard .wairm-page-header,
+.wairm-responses .wairm-page-header,
+.wairm-invitations .wairm-page-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.wairm-page-header .page-title-action {
+	margin-top: 9px;
+}
+
 .wairm-dashboard h1 {
 	font-family: var(--font-display);
 	font-size: 28px;
@@ -581,13 +594,15 @@
 	border: none;
 	border-bottom: 2px solid transparent;
 	background: transparent;
-	padding: 10px 18px;
+	padding: 10px 0;
+	margin-right: 16px;
 	margin-bottom: -2px;
 	transition: color 0.2s, border-color 0.2s;
 }
 
-.wairm-settings .nav-tab:hover {
+.wairm-settings .nav-tab-wrapper .nav-tab:hover {
 	color: var(--accent);
+	border-bottom: 2px solid var(--accent);
 	background: transparent;
 }
 
@@ -867,24 +882,11 @@
    Responses Page – Review Quote
    ------------------------------------------------------- */
 .wairm-response-review {
-	position: relative;
 	background: var(--surface-sunken);
 	border: 1px solid var(--border);
-	padding: 14px 18px 14px 34px;
+	padding: 14px 18px;
 	margin-bottom: 14px;
 	border-radius: var(--radius-sm);
-}
-
-.wairm-response-review::before {
-	content: "\201C";
-	position: absolute;
-	left: 12px;
-	top: 8px;
-	font-family: var(--font-display);
-	font-size: 26px;
-	color: var(--accent);
-	line-height: 1;
-	opacity: 0.4;
 }
 
 .wairm-response-review strong {
@@ -1027,17 +1029,46 @@
    ------------------------------------------------------- */
 .wairm-responses .tablenav {
 	font-family: var(--font-body);
+	margin-top: 20px;
+}
+
+.wairm-responses .tablenav-pages {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin: 0 auto;
+	justify-content: center;
+	float: none;
 }
 
 .wairm-responses .tablenav-pages a,
 .wairm-responses .tablenav-pages span.current {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 34px;
+	height: 34px;
+	padding: 0 10px;
+	border: 1px solid var(--border);
 	border-radius: var(--radius-sm);
+	font-size: 13px;
+	font-weight: 500;
+	text-decoration: none;
+	color: var(--ink-soft);
+	background: var(--surface);
+	transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.wairm-responses .tablenav-pages a:hover {
+	border-color: var(--accent);
+	color: var(--accent);
 }
 
 .wairm-responses .tablenav-pages span.current {
 	background: var(--accent);
 	border-color: var(--accent-dark);
 	color: #fff;
+	font-weight: 600;
 }
 
 /* -------------------------------------------------------
@@ -1261,18 +1292,19 @@
 	font-weight: 500;
 	font-size: 13px;
 	letter-spacing: 0.02em;
-	text-transform: uppercase;
 	color: var(--ink-muted);
 	border: none;
 	border-bottom: 2px solid transparent;
 	background: transparent;
-	padding: 10px 18px;
+	padding: 10px 0;
+	margin-right: 16px;
 	margin-bottom: -2px;
 	transition: color 0.2s, border-color 0.2s;
 }
 
-.wairm-insights .nav-tab:hover {
+.wairm-insights .nav-tab-wrapper .nav-tab:hover {
 	color: var(--accent);
+	border-bottom: 2px solid var(--accent);
 	background: transparent;
 }
 
@@ -2169,7 +2201,8 @@
    ------------------------------------------------------- */
 @media screen and (max-width: 782px) {
 	.wairm-settings .nav-tab {
-		padding: 8px 12px;
+		padding: 8px 0;
+		margin-right: 12px;
 		font-size: 12px;
 	}
 }
@@ -2178,9 +2211,8 @@
    Dashboard – Setup Checklist Banner
    ------------------------------------------------------- */
 .wairm-setup-checklist {
-	background: var(--mixed-bg);
-	border: 1px solid var(--mixed-border);
-	border-left: 4px solid var(--mixed);
+	background: #ffffff;
+	border: 1px solid var(--border);
 	border-radius: var(--radius-sm);
 	padding: 16px 20px;
 	margin: 16px 0;
@@ -2211,6 +2243,7 @@
 .wairm-setup-checklist ul {
 	margin: 0 0 0 18px;
 	padding: 0;
+	list-style: disc;
 }
 
 .wairm-setup-checklist li {
@@ -2315,9 +2348,14 @@
 .wairm-bulk-bar label {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
+	gap: 6px;
 	font-weight: 600;
 	white-space: nowrap;
+}
+
+.wairm-bulk-bar label input[type="checkbox"] {
+	margin: 0;
+	vertical-align: middle;
 }
 
 .wairm-bulk-count {
@@ -2327,8 +2365,42 @@
 
 .wairm-bulk-check {
 	position: absolute;
-	top: 12px;
-	right: 12px;
+	bottom: 20px;
+	right: 24px;
+	width: 26px;
+	height: 26px;
+	cursor: pointer;
+	accent-color: var(--accent);
+}
+
+.wairm-bulk-check input[type="checkbox"] {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 26px;
+	height: 26px;
+	margin: 0;
+	cursor: pointer;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	transition: background 0.15s, border-color 0.15s;
+}
+
+.wairm-bulk-check input[type="checkbox"]::before {
+	content: none !important;
+}
+
+.wairm-bulk-check input[type="checkbox"]:checked {
+	background: var(--accent);
+	border-color: var(--accent-dark);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+	background-size: 16px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.wairm-bulk-check input[type="checkbox"]:hover {
+	border-color: var(--accent);
 }
 
 .wairm-response-card {
@@ -2339,7 +2411,14 @@
    Invitations – Filters
    ------------------------------------------------------- */
 .wairm-invitation-filters {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 16px;
 	margin: 16px 0 0;
+	background: var(--surface-raised);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
 }
 
 .wairm-invitation-filters form {

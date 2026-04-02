@@ -506,6 +506,28 @@ final class Email_Sender {
 	}
 
 	/**
+	 * Build a test/preview email body using the same HTML template as real invitations.
+	 *
+	 * Uses sample WooCommerce products if available, otherwise placeholder data.
+	 */
+	public static function build_test_email_body(): string {
+		// Find up to 2 published products for realistic preview.
+		$sample_ids = wc_get_products( [
+			'status' => 'publish',
+			'limit'  => 2,
+			'return' => 'ids',
+		] );
+
+		$fake_email = (object) [
+			'customer_name' => __( 'Test Customer', 'woo-ai-review-manager' ),
+			'product_ids'   => wp_json_encode( ! empty( $sample_ids ) ? $sample_ids : [ 0 ] ),
+			'token'         => 'test-preview',
+		];
+
+		return self::build_email_body( $fake_email );
+	}
+
+	/**
 	 * Shortcode to render a review form for token-based access.
 	 */
 	public function review_form_shortcode(): string {
