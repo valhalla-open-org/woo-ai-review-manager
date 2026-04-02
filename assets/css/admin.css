@@ -49,17 +49,6 @@
 .wairm-stat-card.negative .stat-number { color: #e74c3c; }
 
 /* -------------------------------------------------------
-   Dashboard – Chart Section
-   ------------------------------------------------------- */
-.wairm-chart-section {
-	margin: 30px 0;
-}
-
-.wairm-chart-section h2 {
-	margin-bottom: 10px;
-}
-
-/* -------------------------------------------------------
    Dashboard – Two-Column Layout
    ------------------------------------------------------- */
 .wairm-two-column {
@@ -154,11 +143,24 @@
 /* -------------------------------------------------------
    Dashboard – Quick Actions
    ------------------------------------------------------- */
+.wairm-quick-actions-section {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px 20px;
+	margin-bottom: 20px;
+}
+
+.wairm-quick-actions-section h2 {
+	margin: 0 0 12px;
+	font-size: 14px;
+}
+
 .wairm-quick-actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
-	align-items: flex-start;
+	align-items: center;
 }
 
 .wairm-quick-actions .button {
@@ -203,6 +205,28 @@
 
 .wairm-api-status h3 {
 	margin-top: 0;
+}
+
+/* -------------------------------------------------------
+   Invitations Page – Status Badges
+   ------------------------------------------------------- */
+.wairm-invitation-status {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+}
+
+.wairm-invitation-status.status-pending  { background: #fef3cd; color: #856404; }
+.wairm-invitation-status.status-sent     { background: #e8f4fd; color: #0073aa; }
+.wairm-invitation-status.status-clicked  { background: #e7f5e7; color: #2e7d32; }
+.wairm-invitation-status.status-reviewed { background: #d4edda; color: #155724; }
+.wairm-invitation-status.status-expired  { background: #f5f5f5; color: #888; }
+
+.wairm-invitations .subsubsub {
+	margin-bottom: 10px;
 }
 
 /* -------------------------------------------------------
@@ -344,4 +368,119 @@
 	border: 1px solid #ccd0d4;
 	margin-top: 20px;
 	border-radius: 6px;
+}
+
+/* -------------------------------------------------------
+   Insights Page
+   ------------------------------------------------------- */
+.wairm-insights-content {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-top: none;
+	padding: 20px 24px;
+	min-height: 300px;
+}
+
+.wairm-insights-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 20px;
+	padding-bottom: 16px;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.wairm-insights-description {
+	margin: 0;
+	color: #646970;
+	font-size: 13px;
+}
+
+.wairm-insights-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.wairm-insight-loading {
+	display: flex;
+	align-items: center;
+	padding: 40px 0;
+	color: #646970;
+	font-size: 14px;
+}
+
+.wairm-insight-error {
+	display: flex;
+	align-items: center;
+	padding: 20px;
+	background: #fcf0f1;
+	border: 1px solid #d63638;
+	border-radius: 4px;
+	color: #d63638;
+	font-size: 13px;
+}
+
+.wairm-insight-body h3 {
+	font-size: 15px;
+	margin: 24px 0 10px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid #f0f0f0;
+	color: #1d2327;
+}
+
+.wairm-insight-body h3:first-child {
+	margin-top: 0;
+}
+
+.wairm-insight-body p {
+	font-size: 13px;
+	line-height: 1.6;
+	color: #3c434a;
+	margin: 8px 0;
+}
+
+.wairm-insight-body ul {
+	margin: 8px 0 8px 20px;
+}
+
+.wairm-insight-body li {
+	font-size: 13px;
+	line-height: 1.6;
+	color: #3c434a;
+	margin-bottom: 4px;
+}
+
+.wairm-insight-body em {
+	color: #646970;
+	font-style: italic;
+}
+
+.wairm-insight-body strong {
+	color: #1d2327;
+}
+
+.wairm-insight-empty {
+	text-align: center;
+	padding: 60px 20px;
+	color: #646970;
+}
+
+.wairm-insight-empty p {
+	margin: 12px 0 0;
+	font-size: 14px;
+}
+
+.wairm-insight-empty .description {
+	font-size: 13px;
+	color: #888;
+}
+
+.wairm-insight-history {
+	min-width: 320px;
+}
+
+.wairm-insight-period {
+	min-width: 130px;
 }

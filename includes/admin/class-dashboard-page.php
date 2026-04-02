@@ -29,6 +29,16 @@ final class Dashboard_Page {
 			'dashicons-chart-bar',
 			56
 		);
+
+		// Override the auto-created first submenu label from "AI Reviews" to "Dashboard".
+		add_submenu_page(
+			'wairm-dashboard',
+			__( 'Dashboard', 'woo-ai-review-manager' ),
+			__( 'Dashboard', 'woo-ai-review-manager' ),
+			'manage_woocommerce',
+			'wairm-dashboard',
+			[ $this, 'render_page' ]
+		);
 	}
 
 	public function enqueue_assets( string $hook ): void {
@@ -44,17 +54,9 @@ final class Dashboard_Page {
 		);
 
 		wp_enqueue_script(
-			'wairm-charts',
-			'https://cdn.jsdelivr.net/npm/chart.js',
-			[],
-			WAIRM_VERSION,
-			true
-		);
-
-		wp_enqueue_script(
 			'wairm-dashboard',
 			WAIRM_PLUGIN_URL . 'assets/js/dashboard.js',
-			[ 'wairm-charts' ],
+			[],
 			WAIRM_VERSION,
 			true
 		);
@@ -71,11 +73,6 @@ final class Dashboard_Page {
 				'ajax_url'             => admin_url( 'admin-ajax.php' ),
 				'nonce'                => wp_create_nonce( 'wairm_dashboard' ),
 				'pending_count'        => $pending_count,
-				'chart'                => [
-					'positive' => absint( $stats->positive ?? 0 ),
-					'neutral'  => absint( $stats->neutral ?? 0 ),
-					'negative' => absint( $stats->negative ?? 0 ),
-				],
 				'i18n'                 => [
 					'analyze_button'  => __( 'Analyze Old Reviews', 'woo-ai-review-manager' ),
 					'analyzing'       => __( 'Analyzing...', 'woo-ai-review-manager' ),
@@ -83,10 +80,6 @@ final class Dashboard_Page {
 					'complete'        => __( 'All done! Reloading...', 'woo-ai-review-manager' ),
 					'nothing'         => __( 'No unanalyzed reviews found.', 'woo-ai-review-manager' ),
 					'error'           => __( 'An error occurred. Please try again.', 'woo-ai-review-manager' ),
-					'chart_positive'  => __( 'Positive', 'woo-ai-review-manager' ),
-					'chart_neutral'   => __( 'Neutral', 'woo-ai-review-manager' ),
-					'chart_negative'  => __( 'Negative', 'woo-ai-review-manager' ),
-					'no_chart_data'   => __( 'No sentiment data yet. Analyze some reviews to see the chart.', 'woo-ai-review-manager' ),
 				],
 			]
 		);
@@ -106,7 +99,7 @@ final class Dashboard_Page {
 			wp_send_json_error( [ 'message' => __( 'AI Client is not available. Please configure AI credentials first.', 'woo-ai-review-manager' ) ] );
 		}
 
-		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 10 );
+		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 1 );
 
 		wp_send_json_success( $result );
 	}
@@ -227,11 +220,46 @@ final class Dashboard_Page {
 				</div>
 			</div>
 
-			<div class="wairm-chart-section">
-				<h2><?php esc_html_e( 'Sentiment Distribution', 'woo-ai-review-manager' ); ?></h2>
-				<div style="max-width: 500px;">
-					<canvas id="wairm-sentiment-chart"></canvas>
+			<div class="wairm-quick-actions-section">
+				<h2><?php esc_html_e( 'Quick Actions', 'woo-ai-review-manager' ); ?></h2>
+				<div class="wairm-quick-actions">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses' ) ); ?>" class="button button-primary">
+						<?php esc_html_e( 'Manage Responses', 'woo-ai-review-manager' ); ?>
+						<?php if ( $actionable_responses > 0 ) : ?>
+							<span class="wairm-badge"><?php echo absint( $actionable_responses ); ?></span>
+						<?php endif; ?>
+					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ); ?>" class="button">
+						<?php esc_html_e( 'Invitations', 'woo-ai-review-manager' ); ?>
+					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-insights' ) ); ?>" class="button">
+						<?php esc_html_e( 'Insights', 'woo-ai-review-manager' ); ?>
+					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="button">
+						<?php esc_html_e( 'Settings', 'woo-ai-review-manager' ); ?>
+					</a>
+
+					<?php if ( $pending_count > 0 ) : ?>
+					<button class="button" id="wairm-analyze-old-reviews">
+						<?php
+						printf(
+							/* translators: %d: number of unanalyzed reviews */
+							esc_html__( 'Analyze %d Unanalyzed Reviews', 'woo-ai-review-manager' ),
+							$pending_count
+						);
+						?>
+					</button>
+					<?php endif; ?>
 				</div>
+
+				<?php if ( $pending_count > 0 ) : ?>
+				<div id="wairm-analyze-progress" style="display: none; margin-top: 10px;">
+					<div style="background: #e0e0e0; border-radius: 4px; overflow: hidden; height: 20px;">
+						<div id="wairm-progress-bar" style="background: #3498db; height: 100%; width: 0%; transition: width 0.3s;"></div>
+					</div>
+					<p id="wairm-progress-text" style="margin: 5px 0; font-size: 13px; color: #666;"></p>
+				</div>
+				<?php endif; ?>
 			</div>
 
 			<div class="wairm-two-column">
@@ -249,7 +277,7 @@ final class Dashboard_Page {
 								<div class="review-excerpt"><?php echo esc_html( wp_trim_words( $review->comment_content, 30 ) ); ?></div>
 								<div class="review-meta">
 									<span class="review-author"><?php echo esc_html( $review->comment_author ); ?></span>
-									<span class="review-score"><?php esc_html_e( 'Score:', 'woo-ai-review-manager' ); ?> <?php echo esc_html( number_format( $review->score, 2 ) ); ?></span>
+									<span class="review-score"><?php esc_html_e( 'Score:', 'woo-ai-review-manager' ); ?> <?php echo esc_html( number_format( (float) $review->score, 2 ) ); ?></span>
 									<?php if ( $review->ai_response_suggestion && 'sent' !== $review->ai_response_status ) : ?>
 										<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses&status=actionable' ) ); ?>" class="button button-small">
 											<?php esc_html_e( 'Respond', 'woo-ai-review-manager' ); ?>
@@ -283,7 +311,7 @@ final class Dashboard_Page {
 									<td><?php echo esc_html( $product->product_name ); ?></td>
 									<td><?php echo absint( $product->review_count ); ?></td>
 									<td>
-										<?php echo esc_html( number_format( $product->avg_score, 2 ) ); ?>
+										<?php echo esc_html( number_format( (float) $product->avg_score, 2 ) ); ?>
 										<span class="score-bar" style="display: inline-block; width: 50px; height: 6px; background: #e0e0e0; margin-left: 10px; vertical-align: middle;">
 											<span style="display: block; width: <?php echo esc_attr( $product->avg_score * 100 ); ?>%; height: 100%; background: <?php echo $product->avg_score > 0.65 ? '#2ecc71' : ( $product->avg_score > 0.35 ? '#f39c12' : '#e74c3c' ); ?>;"></span>
 										</span>
@@ -295,39 +323,6 @@ final class Dashboard_Page {
 					<?php else : ?>
 						<p><?php esc_html_e( 'No product data yet.', 'woo-ai-review-manager' ); ?></p>
 					<?php endif; ?>
-
-					<h2 style="margin-top: 30px;"><?php esc_html_e( 'Quick Actions', 'woo-ai-review-manager' ); ?></h2>
-					<div class="wairm-quick-actions">
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses' ) ); ?>" class="button button-primary">
-							<?php esc_html_e( 'Manage Responses', 'woo-ai-review-manager' ); ?>
-							<?php if ( $actionable_responses > 0 ) : ?>
-								<span class="wairm-badge"><?php echo absint( $actionable_responses ); ?></span>
-							<?php endif; ?>
-						</a>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="button">
-							<?php esc_html_e( 'Settings', 'woo-ai-review-manager' ); ?>
-						</a>
-
-						<?php if ( $pending_count > 0 ) : ?>
-						<div id="wairm-analyze-section" style="margin-top: 15px;">
-							<button class="button" id="wairm-analyze-old-reviews">
-								<?php
-								printf(
-									/* translators: %d: number of unanalyzed reviews */
-									esc_html__( 'Analyze %d Unanalyzed Reviews', 'woo-ai-review-manager' ),
-									$pending_count
-								);
-								?>
-							</button>
-							<div id="wairm-analyze-progress" style="display: none; margin-top: 10px;">
-								<div style="background: #e0e0e0; border-radius: 4px; overflow: hidden; height: 20px;">
-									<div id="wairm-progress-bar" style="background: #3498db; height: 100%; width: 0%; transition: width 0.3s;"></div>
-								</div>
-								<p id="wairm-progress-text" style="margin: 5px 0; font-size: 13px; color: #666;"></p>
-							</div>
-						</div>
-						<?php endif; ?>
-					</div>
 
 					<?php
 					$text_supported  = \WooAIReviewManager\AI_Client::is_text_supported();

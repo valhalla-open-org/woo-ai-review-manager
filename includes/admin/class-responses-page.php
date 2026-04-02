@@ -168,16 +168,31 @@ final class Responses_Page {
 		}
 
 		$current_user = wp_get_current_user();
+		$reply_as     = get_option( 'wairm_reply_as', 'store' );
+
+		if ( 'user' === $reply_as ) {
+			$author_name  = $current_user->display_name;
+			$author_email = $current_user->user_email;
+		} else {
+			$author_name = get_option( 'wairm_email_from_name', '' );
+			if ( empty( $author_name ) ) {
+				$author_name = get_bloginfo( 'name' );
+			}
+			$author_email = get_option( 'wairm_support_email', '' );
+			if ( empty( $author_email ) ) {
+				$author_email = get_option( 'admin_email' );
+			}
+		}
 
 		$comment_id = wp_insert_comment( [
-			'comment_post_ID' => (int) $row->product_id,
-			'comment_parent'  => (int) $row->comment_id,
-			'comment_content' => $text,
-			'comment_type'    => 'comment',
-			'comment_approved' => 1,
-			'user_id'         => $current_user->ID,
-			'comment_author'  => $current_user->display_name,
-			'comment_author_email' => $current_user->user_email,
+			'comment_post_ID'      => (int) $row->product_id,
+			'comment_parent'       => (int) $row->comment_id,
+			'comment_content'      => $text,
+			'comment_type'         => 'comment',
+			'comment_approved'     => 1,
+			'user_id'              => $current_user->ID,
+			'comment_author'       => $author_name,
+			'comment_author_email' => $author_email,
 		] );
 
 		if ( ! $comment_id ) {
@@ -327,9 +342,31 @@ final class Responses_Page {
 		$total_pages = (int) ceil( $total / $per_page );
 		$base_url    = admin_url( 'admin.php?page=wairm-responses' );
 		?>
+		<?php $pending_analysis = \WooAIReviewManager\Sentiment_Analyzer::count_pending(); ?>
 		<div class="wrap wairm-responses">
 			<h1><?php esc_html_e( 'AI Response Suggestions', 'woo-ai-review-manager' ); ?></h1>
 			<hr class="wp-header-end">
+
+			<?php if ( $pending_analysis > 0 ) : ?>
+			<div class="notice notice-warning" style="margin: 15px 0;">
+				<p>
+					<?php
+					printf(
+						/* translators: 1: count, 2: link open, 3: link close */
+						esc_html( _n(
+							'%1$s review is awaiting AI analysis. %2$sRun analysis on the Dashboard%3$s to generate sentiment scores and response suggestions.',
+							'%1$s reviews are awaiting AI analysis. %2$sRun analysis on the Dashboard%3$s to generate sentiment scores and response suggestions.',
+							$pending_analysis,
+							'woo-ai-review-manager'
+						) ),
+						'<strong>' . esc_html( (string) $pending_analysis ) . '</strong>',
+						'<a href="' . esc_url( admin_url( 'admin.php?page=wairm-dashboard' ) ) . '">',
+						'</a>'
+					);
+					?>
+				</p>
+			</div>
+			<?php endif; ?>
 
 			<ul class="subsubsub">
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'actionable', $base_url ) ); ?>" class="<?php echo 'actionable' === $filter ? 'current' : ''; ?>">
@@ -390,7 +427,7 @@ final class Responses_Page {
 								?>
 							</span>
 							<span class="wairm-response-meta">
-								<?php echo esc_html( $row->product_name ); ?>
+								<a href="<?php echo esc_url( get_permalink( (int) $row->product_id ) ); ?>" target="_blank"><?php echo esc_html( $row->product_name ); ?></a>
 								&middot;
 								<?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $row->comment_date ) ) ); ?>
 								&middot;

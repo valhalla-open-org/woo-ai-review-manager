@@ -1,36 +1,6 @@
-/* global wairm, Chart */
+/* global wairm */
 document.addEventListener( 'DOMContentLoaded', function () {
 	'use strict';
-
-	// Sentiment pie chart.
-	var canvas = document.getElementById( 'wairm-sentiment-chart' );
-	if ( canvas && typeof Chart !== 'undefined' && wairm.chart ) {
-		var chartData = wairm.chart;
-		var hasData   = chartData.positive + chartData.neutral + chartData.negative > 0;
-
-		var i18nChart = wairm.i18n;
-
-		if ( hasData ) {
-			new Chart( canvas.getContext( '2d' ), {
-				type: 'pie',
-				data: {
-					labels: [ i18nChart.chart_positive, i18nChart.chart_neutral, i18nChart.chart_negative ],
-					datasets: [ {
-						data: [ chartData.positive, chartData.neutral, chartData.negative ],
-						backgroundColor: [ '#2ecc71', '#f39c12', '#e74c3c' ]
-					} ]
-				},
-				options: {
-					responsive: true,
-					plugins: {
-						legend: { position: 'bottom' }
-					}
-				}
-			} );
-		} else {
-			canvas.parentNode.innerHTML = '<p style="color: #888; text-align: center;">' + i18nChart.no_chart_data + '</p>';
-		}
-	}
 
 	// Analyze old reviews with batch processing and progress bar.
 	var analyzeBtn = document.getElementById( 'wairm-analyze-old-reviews' );

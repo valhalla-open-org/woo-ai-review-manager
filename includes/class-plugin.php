@@ -23,7 +23,18 @@ final class Plugin {
 	}
 
 	private function __construct() {
+		$this->maybe_upgrade();
 		$this->init_hooks();
+	}
+
+	/**
+	 * Run the installer if the DB version is outdated (e.g. new tables added).
+	 */
+	private function maybe_upgrade(): void {
+		$db_version = get_option( 'wairm_version', '0' );
+		if ( version_compare( $db_version, WAIRM_VERSION, '<' ) ) {
+			Installer::activate();
+		}
 	}
 
 	/**
@@ -58,8 +69,10 @@ final class Plugin {
 		// Admin.
 		if ( is_admin() ) {
 			new Admin\Dashboard_Page();
-			new Admin\Settings_Page();
 			new Admin\Responses_Page();
+			new Admin\Invitations_Page();
+			new Admin\Insights_Page();
+			new Admin\Settings_Page();
 		}
 
 		// Core modules.
@@ -75,7 +88,6 @@ final class Plugin {
 		} );
 
 		// Cron.
-		add_action( 'wairm_process_pending_reviews', [ Sentiment_Analyzer::class, 'process_pending' ] );
 		add_action( 'wairm_send_review_invitations', [ Email_Sender::class, 'process_queue' ] );
 		add_action( 'wairm_expire_invitations', [ self::class, 'expire_stale_invitations' ] );
 	}

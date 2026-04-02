@@ -13,6 +13,7 @@ global $wpdb;
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_email_queue" );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_review_invitations" );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_review_sentiment" );
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_insights" );
 
 // Delete plugin options.
 $options = [
@@ -26,6 +27,9 @@ $options = [
 	'wairm_auto_analyze',
 	'wairm_auto_respond_positive',
 	'wairm_negative_threshold',
+	'wairm_model_preference',
+	'wairm_support_email',
+	'wairm_reply_as',
 ];
 
 foreach ( $options as $option ) {
@@ -33,6 +37,5 @@ foreach ( $options as $option ) {
 }
 
 // Clear any scheduled cron events.
-wp_clear_scheduled_hook( 'wairm_process_pending_reviews' );
 wp_clear_scheduled_hook( 'wairm_send_review_invitations' );
 wp_clear_scheduled_hook( 'wairm_expire_invitations' );

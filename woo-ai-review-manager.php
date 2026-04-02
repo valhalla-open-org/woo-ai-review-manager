@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce AI Review Manager
  * Plugin URI:  https://github.com/valhalla-open-org/woo-ai-review-manager
  * Description: Automated review collection, sentiment analysis, and AI-powered response suggestions for WooCommerce stores.
- * Version:     2.0.0
+ * Version:     2.1.0
  * Author:      Valhalla Open
  * Author URI:  https://github.com/valhalla-open-org
  * License:     GPL-2.0-or-later
@@ -23,7 +23,7 @@ declare(strict_types=1);
 defined( 'ABSPATH' ) || exit;
 
 // Plugin constants.
-define( 'WAIRM_VERSION', '2.0.0' );
+define( 'WAIRM_VERSION', '2.1.0' );
 define( 'WAIRM_PLUGIN_FILE', __FILE__ );
 define( 'WAIRM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WAIRM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

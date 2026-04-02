@@ -18,7 +18,6 @@ final class Email_Sender {
 		add_action( 'admin_post_nopriv_wairm_submit_review', [ $this, 'handle_form_submission' ] );
 		add_action( 'admin_post_wairm_submit_review', [ $this, 'handle_form_submission' ] );
 		add_action( 'template_redirect', [ $this, 'intercept_review_token' ] );
-		add_action( 'wp', [ $this, 'maybe_show_thank_you' ] );
 	}
 
 	/**
@@ -32,6 +31,14 @@ final class Email_Sender {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public token-based URL, no nonce available.
 		if ( empty( $_GET['wairm_token'] ) || sanitize_key( wp_unslash( $_GET['action'] ?? '' ) ) !== 'review' ) {
 			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$is_submitted = ! empty( $_GET['wairm_submitted'] );
+
+		if ( $is_submitted ) {
+			$this->render_thank_you_page();
+			exit;
 		}
 
 		$form_html = $this->review_form_shortcode();
@@ -48,15 +55,216 @@ final class Email_Sender {
 			<title><?php echo esc_html__( 'Leave a Review', 'woo-ai-review-manager' ) . ' — ' . $site_name; ?></title>
 			<?php wp_head(); ?>
 			<style>
-				body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background: #f9f9f9; }
-				.wairm-review-page { max-width: 700px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-				.wairm-review-page h2 { margin-top: 0; }
+				/* Reset & base */
+				*, *::before, *::after { box-sizing: border-box; }
+				body {
+					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+					font-size: 15px;
+					line-height: 1.6;
+					color: #1a1a1a;
+					margin: 0;
+					padding: 20px;
+					background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+					min-height: 100vh;
+				}
+
+				/* Page container */
+				.wairm-review-page {
+					max-width: 640px;
+					margin: 30px auto;
+					background: #fff;
+					padding: 40px;
+					border-radius: 12px;
+					box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+				}
+				@media (max-width: 600px) {
+					body { padding: 12px; }
+					.wairm-review-page { padding: 24px 20px; margin: 12px auto; }
+				}
+
+				/* Store branding */
+				.wairm-store-name {
+					font-size: 13px;
+					font-weight: 600;
+					text-transform: uppercase;
+					letter-spacing: 1px;
+					color: #888;
+					margin: 0 0 6px;
+				}
+
+				/* Headings */
+				.wairm-review-page h2 {
+					margin: 0 0 8px;
+					font-size: 26px;
+					font-weight: 700;
+					color: #1a1a1a;
+				}
+				.wairm-review-page > .wairm-review-form > p:first-of-type {
+					margin: 0 0 28px;
+					font-size: 15px;
+					color: #555;
+				}
+
+				/* Product card */
+				.wairm-product-card {
+					background: #fafbfc;
+					border: 1px solid #e8ecf0;
+					border-radius: 10px;
+					padding: 24px;
+					margin-bottom: 20px;
+					transition: border-color 0.2s;
+				}
+				.wairm-product-card:hover { border-color: #c0c8d4; }
+				.wairm-product-card:last-of-type { margin-bottom: 24px; }
+
+				.wairm-product-header {
+					display: flex;
+					align-items: center;
+					gap: 16px;
+					margin-bottom: 20px;
+				}
+				.wairm-product-image {
+					width: 64px;
+					height: 64px;
+					border-radius: 8px;
+					object-fit: cover;
+					border: 1px solid #e8ecf0;
+					flex-shrink: 0;
+				}
+				.wairm-product-image-placeholder {
+					width: 64px;
+					height: 64px;
+					border-radius: 8px;
+					background: #e8ecf0;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+					color: #aaa;
+					font-size: 24px;
+				}
+				.wairm-product-name {
+					font-size: 18px;
+					font-weight: 600;
+					color: #1a1a1a;
+					margin: 0;
+				}
+
+				/* Star rating */
+				.wairm-star-rating {
+					display: flex;
+					flex-direction: row-reverse;
+					justify-content: flex-end;
+					gap: 4px;
+					margin: 4px 0 0;
+				}
+				.wairm-star-rating input { display: none; }
+				.wairm-star-rating label {
+					cursor: pointer;
+					font-size: 32px;
+					color: #d4d8de;
+					transition: color 0.15s, transform 0.15s;
+					line-height: 1;
+					user-select: none;
+				}
+				.wairm-star-rating label:hover,
+				.wairm-star-rating label:hover ~ label,
+				.wairm-star-rating input:checked ~ label {
+					color: #f5a623;
+				}
+				.wairm-star-rating label:hover { transform: scale(1.15); }
+				.wairm-star-rating-label {
+					font-size: 13px;
+					font-weight: 600;
+					color: #555;
+					margin-bottom: 4px;
+				}
+
+				/* Form fields */
+				.wairm-field { margin-top: 18px; }
+				.wairm-field label {
+					display: block;
+					font-size: 13px;
+					font-weight: 600;
+					color: #555;
+					margin-bottom: 6px;
+				}
+				.wairm-field textarea {
+					width: 100%;
+					padding: 12px 14px;
+					border: 1px solid #d4d8de;
+					border-radius: 8px;
+					font-family: inherit;
+					font-size: 14px;
+					line-height: 1.6;
+					color: #1a1a1a;
+					resize: vertical;
+					transition: border-color 0.2s, box-shadow 0.2s;
+					background: #fff;
+				}
+				.wairm-field textarea:focus {
+					outline: none;
+					border-color: #3b82f6;
+					box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+				}
+				.wairm-field textarea::placeholder { color: #aaa; }
+
+				/* Hidden select fallback (visually hidden but form-accessible) */
+				.wairm-rating-select { display: none; }
+
+				/* Submit */
+				.wairm-submit-wrap { margin-top: 8px; }
+				.wairm-submit-btn {
+					display: inline-flex;
+					align-items: center;
+					gap: 8px;
+					background: #3b82f6;
+					color: #fff;
+					border: none;
+					padding: 14px 32px;
+					border-radius: 8px;
+					font-size: 15px;
+					font-weight: 600;
+					cursor: pointer;
+					transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+					letter-spacing: 0.01em;
+				}
+				.wairm-submit-btn:hover {
+					background: #2563eb;
+					box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+				}
+				.wairm-submit-btn:active { transform: scale(0.98); }
+
+				/* Footer */
+				.wairm-form-footer {
+					margin-top: 28px;
+					padding-top: 20px;
+					border-top: 1px solid #eee;
+					text-align: center;
+					font-size: 13px;
+					color: #999;
+				}
 			</style>
 		</head>
 		<body>
 			<div class="wairm-review-page">
 				<?php echo $form_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- already escaped in shortcode. ?>
+				<div class="wairm-form-footer">
+					<?php echo esc_html( get_bloginfo( 'name' ) ); ?>
+				</div>
 			</div>
+			<script>
+			/* Star rating: sync clicks to hidden select */
+			document.addEventListener('DOMContentLoaded', function() {
+				document.querySelectorAll('.wairm-star-rating input').forEach(function(radio) {
+					radio.addEventListener('change', function() {
+						var pid = this.name.replace('star_rating[', '').replace(']', '');
+						var sel = document.querySelector('select[name="rating[' + pid + ']"]');
+						if (sel) sel.value = this.value;
+					});
+				});
+			});
+			</script>
 			<?php wp_footer(); ?>
 		</body>
 		</html>
@@ -334,6 +542,7 @@ final class Email_Sender {
 		ob_start();
 		?>
 		<div class="wairm-review-form">
+			<p class="wairm-store-name"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></p>
 			<h2><?php esc_html_e( 'Leave a Review', 'woo-ai-review-manager' ); ?></h2>
 			<p><?php esc_html_e( 'Please share your thoughts on the products you purchased:', 'woo-ai-review-manager' ); ?></p>
 
@@ -348,35 +557,47 @@ final class Email_Sender {
 					if ( ! $product ) {
 						continue;
 					}
+					$image_url = wp_get_attachment_image_url( $product->get_image_id(), 'thumbnail' );
+					$pid       = absint( $product_id );
 				?>
-				<div style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
-					<h3><?php echo esc_html( $product->get_name() ); ?></h3>
-					<input type="hidden" name="product_ids[]" value="<?php echo absint( $product_id ); ?>">
-
-					<div style="margin: 15px 0;">
-						<label>
-							<strong><?php esc_html_e( 'Rating:', 'woo-ai-review-manager' ); ?></strong><br>
-							<select name="rating[<?php echo absint( $product_id ); ?>]" required>
-								<option value=""><?php esc_html_e( 'Select a rating', 'woo-ai-review-manager' ); ?></option>
-								<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
-								<option value="<?php echo absint( $i ); ?>"><?php echo absint( $i ); ?> <?php esc_html_e( 'stars', 'woo-ai-review-manager' ); ?></option>
-								<?php endfor; ?>
-							</select>
-						</label>
+				<div class="wairm-product-card">
+					<div class="wairm-product-header">
+						<?php if ( $image_url ) : ?>
+							<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $product->get_name() ); ?>" class="wairm-product-image">
+						<?php else : ?>
+							<div class="wairm-product-image-placeholder">&#9733;</div>
+						<?php endif; ?>
+						<h3 class="wairm-product-name"><?php echo esc_html( $product->get_name() ); ?></h3>
 					</div>
 
-					<div style="margin: 15px 0;">
-						<label>
-							<strong><?php esc_html_e( 'Your Review:', 'woo-ai-review-manager' ); ?></strong><br>
-							<textarea name="review[<?php echo absint( $product_id ); ?>]" rows="4" style="width: 100%; max-width: 500px;" placeholder="<?php esc_attr_e( 'What did you like or dislike about this product?', 'woo-ai-review-manager' ); ?>" required></textarea>
-						</label>
+					<input type="hidden" name="product_ids[]" value="<?php echo $pid; ?>">
+
+					<div class="wairm-star-rating-label"><?php esc_html_e( 'Your rating', 'woo-ai-review-manager' ); ?></div>
+					<div class="wairm-star-rating">
+						<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
+							<input type="radio" id="star-<?php echo $pid; ?>-<?php echo $i; ?>" name="star_rating[<?php echo $pid; ?>]" value="<?php echo $i; ?>">
+							<label for="star-<?php echo $pid; ?>-<?php echo $i; ?>" title="<?php echo esc_attr( $i ); ?> <?php esc_attr_e( 'stars', 'woo-ai-review-manager' ); ?>">&#9733;</label>
+						<?php endfor; ?>
+					</div>
+
+					<select name="rating[<?php echo $pid; ?>]" class="wairm-rating-select" required>
+						<option value=""><?php esc_html_e( 'Select a rating', 'woo-ai-review-manager' ); ?></option>
+						<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
+						<option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+						<?php endfor; ?>
+					</select>
+
+					<div class="wairm-field">
+						<label for="review-<?php echo $pid; ?>"><?php esc_html_e( 'Your review', 'woo-ai-review-manager' ); ?></label>
+						<textarea id="review-<?php echo $pid; ?>" name="review[<?php echo $pid; ?>]" rows="4" placeholder="<?php esc_attr_e( 'What did you like or dislike about this product?', 'woo-ai-review-manager' ); ?>" required></textarea>
 					</div>
 				</div>
 				<?php endforeach; ?>
 
-				<div style="margin-top: 30px;">
-					<button type="submit" style="background: #3498db; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+				<div class="wairm-submit-wrap">
+					<button type="submit" class="wairm-submit-btn">
 						<?php esc_html_e( 'Submit Reviews', 'woo-ai-review-manager' ); ?>
+						<span>&#8594;</span>
 					</button>
 				</div>
 			</form>
@@ -416,6 +637,7 @@ final class Email_Sender {
 		$product_ids = $_POST['product_ids'] ?? [];
 		$ratings     = $_POST['rating'] ?? [];
 		$reviews     = $_POST['review'] ?? [];
+
 
 		foreach ( (array) $product_ids as $product_id ) {
 			$product_id = absint( $product_id );
@@ -480,8 +702,9 @@ final class Email_Sender {
 
 		$redirect_url = add_query_arg(
 			[
-				'wairm_thank_you' => '1',
-				'_wpnonce'        => wp_create_nonce( 'wairm_thank_you' ),
+				'wairm_token'     => $token,
+				'action'          => 'review',
+				'wairm_submitted' => '1',
 			],
 			get_home_url()
 		);
@@ -490,20 +713,189 @@ final class Email_Sender {
 	}
 
 	/**
-	 * Show thank-you notice on the front page after review submission.
+	 * Render a standalone thank-you page after review submission.
 	 */
-	public function maybe_show_thank_you(): void {
-		if ( ! isset( $_GET['wairm_thank_you'] ) ) {
-			return;
-		}
-		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'wairm_thank_you' ) ) {
-			return;
-		}
-		add_filter( 'the_content', static function ( string $content ): string {
-			$notice = '<div class="wairm-thank-you" style="padding: 20px; margin: 20px 0; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; text-align: center;">'
-				. '<p style="font-size: 18px; margin: 0;">' . esc_html__( 'Thank you for your reviews! Your feedback helps us improve.', 'woo-ai-review-manager' ) . '</p>'
-				. '</div>';
-			return $notice . $content;
-		} );
+	private function render_thank_you_page(): void {
+		$site_name = esc_html( get_bloginfo( 'name' ) );
+		$charset   = esc_attr( get_bloginfo( 'charset' ) );
+		$shop_url  = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : get_home_url();
+		?>
+		<!DOCTYPE html>
+		<html <?php language_attributes(); ?>>
+		<head>
+			<meta charset="<?php echo $charset; ?>">
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+			<title><?php echo esc_html__( 'Thank You', 'woo-ai-review-manager' ) . ' — ' . $site_name; ?></title>
+			<?php wp_head(); ?>
+			<style>
+				*, *::before, *::after { box-sizing: border-box; }
+				body {
+					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+					font-size: 15px;
+					line-height: 1.6;
+					color: #1a1a1a;
+					margin: 0;
+					padding: 20px;
+					background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+					min-height: 100vh;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+				.wairm-thankyou {
+					max-width: 520px;
+					width: 100%;
+					background: #fff;
+					padding: 48px 40px;
+					border-radius: 16px;
+					box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+					text-align: center;
+					animation: wairm-ty-fadein 0.6s ease;
+				}
+				@keyframes wairm-ty-fadein {
+					from { opacity: 0; transform: translateY(16px); }
+					to   { opacity: 1; transform: translateY(0); }
+				}
+				@media (max-width: 600px) {
+					body { padding: 16px; }
+					.wairm-thankyou { padding: 36px 24px; }
+				}
+
+				/* Checkmark animation */
+				.wairm-ty-icon {
+					width: 80px;
+					height: 80px;
+					margin: 0 auto 24px;
+					background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					animation: wairm-ty-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+				}
+				@keyframes wairm-ty-pop {
+					from { transform: scale(0); }
+					to   { transform: scale(1); }
+				}
+				.wairm-ty-icon svg {
+					width: 40px;
+					height: 40px;
+					stroke: #fff;
+					stroke-width: 3;
+					fill: none;
+					stroke-linecap: round;
+					stroke-linejoin: round;
+				}
+				.wairm-ty-icon svg .checkmark-path {
+					stroke-dasharray: 50;
+					stroke-dashoffset: 50;
+					animation: wairm-ty-draw 0.4s ease 0.6s forwards;
+				}
+				@keyframes wairm-ty-draw {
+					to { stroke-dashoffset: 0; }
+				}
+
+				/* Typography */
+				.wairm-ty-heading {
+					font-size: 24px;
+					font-weight: 700;
+					color: #1a1a1a;
+					margin: 0 0 12px;
+				}
+				.wairm-ty-message {
+					font-size: 16px;
+					color: #555;
+					margin: 0 0 8px;
+					line-height: 1.7;
+				}
+				.wairm-ty-submessage {
+					font-size: 14px;
+					color: #888;
+					margin: 0 0 32px;
+				}
+
+				/* Stars decoration */
+				.wairm-ty-stars {
+					display: flex;
+					justify-content: center;
+					gap: 6px;
+					margin-bottom: 28px;
+				}
+				.wairm-ty-stars span {
+					font-size: 28px;
+					color: #f5a623;
+					animation: wairm-ty-star 0.3s ease both;
+				}
+				.wairm-ty-stars span:nth-child(1) { animation-delay: 0.8s; }
+				.wairm-ty-stars span:nth-child(2) { animation-delay: 0.9s; }
+				.wairm-ty-stars span:nth-child(3) { animation-delay: 1.0s; }
+				.wairm-ty-stars span:nth-child(4) { animation-delay: 1.1s; }
+				.wairm-ty-stars span:nth-child(5) { animation-delay: 1.2s; }
+				@keyframes wairm-ty-star {
+					from { opacity: 0; transform: scale(0) rotate(-30deg); }
+					to   { opacity: 1; transform: scale(1) rotate(0); }
+				}
+
+				/* CTA button */
+				.wairm-ty-btn {
+					display: inline-block;
+					background: #3b82f6;
+					color: #fff;
+					text-decoration: none;
+					padding: 12px 28px;
+					border-radius: 8px;
+					font-size: 15px;
+					font-weight: 600;
+					transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+				}
+				.wairm-ty-btn:hover {
+					background: #2563eb;
+					box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+					color: #fff;
+				}
+				.wairm-ty-btn:active { transform: scale(0.98); }
+
+				/* Footer */
+				.wairm-ty-footer {
+					margin-top: 32px;
+					padding-top: 20px;
+					border-top: 1px solid #eee;
+					font-size: 13px;
+					color: #aaa;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="wairm-thankyou">
+				<div class="wairm-ty-icon">
+					<svg viewBox="0 0 40 40">
+						<polyline class="checkmark-path" points="12,21 18,27 28,14" />
+					</svg>
+				</div>
+
+				<h1 class="wairm-ty-heading"><?php esc_html_e( 'Thank you!', 'woo-ai-review-manager' ); ?></h1>
+				<p class="wairm-ty-message"><?php esc_html_e( 'Your reviews have been submitted successfully.', 'woo-ai-review-manager' ); ?></p>
+				<p class="wairm-ty-submessage"><?php esc_html_e( 'Your feedback helps us improve and helps other customers make informed decisions.', 'woo-ai-review-manager' ); ?></p>
+
+				<div class="wairm-ty-stars">
+					<span>&#9733;</span>
+					<span>&#9733;</span>
+					<span>&#9733;</span>
+					<span>&#9733;</span>
+					<span>&#9733;</span>
+				</div>
+
+				<a href="<?php echo esc_url( $shop_url ); ?>" class="wairm-ty-btn">
+					<?php esc_html_e( 'Continue Shopping', 'woo-ai-review-manager' ); ?>
+				</a>
+
+				<div class="wairm-ty-footer">
+					<?php echo esc_html( get_bloginfo( 'name' ) ); ?>
+				</div>
+			</div>
+			<?php wp_footer(); ?>
+		</body>
+		</html>
+		<?php
 	}
 }

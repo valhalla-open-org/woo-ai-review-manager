@@ -85,6 +85,16 @@ final class Settings_Page {
 			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
 			'default'           => 'no',
 		] );
+		register_setting( 'wairm_settings_general', 'wairm_reply_as', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_key',
+			'default'           => 'store',
+		] );
+		register_setting( 'wairm_settings_general', 'wairm_support_email', [
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_email',
+			'default'           => '',
+		] );
 	}
 
 	/**
@@ -359,6 +369,46 @@ final class Settings_Page {
 								</label>
 								<p class="description">
 									<?php esc_html_e( 'By default, only negative reviews get AI response suggestions. Enable this to get suggestions for positive reviews too.', 'woo-ai-review-manager' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="wairm_reply_as"><?php esc_html_e( 'Post Replies As', 'woo-ai-review-manager' ); ?></label>
+							</th>
+							<td>
+								<?php $reply_as = get_option( 'wairm_reply_as', 'store' ); ?>
+								<select id="wairm_reply_as" name="wairm_reply_as">
+									<option value="store" <?php selected( $reply_as, 'store' ); ?>>
+										<?php
+										$store_label = get_option( 'wairm_email_from_name', '' );
+										if ( empty( $store_label ) ) {
+											$store_label = get_bloginfo( 'name' );
+										}
+										printf(
+											/* translators: %s: store name */
+											esc_html__( 'Store name (%s)', 'woo-ai-review-manager' ),
+											esc_html( $store_label )
+										);
+										?>
+									</option>
+									<option value="user" <?php selected( $reply_as, 'user' ); ?>>
+										<?php esc_html_e( 'Logged-in user (your personal account)', 'woo-ai-review-manager' ); ?>
+									</option>
+								</select>
+								<p class="description">
+									<?php esc_html_e( 'Choose how reply comments appear on the product page. "Store name" uses the Email From Name setting (or site name).', 'woo-ai-review-manager' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="wairm_support_email"><?php esc_html_e( 'Support Email', 'woo-ai-review-manager' ); ?></label>
+							</th>
+							<td>
+								<input type="email" id="wairm_support_email" name="wairm_support_email" value="<?php echo esc_attr( get_option( 'wairm_support_email', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" />
+								<p class="description">
+									<?php esc_html_e( 'Email address for customer support. The AI will reference this in response suggestions when directing customers to reach out. Defaults to the site admin email if left empty.', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>

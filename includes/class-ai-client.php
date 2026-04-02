@@ -156,16 +156,15 @@ final class AI_Client {
 		$positive_threshold = max( $negative_threshold + 0.30, 0.65 );
 
 		$schema = [
-			'type'       => 'object',
-			'properties' => [
+			'type'                 => 'object',
+			'additionalProperties' => false,
+			'properties'           => [
 				'sentiment'   => [
 					'type' => 'string',
 					'enum' => [ 'positive', 'neutral', 'negative' ],
 				],
 				'score'       => [
 					'type'        => 'number',
-					'minimum'     => 0.0,
-					'maximum'     => 1.0,
 					'description' => sprintf(
 						'Sentiment score: 0.0 (most negative) to 1.0 (most positive). >= %.2f = positive, %.2f-%.2f = neutral, < %.2f = negative.',
 						$positive_threshold,
@@ -175,13 +174,11 @@ final class AI_Client {
 					),
 				],
 				'key_phrases' => [
-					'type'     => 'array',
-					'items'    => [ 'type' => 'string' ],
-					'minItems' => 1,
-					'maxItems' => 5,
+					'type'  => 'array',
+					'items' => [ 'type' => 'string' ],
 				],
 			],
-			'required'   => [ 'sentiment', 'score', 'key_phrases' ],
+			'required'             => [ 'sentiment', 'score', 'key_phrases' ],
 		];
 
 		$system = implode( "\n", [
@@ -216,34 +213,52 @@ final class AI_Client {
 	 */
 	public function generate_response( string $review_text, string $sentiment, string $product_name, string $store_name ): string {
 		$tone_guidance = match ( $sentiment ) {
-			'negative' => 'Empathetic, apologetic, and solution-oriented. Offer to make it right without being defensive.',
-			'neutral'  => 'Warm and appreciative. Invite them to share more feedback or reach out.',
-			'positive' => 'Grateful and enthusiastic. Mention specific things they liked. Keep it genuine, not corporate.',
-			default    => 'Professional and friendly.',
+			'negative' => 'Sincere and empathetic. Apologize that their experience fell short, but do NOT amplify their criticism or agree that the product is bad (never say "that\'s not acceptable" or similar). If the product is physically broken or defective, offer a replacement or refund. If the issue is subjective (fit, color, expectations), be sympathetic and direct them to support — do NOT offer refunds for subjective complaints. No humor, no jokes, no witty remarks.',
+			'neutral'  => 'Friendly and conversational. Pick up on something specific they mentioned and respond to that. Keep it light and casual.',
+			'positive' => 'Warm and brief — match their energy. If they were casual, be casual back. A short, genuine reply beats a long grateful one. Light humor is fine if it actually makes sense in context.',
+			default    => 'Friendly and helpful.',
 		};
 
 		$locale   = get_locale();
 		$language = self::locale_to_language( $locale );
 
+		$support_email = get_option( 'wairm_support_email', '' );
+		if ( empty( $support_email ) ) {
+			$support_email = get_option( 'admin_email' );
+		}
+
 		$prompt = <<<PROMPT
-Write a store owner's response to this customer review.
+Write a store owner's reply to this customer review.
 
 Store: {$store_name}
 Product: {$product_name}
-Review sentiment: {$sentiment}
+Sentiment: {$sentiment}
+Support email: {$support_email}
 Review: "{$review_text}"
 PROMPT;
 
 		$system = implode( "\n", [
+			'You are a store owner who personally reads every review. You are helpful, personable, and genuine.',
+			'',
 			"Tone: {$tone_guidance}",
 			"Language: Always respond in {$language}.",
+			'',
 			'Rules:',
-			'- 2-4 sentences max',
-			'- Sound human, not like a template',
-			'- Reference specific details from the review',
-			'- For negative reviews: acknowledge the issue and offer resolution',
-			'- Do not use exclamation marks excessively',
-			'- Do not start with a generic thank-you opener',
+			'- 2-3 sentences. Shorter is better.',
+			'- NEVER quote or repeat the customer\'s words back to them. Respond to their point, don\'t echo it.',
+			'- NEVER start with "Thank you for your feedback", "Thanks for sharing", "We appreciate", or any canned opener. Jump straight into a real response.',
+			'- NEVER use phrases like "I\'m sorry to hear that", "We\'re glad you enjoyed", or "that\'s not acceptable". These sound robotic or damage the brand.',
+			'- NEVER amplify or agree with criticism. Don\'t say "that\'s not acceptable" or "you\'re right, that shouldn\'t happen". Apologize that their experience fell short without validating that the product is bad.',
+			'- Keep complaints vague in your reply. Say "sorry it didn\'t meet your expectations" rather than repeating specific complaints like "the color was wrong and the quality was poor".',
+			'- Sound like a real person writing a quick reply, not a PR department.',
+			'- For negative reviews with a DEFECTIVE product (broken, torn, stitching undone, damaged): apologize and offer a replacement or refund via the support email.',
+			'- For negative reviews with SUBJECTIVE complaints (sizing, color, expectations, appearance): be empathetic and invite them to reach out to support, but do NOT offer refunds or replacements unprompted.',
+			'- For positive reviews: be brief and warm. One genuine sentence beats three grateful ones.',
+			'- For suggestions or feature requests: respond casually and optimistically, e.g. "more colors might be coming soon" — not "I\'ll keep pushing on our side".',
+			'- Any humor must make logical sense in context. Don\'t force jokes or make confusing quips.',
+			'- Match the customer\'s register — casual review gets a casual reply, detailed review gets a more considered reply.',
+			'- No exclamation mark overuse. One max per reply.',
+			'- When directing a customer to contact support, use the support email provided above.',
 		] );
 
 		$builder = wp_ai_client_prompt( $prompt )
@@ -258,6 +273,128 @@ PROMPT;
 		}
 
 		return trim( $result );
+	}
+
+	/**
+	 * Generate insights from a collection of reviews for a specific category.
+	 *
+	 * @param array  $reviews      Array of review data.
+	 * @param string $category     Insight category: product, trends, operational, strategic.
+	 * @param string $period_label Human-readable period (e.g. "Last 30 days").
+	 * @return string HTML-formatted insight content.
+	 * @throws \RuntimeException On API failure.
+	 */
+	public function generate_insights( array $reviews, string $category, string $period_label = 'All time' ): string {
+		$locale   = get_locale();
+		$language = self::locale_to_language( $locale );
+
+		// Build a compact review summary for the prompt.
+		$review_lines = [];
+		foreach ( $reviews as $i => $r ) {
+			$review_lines[] = sprintf(
+				'[%d] Product: %s | Sentiment: %s (%.2f) | Date: %s | Review: "%s"',
+				$i + 1,
+				$r['product'],
+				$r['sentiment'],
+				$r['score'],
+				wp_date( 'Y-m-d', strtotime( $r['date'] ) ),
+				mb_substr( $r['content'], 0, 300 )
+			);
+		}
+
+		$review_count    = count( $reviews );
+		$reviews_text    = implode( "\n", $review_lines );
+		$category_prompt = $this->get_insight_prompt( $category );
+
+		$prompt = <<<PROMPT
+Analyze these {$review_count} customer reviews and provide insights.
+
+Time period: {$period_label}
+Category: {$category}
+
+{$category_prompt}
+
+Reviews:
+{$reviews_text}
+PROMPT;
+
+		$system = implode( "\n", [
+			'You are a business intelligence analyst helping an e-commerce store owner understand their customer feedback.',
+			"Language: Always respond in {$language}.",
+			'',
+			'Rules:',
+			'- Return your analysis as clean HTML that can be embedded directly in a WordPress admin page.',
+			'- Use <h3> for section headings, <p> for text, <ul>/<li> for lists, <strong> for emphasis.',
+			'- Do NOT wrap in <html>, <body>, or <div> tags. Just the content.',
+			'- Be specific and actionable. Reference actual products and quotes from reviews where relevant.',
+			'- Keep quotes short (max 10 words) and use <em> for quotes.',
+			'- Present findings as clear, prioritized insights — most important first.',
+			'- Use plain, direct language. No corporate jargon or filler.',
+			'- If there is not enough data for a particular insight, say so briefly rather than speculating.',
+		] );
+
+		// Extend HTTP timeout for insight generation (large prompt + long response).
+		$extend_timeout = static function () {
+			return 120;
+		};
+		add_filter( 'http_request_timeout', $extend_timeout );
+
+		$builder = wp_ai_client_prompt( $prompt )
+			->using_system_instruction( $system )
+			->using_temperature( 0.5 )
+			->using_max_tokens( 1500 );
+
+		$result = self::apply_model_preference( $builder )->generate_text();
+
+		remove_filter( 'http_request_timeout', $extend_timeout );
+
+		if ( is_wp_error( $result ) ) {
+			throw new \RuntimeException( 'AI insight generation failed: ' . $result->get_error_message() );
+		}
+
+		return wp_kses_post( trim( $result ) );
+	}
+
+	/**
+	 * Get the specific prompt instructions for each insight category.
+	 */
+	private function get_insight_prompt( string $category ): string {
+		return match ( $category ) {
+			'product' => implode( "\n", [
+				'Analyze reviews at the product level. For each product with enough reviews, provide:',
+				'- Top strengths: what customers consistently praise',
+				'- Recurring complaints: specific issues mentioned by multiple customers',
+				'- Sizing/fit patterns: does the product run large, small, or true to size?',
+				'- Overall quality perception',
+				'Group findings by product. Skip products with only 1 review unless the feedback is notable.',
+			] ),
+			'trends' => implode( "\n", [
+				'Analyze review sentiment and patterns over time:',
+				'- Is overall sentiment improving or declining? Compare recent vs older reviews.',
+				'- Are there any new/emerging issues that appear in recent reviews but not older ones?',
+				'- Are there products whose sentiment is shifting (getting better or worse)?',
+				'- Note any patterns in review timing or volume.',
+				'Present findings chronologically where possible.',
+			] ),
+			'operational' => implode( "\n", [
+				'Extract operational insights from the reviews:',
+				'- Shipping & fulfillment: what do customers say about delivery speed, packaging, condition on arrival?',
+				'- Expectations vs reality: are products matching their descriptions and photos?',
+				'- Price-to-value perception: do customers feel they got good value for money?',
+				'- Customer service mentions: any references to support interactions?',
+				'Focus on actionable findings the store owner can improve.',
+			] ),
+			'strategic' => implode( "\n", [
+				'Extract strategic business insights from the reviews:',
+				'- Feature/product requests: what are customers asking for? (colors, sizes, variants, new products)',
+				'- Competitive mentions: are customers comparing to other brands? What do they say?',
+				'- Repeat purchase signals: are customers buying again or recommending to others?',
+				'- Gift purchases: are products being bought as gifts?',
+				'- Marketing opportunities: what language and praise can be used in marketing materials?',
+				'Prioritize insights that could directly drive business decisions.',
+			] ),
+			default => 'Provide general insights from the reviews.',
+		};
 	}
 
 	/**

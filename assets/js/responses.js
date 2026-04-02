@@ -106,10 +106,6 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	// Post Reply.
 	document.querySelectorAll( '.wairm-action-post' ).forEach( function ( btn ) {
 		btn.addEventListener( 'click', function () {
-			/* eslint-disable-next-line no-alert */
-			if ( ! confirm( i18n.confirm_post ) ) {
-				return;
-			}
 			var card = getCard( btn );
 			var text = card.querySelector( '.wairm-response-text' ).value;
 
