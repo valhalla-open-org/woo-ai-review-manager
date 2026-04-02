@@ -79,16 +79,68 @@ final class Insights_Page {
 			true
 		);
 
+		// Retrieve initial data to embed in the page for JS rendering.
+		global $wpdb;
+
+		$active_tab = sanitize_key( $_GET['tab'] ?? 'product' );
+		if ( ! isset( self::CATEGORIES[ $active_tab ] ) ) {
+			$active_tab = 'product';
+		}
+
+		$initial_data = null;
+		$initial_html = null;
+		$page_history = $this->get_history( $active_tab );
+		if ( ! empty( $page_history ) ) {
+			$raw = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT content FROM {$wpdb->prefix}wairm_insights WHERE id = %d",
+					$page_history[0]['id']
+				)
+			);
+			$decoded = json_decode( $raw, true );
+			if ( is_array( $decoded ) ) {
+				$initial_data = $decoded;
+			} else {
+				$initial_html = $raw;
+			}
+		}
+
 		wp_localize_script(
 			'wairm-insights',
 			'wairmInsights',
 			[
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'wairm_insights' ),
-				'i18n'     => [
-					'generating' => __( 'Analyzing reviews...', 'woo-ai-review-manager' ),
-					'error'      => __( 'Failed to generate insights. Please try again.', 'woo-ai-review-manager' ),
-					'reviews'    => __( 'reviews', 'woo-ai-review-manager' ),
+				'ajax_url'     => admin_url( 'admin-ajax.php' ),
+				'nonce'        => wp_create_nonce( 'wairm_insights' ),
+				'initial_data' => $initial_data,
+				'initial_html' => $initial_html,
+				'i18n'         => [
+					'generating'       => __( 'Analyzing reviews...', 'woo-ai-review-manager' ),
+					'error'            => __( 'Failed to generate insights. Please try again.', 'woo-ai-review-manager' ),
+					'reviews'          => __( 'reviews', 'woo-ai-review-manager' ),
+					'no_data'          => __( 'Insufficient data', 'woo-ai-review-manager' ),
+					'strengths'        => __( 'Strengths', 'woo-ai-review-manager' ),
+					'complaints'       => __( 'Complaints', 'woo-ai-review-manager' ),
+					'sizing'           => __( 'Sizing', 'woo-ai-review-manager' ),
+					'priority_action'  => __( 'Priority Action', 'woo-ai-review-manager' ),
+					'emerging_issues'  => __( 'Emerging Issues', 'woo-ai-review-manager' ),
+					'product_shifts'   => __( 'Product Shifts', 'woo-ai-review-manager' ),
+					'patterns'         => __( 'Patterns', 'woo-ai-review-manager' ),
+					'shipping'         => __( 'Shipping & Fulfillment', 'woo-ai-review-manager' ),
+					'expectations'     => __( 'Expectations vs Reality', 'woo-ai-review-manager' ),
+					'price_value'      => __( 'Price & Value', 'woo-ai-review-manager' ),
+					'support'          => __( 'Customer Support', 'woo-ai-review-manager' ),
+					'priority_actions' => __( 'Priority Actions', 'woo-ai-review-manager' ),
+					'feature_requests' => __( 'Feature Requests', 'woo-ai-review-manager' ),
+					'competitive'      => __( 'Competitive Mentions', 'woo-ai-review-manager' ),
+					'repeat_signals'   => __( 'Repeat Purchase Signals', 'woo-ai-review-manager' ),
+					'marketing_quotes' => __( 'Marketing Quotes', 'woo-ai-review-manager' ),
+					'improving'        => __( 'Improving', 'woo-ai-review-manager' ),
+					'stable'           => __( 'Stable', 'woo-ai-review-manager' ),
+					'declining'        => __( 'Declining', 'woo-ai-review-manager' ),
+					'positive'         => __( 'Positive', 'woo-ai-review-manager' ),
+					'mixed'            => __( 'Mixed', 'woo-ai-review-manager' ),
+					'negative'         => __( 'Negative', 'woo-ai-review-manager' ),
+					'mentions'         => __( 'mentions', 'woo-ai-review-manager' ),
 				],
 			]
 		);
@@ -134,7 +186,7 @@ final class Insights_Page {
 
 		try {
 			$client = new \WooAIReviewManager\AI_Client();
-			$html   = $client->generate_insights( $sampled, $category, self::period_label( $period ) );
+			$data   = $client->generate_insights( $sampled, $category, self::period_label( $period ) );
 		} catch ( \RuntimeException $e ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( '[WAIRM] Insight generation failed for ' . $category . ': ' . $e->getMessage() );
@@ -151,7 +203,7 @@ final class Insights_Page {
 			[
 				'category'     => $category,
 				'period'       => $period,
-				'content'      => $html,
+				'content'      => wp_json_encode( $data ),
 				'review_count' => $review_count,
 				'generated_at' => $generated_at,
 			],
@@ -167,7 +219,8 @@ final class Insights_Page {
 
 		wp_send_json_success( [
 			'id'           => $insight_id,
-			'html'         => $html,
+			'category'     => $category,
+			'data'         => $data,
 			'review_count' => $review_count,
 			'period'       => $period,
 			'generated_at' => $generated_at,
@@ -194,7 +247,7 @@ final class Insights_Page {
 
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT id, content, review_count, period, generated_at
+				"SELECT id, category, content, review_count, period, generated_at
 				 FROM {$wpdb->prefix}wairm_insights WHERE id = %d",
 				$insight_id
 			)
@@ -204,9 +257,13 @@ final class Insights_Page {
 			wp_send_json_error( [ 'message' => __( 'Insight not found.', 'woo-ai-review-manager' ) ] );
 		}
 
+		$data = json_decode( $row->content, true );
+
 		wp_send_json_success( [
 			'id'           => (int) $row->id,
-			'html'         => $row->content,
+			'category'     => $row->category,
+			'data'         => is_array( $data ) ? $data : null,
+			'html'         => ! is_array( $data ) ? $row->content : null,
 			'review_count' => (int) $row->review_count,
 			'period'       => $row->period,
 			'generated_at' => $row->generated_at,
@@ -358,14 +415,21 @@ final class Insights_Page {
 		$history      = $this->get_history( $active_tab );
 		$has_insights = ! empty( $history );
 
-		$latest_content = null;
+		$has_json_data  = false;
+		$latest_html    = null;
 		if ( $has_insights ) {
-			$latest_content = $wpdb->get_var(
+			$latest_raw = $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT content FROM {$wpdb->prefix}wairm_insights WHERE id = %d",
 					$history[0]['id']
 				)
 			);
+			$decoded = json_decode( $latest_raw, true );
+			if ( is_array( $decoded ) ) {
+				$has_json_data = true; // JS will render from wairmInsights.initial_data.
+			} else {
+				$latest_html = $latest_raw;
+			}
 		}
 
 		$base_url = admin_url( 'admin.php?page=wairm-insights' );
@@ -423,9 +487,11 @@ final class Insights_Page {
 				</div>
 
 				<div id="wairm-insight-output" class="wairm-insight-output">
-					<?php if ( $latest_content ) : ?>
+					<?php if ( $has_json_data ) : ?>
+						<!-- JS renders cards from wairmInsights.initial_data -->
+					<?php elseif ( $latest_html ) : ?>
 						<div class="wairm-insight-body">
-							<?php echo wp_kses_post( $latest_content ); ?>
+							<?php echo wp_kses_post( $latest_html ); ?>
 						</div>
 					<?php else : ?>
 						<div class="wairm-insight-empty">

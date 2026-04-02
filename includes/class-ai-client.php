@@ -278,13 +278,15 @@ PROMPT;
 	/**
 	 * Generate insights from a collection of reviews for a specific category.
 	 *
+	 * Returns structured JSON data that can be rendered as cards in the admin UI.
+	 *
 	 * @param array  $reviews      Array of review data.
 	 * @param string $category     Insight category: product, trends, operational, strategic.
 	 * @param string $period_label Human-readable period (e.g. "Last 30 days").
-	 * @return string HTML-formatted insight content.
+	 * @return array Parsed JSON insight data.
 	 * @throws \RuntimeException On API failure.
 	 */
-	public function generate_insights( array $reviews, string $category, string $period_label = 'All time' ): string {
+	public function generate_insights( array $reviews, string $category, string $period_label = 'All time' ): array {
 		$locale   = get_locale();
 		$language = self::locale_to_language( $locale );
 
@@ -305,9 +307,10 @@ PROMPT;
 		$review_count    = count( $reviews );
 		$reviews_text    = implode( "\n", $review_lines );
 		$category_prompt = $this->get_insight_prompt( $category );
+		$schema          = $this->get_insight_schema( $category );
 
 		$prompt = <<<PROMPT
-Analyze these {$review_count} customer reviews and provide insights.
+Analyze these {$review_count} customer reviews and provide structured insights.
 
 Time period: {$period_label}
 Category: {$category}
@@ -320,20 +323,18 @@ PROMPT;
 
 		$system = implode( "\n", [
 			'You are a business intelligence analyst helping an e-commerce store owner understand their customer feedback.',
-			"Language: Always respond in {$language}.",
+			"Language: All text fields must be in {$language}.",
 			'',
 			'Rules:',
-			'- Return your analysis as clean HTML that can be embedded directly in a WordPress admin page.',
-			'- Use <h3> for section headings, <p> for text, <ul>/<li> for lists, <strong> for emphasis.',
-			'- Do NOT wrap in <html>, <body>, or <div> tags. Just the content.',
-			'- Be specific and actionable. Reference actual products and quotes from reviews where relevant.',
-			'- Keep quotes short (max 10 words) and use <em> for quotes.',
-			'- Present findings as clear, prioritized insights — most important first.',
-			'- Use plain, direct language. No corporate jargon or filler.',
-			'- If there is not enough data for a particular insight, say so briefly rather than speculating.',
+			'- Be specific and actionable. Reference actual products and quotes from reviews.',
+			'- Keep quotes short (max 10 words).',
+			'- Present findings prioritized — most important first.',
+			'- Use plain, direct language. No corporate jargon.',
+			'- If there is not enough data for a field, use an empty array or "Insufficient data".',
+			'- All string fields should be concise (1-2 sentences max).',
 		] );
 
-		// Extend HTTP timeout for insight generation (large prompt + long response).
+		// Extend HTTP timeout for insight generation.
 		$extend_timeout = static function () {
 			return 120;
 		};
@@ -342,7 +343,8 @@ PROMPT;
 		$builder = wp_ai_client_prompt( $prompt )
 			->using_system_instruction( $system )
 			->using_temperature( 0.5 )
-			->using_max_tokens( 1500 );
+			->using_max_tokens( 2000 )
+			->as_json_response( $schema );
 
 		$result = self::apply_model_preference( $builder )->generate_text();
 
@@ -352,49 +354,175 @@ PROMPT;
 			throw new \RuntimeException( 'AI insight generation failed: ' . $result->get_error_message() );
 		}
 
-		return wp_kses_post( trim( $result ) );
+		return $this->parse_insight_response( $result );
 	}
 
 	/**
-	 * Get the specific prompt instructions for each insight category.
+	 * Get the JSON schema for each insight category.
+	 */
+	private function get_insight_schema( string $category ): array {
+		$rating_field = [
+			'type' => 'string',
+			'enum' => [ 'positive', 'mixed', 'negative', 'no_data' ],
+		];
+		$string_array = [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ];
+
+		$ops_section = [
+			'type'                 => 'object',
+			'additionalProperties' => false,
+			'properties'           => [
+				'rating'   => $rating_field,
+				'findings' => $string_array,
+			],
+			'required'             => [ 'rating', 'findings' ],
+		];
+
+		return match ( $category ) {
+			'product' => [
+				'type'                 => 'object',
+				'additionalProperties' => false,
+				'properties'           => [
+					'products' => [
+						'type'  => 'array',
+						'items' => [
+							'type'                 => 'object',
+							'additionalProperties' => false,
+							'properties'           => [
+								'name'            => [ 'type' => 'string' ],
+								'review_count'    => [ 'type' => 'integer' ],
+								'quality_score'   => [ 'type' => 'string', 'enum' => [ 'positive', 'mixed', 'negative' ] ],
+								'strengths'       => $string_array,
+								'complaints'      => $string_array,
+								'sizing'          => [ 'type' => 'string' ],
+								'priority_action' => [ 'type' => 'string' ],
+							],
+							'required'             => [ 'name', 'review_count', 'quality_score', 'strengths', 'complaints', 'sizing', 'priority_action' ],
+						],
+					],
+					'summary' => [ 'type' => 'string' ],
+				],
+				'required'             => [ 'products', 'summary' ],
+			],
+			'trends' => [
+				'type'                 => 'object',
+				'additionalProperties' => false,
+				'properties'           => [
+					'overall_direction' => [ 'type' => 'string', 'enum' => [ 'improving', 'stable', 'declining' ] ],
+					'overall_summary'   => [ 'type' => 'string' ],
+					'emerging_issues'   => [
+						'type'  => 'array',
+						'items' => [
+							'type'                 => 'object',
+							'additionalProperties' => false,
+							'properties'           => [
+								'issue'   => [ 'type' => 'string' ],
+								'product' => [ 'type' => 'string' ],
+								'detail'  => [ 'type' => 'string' ],
+							],
+							'required'             => [ 'issue', 'product', 'detail' ],
+						],
+					],
+					'product_shifts' => [
+						'type'  => 'array',
+						'items' => [
+							'type'                 => 'object',
+							'additionalProperties' => false,
+							'properties'           => [
+								'product'   => [ 'type' => 'string' ],
+								'direction' => [ 'type' => 'string', 'enum' => [ 'improving', 'declining', 'stable' ] ],
+								'detail'    => [ 'type' => 'string' ],
+							],
+							'required'             => [ 'product', 'direction', 'detail' ],
+						],
+					],
+					'patterns' => $string_array,
+				],
+				'required'             => [ 'overall_direction', 'overall_summary', 'emerging_issues', 'product_shifts', 'patterns' ],
+			],
+			'operational' => [
+				'type'                 => 'object',
+				'additionalProperties' => false,
+				'properties'           => [
+					'shipping'         => $ops_section,
+					'expectations'     => $ops_section,
+					'price_value'      => $ops_section,
+					'support'          => $ops_section,
+					'priority_actions' => $string_array,
+				],
+				'required'             => [ 'shipping', 'expectations', 'price_value', 'support', 'priority_actions' ],
+			],
+			'strategic' => [
+				'type'                 => 'object',
+				'additionalProperties' => false,
+				'properties'           => [
+					'feature_requests' => [
+						'type'  => 'array',
+						'items' => [
+							'type'                 => 'object',
+							'additionalProperties' => false,
+							'properties'           => [
+								'request'  => [ 'type' => 'string' ],
+								'mentions' => [ 'type' => 'integer' ],
+								'products' => $string_array,
+							],
+							'required'             => [ 'request', 'mentions', 'products' ],
+						],
+					],
+					'competitive' => [
+						'type'  => 'array',
+						'items' => [
+							'type'                 => 'object',
+							'additionalProperties' => false,
+							'properties'           => [
+								'brand'   => [ 'type' => 'string' ],
+								'context' => [ 'type' => 'string' ],
+							],
+							'required'             => [ 'brand', 'context' ],
+						],
+					],
+					'repeat_signals'   => $string_array,
+					'marketing_quotes' => $string_array,
+					'summary'          => [ 'type' => 'string' ],
+				],
+				'required'             => [ 'feature_requests', 'competitive', 'repeat_signals', 'marketing_quotes', 'summary' ],
+			],
+			default => [
+				'type'                 => 'object',
+				'additionalProperties' => false,
+				'properties'           => [ 'insights' => $string_array ],
+				'required'             => [ 'insights' ],
+			],
+		};
+	}
+
+	/**
+	 * Get the prompt instructions for each insight category.
 	 */
 	private function get_insight_prompt( string $category ): string {
 		return match ( $category ) {
-			'product' => implode( "\n", [
-				'Analyze reviews at the product level. For each product with enough reviews, provide:',
-				'- Top strengths: what customers consistently praise',
-				'- Recurring complaints: specific issues mentioned by multiple customers',
-				'- Sizing/fit patterns: does the product run large, small, or true to size?',
-				'- Overall quality perception',
-				'Group findings by product. Skip products with only 1 review unless the feedback is notable.',
-			] ),
-			'trends' => implode( "\n", [
-				'Analyze review sentiment and patterns over time:',
-				'- Is overall sentiment improving or declining? Compare recent vs older reviews.',
-				'- Are there any new/emerging issues that appear in recent reviews but not older ones?',
-				'- Are there products whose sentiment is shifting (getting better or worse)?',
-				'- Note any patterns in review timing or volume.',
-				'Present findings chronologically where possible.',
-			] ),
-			'operational' => implode( "\n", [
-				'Extract operational insights from the reviews:',
-				'- Shipping & fulfillment: what do customers say about delivery speed, packaging, condition on arrival?',
-				'- Expectations vs reality: are products matching their descriptions and photos?',
-				'- Price-to-value perception: do customers feel they got good value for money?',
-				'- Customer service mentions: any references to support interactions?',
-				'Focus on actionable findings the store owner can improve.',
-			] ),
-			'strategic' => implode( "\n", [
-				'Extract strategic business insights from the reviews:',
-				'- Feature/product requests: what are customers asking for? (colors, sizes, variants, new products)',
-				'- Competitive mentions: are customers comparing to other brands? What do they say?',
-				'- Repeat purchase signals: are customers buying again or recommending to others?',
-				'- Gift purchases: are products being bought as gifts?',
-				'- Marketing opportunities: what language and praise can be used in marketing materials?',
-				'Prioritize insights that could directly drive business decisions.',
-			] ),
-			default => 'Provide general insights from the reviews.',
+			'product' => 'Analyze reviews at the product level. For each product with 2+ reviews, provide strengths, complaints, sizing info, and a priority action. Skip products with only 1 review unless notable.',
+			'trends'  => 'Analyze sentiment trends over time. Is it improving, stable, or declining? Identify emerging issues and products whose perception is shifting.',
+			'operational' => 'Extract operational insights: shipping/fulfillment quality, whether products match descriptions, price-to-value perception, and customer service mentions.',
+			'strategic'   => 'Extract strategic insights: feature/product requests, competitive brand mentions, repeat purchase signals, and customer quotes usable in marketing.',
+			default       => 'Provide general insights from the reviews.',
 		};
+	}
+
+	/**
+	 * Parse the JSON insight response.
+	 *
+	 * @throws \RuntimeException On parse failure.
+	 */
+	private function parse_insight_response( string $text ): array {
+		$text = preg_replace( '/^```json\s*/', '', $text );
+		$text = preg_replace( '/\s*```$/', '', $text );
+
+		$data = json_decode( $text, true );
+		if ( ! is_array( $data ) ) {
+			throw new \RuntimeException( 'Failed to parse insight response from AI.' );
+		}
+
+		return $data;
 	}
 
 	/**
