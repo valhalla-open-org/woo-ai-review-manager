@@ -369,3 +369,100 @@
 	margin-top: 20px;
 	border-radius: 6px;
 }
+
+/* -------------------------------------------------------
+   Insights Page
+   ------------------------------------------------------- */
+.wairm-insights-content {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-top: none;
+	padding: 20px 24px;
+	min-height: 300px;
+}
+
+.wairm-insights-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 20px;
+	padding-bottom: 16px;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.wairm-insights-description {
+	margin: 0;
+	color: #646970;
+	font-size: 13px;
+}
+
+.wairm-insights-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.wairm-insights-meta {
+	color: #888;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.wairm-insight-loading {
+	display: flex;
+	align-items: center;
+	padding: 40px 0;
+	color: #646970;
+	font-size: 14px;
+}
+
+.wairm-insight-error {
+	display: flex;
+	align-items: center;
+	padding: 20px;
+	background: #fcf0f1;
+	border: 1px solid #d63638;
+	border-radius: 4px;
+	color: #d63638;
+	font-size: 13px;
+}
+
+.wairm-insight-body h3 {
+	font-size: 15px;
+	margin: 24px 0 10px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid #f0f0f0;
+	color: #1d2327;
+}
+
+.wairm-insight-body h3:first-child {
+	margin-top: 0;
+}
+
+.wairm-insight-body p {
+	font-size: 13px;
+	line-height: 1.6;
+	color: #3c434a;
+	margin: 8px 0;
+}
+
+.wairm-insight-body ul {
+	margin: 8px 0 8px 20px;
+}
+
+.wairm-insight-body li {
+	font-size: 13px;
+	line-height: 1.6;
+	color: #3c434a;
+	margin-bottom: 4px;
+}
+
+.wairm-insight-body em {
+	color: #646970;
+	font-style: italic;
+}
+
+.wairm-insight-body strong {
+	color: #1d2327;
+}

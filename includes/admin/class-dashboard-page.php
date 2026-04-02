@@ -232,6 +232,9 @@ final class Dashboard_Page {
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ); ?>" class="button">
 						<?php esc_html_e( 'Invitations', 'woo-ai-review-manager' ); ?>
 					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-insights' ) ); ?>" class="button">
+						<?php esc_html_e( 'Insights', 'woo-ai-review-manager' ); ?>
+					</a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="button">
 						<?php esc_html_e( 'Settings', 'woo-ai-review-manager' ); ?>
 					</a>

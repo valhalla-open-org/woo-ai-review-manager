@@ -60,6 +60,7 @@ final class Plugin {
 			new Admin\Dashboard_Page();
 			new Admin\Responses_Page();
 			new Admin\Invitations_Page();
+			new Admin\Insights_Page();
 			new Admin\Settings_Page();
 		}
 
