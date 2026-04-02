@@ -29,6 +29,16 @@ final class Dashboard_Page {
 			'dashicons-chart-bar',
 			56
 		);
+
+		// Override the auto-created first submenu label from "AI Reviews" to "Dashboard".
+		add_submenu_page(
+			'wairm-dashboard',
+			__( 'Dashboard', 'woo-ai-review-manager' ),
+			__( 'Dashboard', 'woo-ai-review-manager' ),
+			'manage_woocommerce',
+			'wairm-dashboard',
+			[ $this, 'render_page' ]
+		);
 	}
 
 	public function enqueue_assets( string $hook ): void {
