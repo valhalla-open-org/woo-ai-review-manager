@@ -168,20 +168,31 @@ final class Responses_Page {
 		}
 
 		$current_user = wp_get_current_user();
-		$reply_name   = get_option( 'wairm_email_from_name', '' );
-		if ( empty( $reply_name ) ) {
-			$reply_name = get_bloginfo( 'name' );
+		$reply_as     = get_option( 'wairm_reply_as', 'store' );
+
+		if ( 'user' === $reply_as ) {
+			$author_name  = $current_user->display_name;
+			$author_email = $current_user->user_email;
+		} else {
+			$author_name = get_option( 'wairm_email_from_name', '' );
+			if ( empty( $author_name ) ) {
+				$author_name = get_bloginfo( 'name' );
+			}
+			$author_email = get_option( 'wairm_support_email', '' );
+			if ( empty( $author_email ) ) {
+				$author_email = get_option( 'admin_email' );
+			}
 		}
 
 		$comment_id = wp_insert_comment( [
-			'comment_post_ID'  => (int) $row->product_id,
-			'comment_parent'   => (int) $row->comment_id,
-			'comment_content'  => $text,
-			'comment_type'     => 'comment',
-			'comment_approved' => 1,
-			'user_id'          => $current_user->ID,
-			'comment_author'   => $reply_name,
-			'comment_author_email' => get_option( 'admin_email' ),
+			'comment_post_ID'      => (int) $row->product_id,
+			'comment_parent'       => (int) $row->comment_id,
+			'comment_content'      => $text,
+			'comment_type'         => 'comment',
+			'comment_approved'     => 1,
+			'user_id'              => $current_user->ID,
+			'comment_author'       => $author_name,
+			'comment_author_email' => $author_email,
 		] );
 
 		if ( ! $comment_id ) {

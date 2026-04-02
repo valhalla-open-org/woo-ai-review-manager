@@ -222,12 +222,18 @@ final class AI_Client {
 		$locale   = get_locale();
 		$language = self::locale_to_language( $locale );
 
+		$support_email = get_option( 'wairm_support_email', '' );
+		if ( empty( $support_email ) ) {
+			$support_email = get_option( 'admin_email' );
+		}
+
 		$prompt = <<<PROMPT
 Write a store owner's reply to this customer review.
 
 Store: {$store_name}
 Product: {$product_name}
 Sentiment: {$sentiment}
+Support email: {$support_email}
 Review: "{$review_text}"
 PROMPT;
 
@@ -247,6 +253,7 @@ PROMPT;
 			'- For positive reviews: be brief and warm. One genuine sentence beats three grateful ones. Light humor is welcome here.',
 			'- Match the customer\'s register — casual review gets a casual reply, detailed review gets a more considered reply.',
 			'- No exclamation mark overuse. One max per reply.',
+			'- When directing a customer to contact support, use the support email provided above.',
 		] );
 
 		$builder = wp_ai_client_prompt( $prompt )
