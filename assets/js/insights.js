@@ -10,8 +10,16 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	var output        = document.getElementById( 'wairm-insight-output' );
 	var generateBtn   = document.getElementById( 'wairm-generate-insight' );
 	var historySelect = document.getElementById( 'wairm-insight-history' );
+	var periodSelect  = document.getElementById( 'wairm-insight-period' );
 	var category      = container.getAttribute( 'data-category' );
 	var i18n          = wairmInsights.i18n;
+
+	var periodLabels = {};
+	if ( periodSelect ) {
+		Array.prototype.forEach.call( periodSelect.options, function ( opt ) {
+			periodLabels[ opt.value ] = opt.textContent.trim();
+		} );
+	}
 
 	function showLoading() {
 		output.innerHTML = '<div class="wairm-insight-loading">' +
@@ -47,6 +55,11 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		return date.toLocaleDateString() + ' ' + date.toLocaleTimeString( [], { hour: '2-digit', minute: '2-digit' } );
 	}
 
+	function formatHistoryLabel( entry ) {
+		var period = periodLabels[ entry.period ] || entry.period || 'All time';
+		return formatDate( entry.generated_at ) + ' \u2014 ' + period + ' (' + entry.review_count + ' ' + i18n.reviews + ')';
+	}
+
 	function updateHistory( history ) {
 		if ( ! historySelect ) {
 			historySelect = document.createElement( 'select' );
@@ -63,7 +76,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 		history.forEach( function ( entry ) {
 			var option = document.createElement( 'option' );
 			option.value = entry.id;
-			option.textContent = formatDate( entry.generated_at ) + ' (' + entry.review_count + ' ' + i18n.reviews + ')';
+			option.textContent = formatHistoryLabel( entry );
 			historySelect.appendChild( option );
 		} );
 
@@ -77,6 +90,10 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			.then( function ( data ) {
 				if ( data.success ) {
 					showResult( data.data );
+					// Update period selector to match the loaded insight.
+					if ( periodSelect && data.data.period ) {
+						periodSelect.value = data.data.period;
+					}
 				} else {
 					showError( ( data.data && data.data.message ) || i18n.error );
 				}
@@ -88,9 +105,10 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 	// Generate button.
 	generateBtn.addEventListener( 'click', function () {
+		var period = periodSelect ? periodSelect.value : '90';
 		showLoading();
 
-		ajaxPost( { action: 'wairm_generate_insight', category: category } )
+		ajaxPost( { action: 'wairm_generate_insight', category: category, period: period } )
 			.then( function ( data ) {
 				if ( data.success ) {
 					showResult( data.data );
@@ -104,7 +122,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 			} );
 	} );
 
-	// History dropdown (only bound once here, not in updateHistory).
+	// History dropdown.
 	if ( historySelect ) {
 		historySelect.addEventListener( 'change', function () {
 			loadInsight( this.value );

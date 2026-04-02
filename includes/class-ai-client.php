@@ -278,12 +278,13 @@ PROMPT;
 	/**
 	 * Generate insights from a collection of reviews for a specific category.
 	 *
-	 * @param array  $reviews  Array of review data.
-	 * @param string $category Insight category: product, trends, operational, strategic.
+	 * @param array  $reviews      Array of review data.
+	 * @param string $category     Insight category: product, trends, operational, strategic.
+	 * @param string $period_label Human-readable period (e.g. "Last 30 days").
 	 * @return string HTML-formatted insight content.
 	 * @throws \RuntimeException On API failure.
 	 */
-	public function generate_insights( array $reviews, string $category ): string {
+	public function generate_insights( array $reviews, string $category, string $period_label = 'All time' ): string {
 		$locale   = get_locale();
 		$language = self::locale_to_language( $locale );
 
@@ -308,6 +309,7 @@ PROMPT;
 		$prompt = <<<PROMPT
 Analyze these {$review_count} customer reviews and provide insights.
 
+Time period: {$period_label}
 Category: {$category}
 
 {$category_prompt}

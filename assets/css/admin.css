@@ -478,5 +478,9 @@
 }
 
 .wairm-insight-history {
-	min-width: 280px;
+	min-width: 320px;
+}
+
+.wairm-insight-period {
+	min-width: 130px;
 }

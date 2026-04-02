@@ -74,6 +74,7 @@ final class Installer {
 		CREATE TABLE {$wpdb->prefix}wairm_insights (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			category VARCHAR(20) NOT NULL,
+			period VARCHAR(10) NOT NULL DEFAULT 'all',
 			content LONGTEXT NOT NULL,
 			review_count INT UNSIGNED NOT NULL DEFAULT 0,
 			generated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

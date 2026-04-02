@@ -4,7 +4,8 @@
  *
  * Provides actionable insights from customer reviews across four categories:
  * Product-Level, Trends, Operational, and Strategic. Results are persisted
- * in the database with full history.
+ * in the database with full history. Reviews are filtered by time period
+ * and sampled proportionally by sentiment when exceeding limits.
  *
  * @package WooAIReviewManager
  */
@@ -17,7 +18,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class Insights_Page {
 
-	/** @var array<string, string> Valid insight categories. */
 	private const CATEGORIES = [
 		'product'     => 'Product-Level',
 		'trends'      => 'Trends',
@@ -25,13 +25,21 @@ final class Insights_Page {
 		'strategic'   => 'Strategic',
 	];
 
-	/** @var array<string, string> Tab descriptions. */
 	private const CATEGORY_DESCRIPTIONS = [
 		'product'     => 'Quality issues, strengths, and recurring patterns per product.',
 		'trends'      => 'Sentiment changes over time and emerging issues.',
 		'operational' => 'Shipping, fulfillment, price perception, and expectations vs reality.',
 		'strategic'   => 'Feature requests, product ideas, and competitive insights.',
 	];
+
+	private const PERIODS = [
+		'30'  => 'Last 30 days',
+		'90'  => 'Last 90 days',
+		'all' => 'All time',
+	];
+
+	/** @var int Maximum reviews to send to AI per request. */
+	private const MAX_REVIEWS = 30;
 
 	public function __construct() {
 		add_action( 'admin_menu', [ $this, 'add_submenu_page' ] );
@@ -101,18 +109,32 @@ final class Insights_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid category.', 'woo-ai-review-manager' ) ] );
 		}
 
-		$reviews = $this->get_reviews_for_insights( $category );
+		$period = sanitize_key( $_POST['period'] ?? '90' );
+		if ( ! isset( self::PERIODS[ $period ] ) ) {
+			$period = '90';
+		}
+
+		$reviews = $this->get_reviews_for_insights( $period );
 		if ( count( $reviews ) < 3 ) {
-			wp_send_json_error( [ 'message' => __( 'Not enough reviews to generate meaningful insights. At least 3 analyzed reviews are needed.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [
+				'message' => sprintf(
+					/* translators: %s: period label */
+					__( 'Not enough reviews for "%s" to generate meaningful insights. At least 3 analyzed reviews are needed.', 'woo-ai-review-manager' ),
+					self::PERIODS[ $period ]
+				),
+			] );
 		}
 
 		if ( ! \WooAIReviewManager\AI_Client::is_available() ) {
 			wp_send_json_error( [ 'message' => __( 'AI Client is not available.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// Sample if we have more than the limit.
+		$sampled = $this->sample_reviews( $reviews );
+
 		try {
 			$client = new \WooAIReviewManager\AI_Client();
-			$html   = $client->generate_insights( $reviews, $category );
+			$html   = $client->generate_insights( $sampled, $category, self::period_label( $period ) );
 		} catch ( \RuntimeException $e ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( '[WAIRM] Insight generation failed for ' . $category . ': ' . $e->getMessage() );
@@ -121,18 +143,19 @@ final class Insights_Page {
 
 		global $wpdb;
 
-		$review_count = count( $reviews );
+		$review_count = count( $sampled );
 		$generated_at = current_time( 'mysql' );
 
 		$wpdb->insert(
 			$wpdb->prefix . 'wairm_insights',
 			[
 				'category'     => $category,
+				'period'       => $period,
 				'content'      => $html,
 				'review_count' => $review_count,
 				'generated_at' => $generated_at,
 			],
-			[ '%s', '%s', '%d', '%s' ]
+			[ '%s', '%s', '%s', '%d', '%s' ]
 		);
 
 		$insight_id = $wpdb->insert_id;
@@ -146,6 +169,7 @@ final class Insights_Page {
 			'id'           => $insight_id,
 			'html'         => $html,
 			'review_count' => $review_count,
+			'period'       => $period,
 			'generated_at' => $generated_at,
 			'history'      => $history,
 		] );
@@ -170,7 +194,7 @@ final class Insights_Page {
 
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT id, content, review_count, generated_at
+				"SELECT id, content, review_count, period, generated_at
 				 FROM {$wpdb->prefix}wairm_insights WHERE id = %d",
 				$insight_id
 			)
@@ -184,6 +208,7 @@ final class Insights_Page {
 			'id'           => (int) $row->id,
 			'html'         => $row->content,
 			'review_count' => (int) $row->review_count,
+			'period'       => $row->period,
 			'generated_at' => $row->generated_at,
 		] );
 	}
@@ -191,14 +216,14 @@ final class Insights_Page {
 	/**
 	 * Get insight history entries for a category.
 	 *
-	 * @return array<int, array{id: int, generated_at: string, review_count: int}>
+	 * @return array<int, array{id: int, generated_at: string, review_count: int, period: string}>
 	 */
 	private function get_history( string $category ): array {
 		global $wpdb;
 
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT id, generated_at, review_count
+				"SELECT id, generated_at, review_count, period
 				 FROM {$wpdb->prefix}wairm_insights
 				 WHERE category = %s
 				 ORDER BY generated_at DESC
@@ -213,6 +238,7 @@ final class Insights_Page {
 				'id'           => (int) $row->id,
 				'generated_at' => $row->generated_at,
 				'review_count' => (int) $row->review_count,
+				'period'       => $row->period ?? 'all',
 			];
 		}
 
@@ -220,28 +246,35 @@ final class Insights_Page {
 	}
 
 	/**
-	 * Gather review data relevant to the insight category.
+	 * Gather reviews filtered by time period.
 	 *
 	 * @return array<int, array{product: string, content: string, sentiment: string, score: float, date: string}>
 	 */
-	private function get_reviews_for_insights( string $category ): array {
+	private function get_reviews_for_insights( string $period ): array {
 		global $wpdb;
 
 		$table = $wpdb->prefix . 'wairm_review_sentiment';
-		$limit = 'product' === $category ? 40 : 30;
 
+		$date_filter = '';
+		if ( 'all' !== $period ) {
+			$days = absint( $period );
+			$date_filter = $wpdb->prepare(
+				' AND c.comment_date >= %s',
+				gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) )
+			);
+		}
+
+		// Fetch more than MAX_REVIEWS so we can sample proportionally.
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $date_filter built via prepare().
 		$rows = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT s.sentiment, s.score,
-				        c.comment_content, c.comment_date,
-				        p.post_title AS product_name
-				 FROM {$table} s
-				 JOIN {$wpdb->comments} c ON c.comment_ID = s.comment_id
-				 JOIN {$wpdb->posts} p ON p.ID = s.product_id
-				 ORDER BY s.analyzed_at DESC
-				 LIMIT %d",
-				$limit
-			)
+			"SELECT s.sentiment, s.score,
+			        c.comment_content, c.comment_date,
+			        p.post_title AS product_name
+			 FROM {$table} s
+			 JOIN {$wpdb->comments} c ON c.comment_ID = s.comment_id
+			 JOIN {$wpdb->posts} p ON p.ID = s.product_id
+			 WHERE 1=1{$date_filter}
+			 ORDER BY c.comment_date DESC"
 		);
 
 		$reviews = [];
@@ -258,6 +291,62 @@ final class Insights_Page {
 		return $reviews;
 	}
 
+	/**
+	 * Sample reviews proportionally by sentiment if exceeding MAX_REVIEWS.
+	 *
+	 * Maintains the same positive/neutral/negative ratio as the full set.
+	 *
+	 * @param array $reviews Full review set.
+	 * @return array Sampled subset (max MAX_REVIEWS).
+	 */
+	private function sample_reviews( array $reviews ): array {
+		if ( count( $reviews ) <= self::MAX_REVIEWS ) {
+			return $reviews;
+		}
+
+		// Group by sentiment.
+		$buckets = [ 'positive' => [], 'neutral' => [], 'negative' => [] ];
+		foreach ( $reviews as $review ) {
+			$s = $review['sentiment'];
+			if ( isset( $buckets[ $s ] ) ) {
+				$buckets[ $s ][] = $review;
+			}
+		}
+
+		$total   = count( $reviews );
+		$sampled = [];
+
+		foreach ( $buckets as $sentiment_reviews ) {
+			if ( empty( $sentiment_reviews ) ) {
+				continue;
+			}
+			// Proportional allocation, at least 1 per non-empty bucket.
+			$share = max( 1, (int) round( ( count( $sentiment_reviews ) / $total ) * self::MAX_REVIEWS ) );
+			// Shuffle to get a random sample, then take the share.
+			shuffle( $sentiment_reviews );
+			$sampled = array_merge( $sampled, array_slice( $sentiment_reviews, 0, $share ) );
+		}
+
+		// Trim to MAX_REVIEWS if rounding caused overshoot.
+		if ( count( $sampled ) > self::MAX_REVIEWS ) {
+			$sampled = array_slice( $sampled, 0, self::MAX_REVIEWS );
+		}
+
+		// Sort by date so the AI sees chronological order.
+		usort( $sampled, static function ( $a, $b ) {
+			return strcmp( $a['date'], $b['date'] );
+		} );
+
+		return $sampled;
+	}
+
+	/**
+	 * Get a period label for display.
+	 */
+	private static function period_label( string $period ): string {
+		return self::PERIODS[ $period ] ?? self::PERIODS['all'];
+	}
+
 	public function render_page(): void {
 		global $wpdb;
 
@@ -266,11 +355,9 @@ final class Insights_Page {
 			$active_tab = 'product';
 		}
 
-		// Single query: fetch history (includes the latest as the first row).
-		$history = $this->get_history( $active_tab );
+		$history      = $this->get_history( $active_tab );
 		$has_insights = ! empty( $history );
 
-		// Load the latest insight content only if history exists.
 		$latest_content = null;
 		if ( $has_insights ) {
 			$latest_content = $wpdb->get_var(
@@ -303,13 +390,23 @@ final class Insights_Page {
 						<?php echo esc_html( self::CATEGORY_DESCRIPTIONS[ $active_tab ] ?? '' ); ?>
 					</p>
 					<div class="wairm-insights-actions">
+						<select id="wairm-insight-period" class="wairm-insight-period">
+							<?php foreach ( self::PERIODS as $val => $label ) : ?>
+								<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $val, '90' ); ?>>
+									<?php echo esc_html( $label ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+
 						<?php if ( $has_insights ) : ?>
 						<select id="wairm-insight-history" class="wairm-insight-history">
 							<?php foreach ( $history as $entry ) : ?>
 								<option value="<?php echo absint( $entry['id'] ); ?>">
 									<?php
+									$period_text = self::period_label( $entry['period'] );
 									echo esc_html(
 										wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $entry['generated_at'] ) )
+										. ' — ' . $period_text
 										. ' (' . $entry['review_count'] . ' ' . __( 'reviews', 'woo-ai-review-manager' ) . ')'
 									);
 									?>
@@ -317,6 +414,7 @@ final class Insights_Page {
 							<?php endforeach; ?>
 						</select>
 						<?php endif; ?>
+
 						<button type="button" class="button button-primary" id="wairm-generate-insight" style="display: inline-flex; align-items: center; gap: 4px;">
 							<span class="dashicons dashicons-update" style="font-size: 16px; width: 16px; height: 16px;"></span>
 							<?php echo $has_insights ? esc_html__( 'Generate New', 'woo-ai-review-manager' ) : esc_html__( 'Generate', 'woo-ai-review-manager' ); ?>
@@ -333,7 +431,7 @@ final class Insights_Page {
 						<div class="wairm-insight-empty">
 							<span class="dashicons dashicons-lightbulb" style="font-size: 48px; width: 48px; height: 48px; color: #c3c4c7;"></span>
 							<p><?php esc_html_e( 'No insights generated yet for this category.', 'woo-ai-review-manager' ); ?></p>
-							<p class="description"><?php esc_html_e( 'Click "Generate" to analyze your reviews and create actionable insights.', 'woo-ai-review-manager' ); ?></p>
+							<p class="description"><?php esc_html_e( 'Select a time period and click "Generate" to analyze your reviews.', 'woo-ai-review-manager' ); ?></p>
 						</div>
 					<?php endif; ?>
 				</div>
