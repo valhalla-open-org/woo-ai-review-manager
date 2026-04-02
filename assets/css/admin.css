@@ -588,8 +588,13 @@
 /* -------------------------------------------------------
    Insight Cards – Product Cards
    ------------------------------------------------------- */
-.wairm-product-card {
-	border-left: 3px solid #2271b1;
+.wairm-product-card .wairm-card-header a {
+	color: #2271b1;
+	text-decoration: none;
+}
+
+.wairm-product-card .wairm-card-header a:hover {
+	text-decoration: underline;
 }
 
 .wairm-product-meta {
@@ -748,7 +753,6 @@
 
 .wairm-priority-card {
 	margin-top: 0;
-	border-left: 3px solid #dba617;
 }
 
 .wairm-priority-list {
@@ -842,12 +846,13 @@
    Insight Cards – Summary Bar
    ------------------------------------------------------- */
 .wairm-summary-bar {
-	margin-top: 16px;
-	padding: 12px 16px;
-	background: #f0f6fc;
-	border: 1px solid #c3d9ed;
+	margin-bottom: 16px;
+	padding: 24px;
+	background: #d8dbeb;
+	border: 1px solid #c3c9ed;
 	border-radius: 6px;
-	font-size: 13px;
+	font-size: 16px;
+	font-weight: 500;
 	line-height: 1.6;
 	color: #1d2327;
 }
