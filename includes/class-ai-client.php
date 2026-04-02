@@ -17,6 +17,9 @@ defined( 'ABSPATH' ) || exit;
 
 final class AI_Client {
 
+	/** @var string[] Valid sentiment values returned by the AI. */
+	public const VALID_SENTIMENTS = [ 'positive', 'neutral', 'negative' ];
+
 	/**
 	 * Check whether the WordPress AI Client is available.
 	 */
@@ -131,7 +134,7 @@ final class AI_Client {
 	 * @param \WP_AI_Client_Prompt_Builder $builder The prompt builder instance.
 	 * @return \WP_AI_Client_Prompt_Builder
 	 */
-	private static function apply_model_preference( $builder ) {
+	private static function apply_model_preference( object $builder ): object {
 		$preference = get_option( 'wairm_model_preference', '' );
 
 		if ( ! empty( $preference ) ) {
@@ -161,7 +164,7 @@ final class AI_Client {
 			'properties'           => [
 				'sentiment'   => [
 					'type' => 'string',
-					'enum' => [ 'positive', 'neutral', 'negative' ],
+					'enum' => self::VALID_SENTIMENTS,
 				],
 				'score'       => [
 					'type'        => 'number',
@@ -592,8 +595,7 @@ PROMPT;
 			throw new \RuntimeException( 'Failed to parse sentiment response from AI.' );
 		}
 
-		$valid_sentiments = [ 'positive', 'neutral', 'negative' ];
-		$sentiment        = in_array( $data['sentiment'], $valid_sentiments, true )
+		$sentiment = in_array( $data['sentiment'], self::VALID_SENTIMENTS, true )
 			? $data['sentiment']
 			: 'neutral';
 

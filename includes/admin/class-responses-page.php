@@ -310,9 +310,10 @@ final class Responses_Page {
 			// 'all' — no additional filter.
 		}
 
-		$page     = max( 1, absint( $_GET['paged'] ?? 1 ) );
-		$per_page = 20;
-		$offset   = ( $page - 1 ) * $per_page;
+		$pagination = Admin_Helpers::parse_pagination();
+		$page       = $pagination['page'];
+		$per_page   = $pagination['per_page'];
+		$offset     = $pagination['offset'];
 
 		$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} s WHERE {$where}" );
 
@@ -352,17 +353,20 @@ final class Responses_Page {
 				<span class="dashicons dashicons-info"></span>
 				<p>
 					<?php
-					printf(
-						/* translators: 1: count, 2: link open, 3: link close */
-						esc_html( _n(
-							'%1$s review is awaiting AI analysis. %2$sRun analysis on the Dashboard%3$s to generate sentiment scores and response suggestions.',
-							'%1$s reviews are awaiting AI analysis. %2$sRun analysis on the Dashboard%3$s to generate sentiment scores and response suggestions.',
-							$pending_analysis,
-							'woo-ai-review-manager'
-						) ),
-						'<strong>' . esc_html( (string) $pending_analysis ) . '</strong>',
-						'<a href="' . esc_url( admin_url( 'admin.php?page=wairm-dashboard' ) ) . '">',
-						'</a>'
+					echo wp_kses(
+						sprintf(
+							/* translators: 1: count, 2: link open, 3: link close */
+							_n(
+								'%1$s review is awaiting AI analysis. %2$sRun analysis on the Dashboard%3$s to generate sentiment scores and response suggestions.',
+								'%1$s reviews are awaiting AI analysis. %2$sRun analysis on the Dashboard%3$s to generate sentiment scores and response suggestions.',
+								$pending_analysis,
+								'woo-ai-review-manager'
+							),
+							'<strong>' . esc_html( (string) $pending_analysis ) . '</strong>',
+							'<a href="' . esc_url( admin_url( 'admin.php?page=wairm-dashboard' ) ) . '">',
+							'</a>'
+						),
+						[ 'strong' => [], 'a' => [ 'href' => [] ] ]
 					);
 					?>
 				</p>
@@ -416,14 +420,9 @@ final class Responses_Page {
 					<div class="wairm-response-card" data-id="<?php echo absint( $row->id ); ?>" data-status="<?php echo esc_attr( $row->ai_response_status ); ?>">
 						<div class="wairm-response-header">
 							<span class="sentiment-badge sentiment-<?php echo esc_attr( $row->sentiment ); ?>"><?php echo esc_html( ucfirst( $row->sentiment ) ); ?></span>
-							<span class="wairm-response-status status-<?php echo esc_attr( $row->ai_response_status ); ?>">
+							<span class="wairm-badge-base wairm-response-status status-<?php echo esc_attr( $row->ai_response_status ); ?>">
 								<?php
-								$status_labels = [
-									'generated' => __( 'New', 'woo-ai-review-manager' ),
-									'approved'  => __( 'Approved', 'woo-ai-review-manager' ),
-									'sent'      => __( 'Posted', 'woo-ai-review-manager' ),
-									'dismissed' => __( 'Dismissed', 'woo-ai-review-manager' ),
-								];
+								$status_labels = Admin_Helpers::response_status_labels();
 								echo esc_html( $status_labels[ $row->ai_response_status ] ?? $row->ai_response_status );
 								?>
 							</span>

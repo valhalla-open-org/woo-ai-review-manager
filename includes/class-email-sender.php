@@ -280,7 +280,6 @@ final class Email_Sender {
 
 		$now = current_time( 'mysql', true );
 
-		// Get up to 20 queued emails ready to send.
 		// Allow invitations in 'pending' (initial) or 'sent'/'clicked' (reminder) statuses.
 		$pending = $wpdb->get_results(
 			$wpdb->prepare(
@@ -291,8 +290,9 @@ final class Email_Sender {
 				   AND eq.scheduled_at <= %s
 				   AND ri.status IN ('pending', 'sent', 'clicked')
 				   AND ri.status != 'reviewed'
-				 LIMIT 20",
-				$now
+				 LIMIT %d",
+				$now,
+				self::QUEUE_BATCH_SIZE
 			)
 		);
 
@@ -302,6 +302,9 @@ final class Email_Sender {
 	}
 
 	private const MAX_EMAIL_ATTEMPTS = 3;
+
+	/** @var int Maximum emails to process per cron run. */
+	private const QUEUE_BATCH_SIZE = 20;
 
 	private static function send_email( object $email ): void {
 		global $wpdb;
@@ -369,6 +372,9 @@ final class Email_Sender {
 				)
 			);
 		} else {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( sprintf( '[WAIRM] Email send failed for invitation %d to %s.', $email->invitation_id, $email->customer_email ) );
+
 			$wpdb->update(
 				$wpdb->prefix . 'wairm_email_queue',
 				[ 'status' => 'failed', 'last_error' => 'wp_mail returned false' ],
@@ -387,17 +393,19 @@ final class Email_Sender {
 
 		return str_replace(
 			[ '{customer_name}', '{store_name}' ],
-			[ $email->customer_name, get_bloginfo( 'name' ) ],
+			[ sanitize_text_field( $email->customer_name ), sanitize_text_field( get_bloginfo( 'name' ) ) ],
 			$subject
 		);
 	}
 
 	private static function build_email_body( object $email ): string {
 		$product_ids = json_decode( $email->product_ids, true );
-		if ( ! is_array( $product_ids ) ) {
+		if ( ! is_array( $product_ids ) || empty( $product_ids ) ) {
 			return '';
 		}
-		$products = [];
+		$product_ids = array_map( 'absint', $product_ids );
+		$product_ids = array_filter( $product_ids );
+		$products    = [];
 
 		foreach ( $product_ids as $product_id ) {
 			$product = wc_get_product( $product_id );
@@ -535,9 +543,11 @@ final class Email_Sender {
 		}
 
 		$product_ids = json_decode( $invitation->product_ids, true );
-		if ( ! is_array( $product_ids ) ) {
+		if ( ! is_array( $product_ids ) || empty( $product_ids ) ) {
 			return '<p>' . esc_html__( 'Invalid invitation data.', 'woo-ai-review-manager' ) . '</p>';
 		}
+		$product_ids = array_map( 'absint', $product_ids );
+		$product_ids = array_filter( $product_ids );
 
 		ob_start();
 		?>
@@ -570,17 +580,17 @@ final class Email_Sender {
 						<h3 class="wairm-product-name"><?php echo esc_html( $product->get_name() ); ?></h3>
 					</div>
 
-					<input type="hidden" name="product_ids[]" value="<?php echo $pid; ?>">
+					<input type="hidden" name="product_ids[]" value="<?php echo esc_attr( $pid ); ?>">
 
 					<div class="wairm-star-rating-label"><?php esc_html_e( 'Your rating', 'woo-ai-review-manager' ); ?></div>
 					<div class="wairm-star-rating">
 						<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
-							<input type="radio" id="star-<?php echo $pid; ?>-<?php echo $i; ?>" name="star_rating[<?php echo $pid; ?>]" value="<?php echo $i; ?>">
-							<label for="star-<?php echo $pid; ?>-<?php echo $i; ?>" title="<?php echo esc_attr( $i ); ?> <?php esc_attr_e( 'stars', 'woo-ai-review-manager' ); ?>">&#9733;</label>
+							<input type="radio" id="star-<?php echo esc_attr( $pid ); ?>-<?php echo esc_attr( $i ); ?>" name="star_rating[<?php echo esc_attr( $pid ); ?>]" value="<?php echo esc_attr( $i ); ?>">
+							<label for="star-<?php echo esc_attr( $pid ); ?>-<?php echo esc_attr( $i ); ?>" title="<?php echo esc_attr( $i ); ?> <?php esc_attr_e( 'stars', 'woo-ai-review-manager' ); ?>">&#9733;</label>
 						<?php endfor; ?>
 					</div>
 
-					<select name="rating[<?php echo $pid; ?>]" class="wairm-rating-select" required>
+					<select name="rating[<?php echo esc_attr( $pid ); ?>]" class="wairm-rating-select" required>
 						<option value=""><?php esc_html_e( 'Select a rating', 'woo-ai-review-manager' ); ?></option>
 						<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
 						<option value="<?php echo $i; ?>"><?php echo $i; ?></option>
@@ -588,8 +598,8 @@ final class Email_Sender {
 					</select>
 
 					<div class="wairm-field">
-						<label for="review-<?php echo $pid; ?>"><?php esc_html_e( 'Your review', 'woo-ai-review-manager' ); ?></label>
-						<textarea id="review-<?php echo $pid; ?>" name="review[<?php echo $pid; ?>]" rows="4" placeholder="<?php esc_attr_e( 'What did you like or dislike about this product?', 'woo-ai-review-manager' ); ?>" required></textarea>
+						<label for="review-<?php echo esc_attr( $pid ); ?>"><?php esc_html_e( 'Your review', 'woo-ai-review-manager' ); ?></label>
+						<textarea id="review-<?php echo esc_attr( $pid ); ?>" name="review[<?php echo esc_attr( $pid ); ?>]" rows="4" placeholder="<?php esc_attr_e( 'What did you like or dislike about this product?', 'woo-ai-review-manager' ); ?>" required></textarea>
 					</div>
 				</div>
 				<?php endforeach; ?>
