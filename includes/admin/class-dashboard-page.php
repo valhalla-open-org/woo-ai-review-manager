@@ -342,10 +342,13 @@ final class Dashboard_Page {
 							<?php if ( ! empty( $dash_model_pref ) ) : ?>
 								<p>
 									<?php
-									printf(
-										/* translators: %s: model ID */
-										esc_html__( 'Preferred model: %s', 'woo-ai-review-manager' ),
-										'<code>' . esc_html( $dash_model_pref ) . '</code>'
+									echo wp_kses(
+										sprintf(
+											/* translators: %s: model ID wrapped in <code> */
+											__( 'Preferred model: %s', 'woo-ai-review-manager' ),
+											'<code>' . esc_html( $dash_model_pref ) . '</code>'
+										),
+										[ 'code' => [] ]
 									);
 									?>
 								</p>

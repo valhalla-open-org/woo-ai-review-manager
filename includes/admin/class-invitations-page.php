@@ -271,9 +271,10 @@ final class Invitations_Page {
 			$where = $wpdb->prepare( 'i.status = %s', $filter );
 		}
 
-		$page     = max( 1, absint( $_GET['paged'] ?? 1 ) );
-		$per_page = 20;
-		$offset   = ( $page - 1 ) * $per_page;
+		$pagination = Admin_Helpers::parse_pagination();
+		$page       = $pagination['page'];
+		$per_page   = $pagination['per_page'];
+		$offset     = $pagination['offset'];
 
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where built via prepare() or literal.
 		$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} i WHERE {$where}" );
@@ -375,6 +376,8 @@ final class Invitations_Page {
 								<?php
 								$product_ids = json_decode( $row->product_ids, true );
 								if ( is_array( $product_ids ) ) {
+									$product_ids = array_map( 'absint', $product_ids );
+									$product_ids = array_filter( $product_ids );
 									$names = [];
 									foreach ( $product_ids as $pid ) {
 										$product = wc_get_product( $pid );
@@ -385,15 +388,9 @@ final class Invitations_Page {
 								?>
 							</td>
 							<td>
-								<span class="wairm-invitation-status status-<?php echo esc_attr( $row->status ); ?>">
+								<span class="wairm-badge-base wairm-invitation-status status-<?php echo esc_attr( $row->status ); ?>">
 									<?php
-									$status_labels = [
-										'pending'  => __( 'Pending', 'woo-ai-review-manager' ),
-										'sent'     => __( 'Sent', 'woo-ai-review-manager' ),
-										'clicked'  => __( 'Clicked', 'woo-ai-review-manager' ),
-										'reviewed' => __( 'Reviewed', 'woo-ai-review-manager' ),
-										'expired'  => __( 'Expired', 'woo-ai-review-manager' ),
-									];
+									$status_labels = Admin_Helpers::invitation_status_labels();
 									echo esc_html( $status_labels[ $row->status ] ?? $row->status );
 									?>
 								</span>

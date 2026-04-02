@@ -32,12 +32,53 @@ final class Sentiment_Controller {
 						},
 					],
 				],
+				'schema' => [ $this, 'get_item_schema' ],
 			]
 		);
 	}
 
 	public function check_permissions(): bool {
 		return current_user_can( 'manage_woocommerce' );
+	}
+
+	/**
+	 * Get the response schema for product sentiment.
+	 */
+	public function get_item_schema(): array {
+		return [
+			'$schema'    => 'http://json-schema.org/draft-04/schema#',
+			'title'      => 'wairm-product-sentiment',
+			'type'       => 'object',
+			'properties' => [
+				'product_id'   => [ 'type' => 'integer', 'description' => __( 'Product ID.', 'woo-ai-review-manager' ) ],
+				'product_name' => [ 'type' => 'string', 'description' => __( 'Product name.', 'woo-ai-review-manager' ) ],
+				'stats'        => [
+					'type'       => 'object',
+					'properties' => [
+						'total'     => [ 'type' => 'integer' ],
+						'positive'  => [ 'type' => 'integer' ],
+						'neutral'   => [ 'type' => 'integer' ],
+						'negative'  => [ 'type' => 'integer' ],
+						'avg_score' => [ 'type' => [ 'number', 'null' ] ],
+					],
+				],
+				'recent'       => [
+					'type'  => 'array',
+					'items' => [
+						'type'       => 'object',
+						'properties' => [
+							'author'      => [ 'type' => 'string' ],
+							'content'     => [ 'type' => 'string' ],
+							'date'        => [ 'type' => 'string', 'format' => 'date-time' ],
+							'sentiment'   => [ 'type' => 'string' ],
+							'score'       => [ 'type' => 'number' ],
+							'key_phrases' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
+							'analyzed_at' => [ 'type' => 'string', 'format' => 'date-time' ],
+						],
+					],
+				],
+			],
+		];
 	}
 
 	public function get_product_sentiment( \WP_REST_Request $request ): \WP_REST_Response {

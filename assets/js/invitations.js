@@ -28,13 +28,13 @@
 	 * Show an inline notice in the row.
 	 */
 	function showRowNotice( $row, message, type ) {
-		var $actions = $row.find( 'td:last' );
+		var $actions = $row.find( 'td:last-child' );
 		$actions.find( '.wairm-inline-notice' ).remove();
-		$actions.append(
-			'<span class="wairm-inline-notice notice-' + type + '" style="display:inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 3px; font-size: 12px;">' +
-			message +
-			'</span>'
-		);
+		var $notice = $( '<span>', {
+			'class': 'wairm-inline-notice notice-' + type,
+			text: message
+		} );
+		$actions.append( $notice );
 
 		if ( 'success' === type ) {
 			setTimeout( function () {
@@ -55,15 +55,17 @@
 			.addClass( 'status-' + newStatus )
 			.text( statusLabels[ newStatus ] || newStatus );
 
-		var $actions = $row.find( 'td:last' );
+		var $actions = $row.find( 'td:last-child' );
 		$actions.find( '.wairm-send-now, .wairm-resend' ).remove();
 
 		if ( 'sent' === newStatus || 'clicked' === newStatus ) {
-			$actions.prepend(
-				'<button type="button" class="button button-small wairm-resend" data-id="' + $row.data( 'id' ) + '">' +
-				( wairmInvitations.i18n.resend || 'Resend' ) +
-				'</button>'
-			);
+			var $btn = $( '<button>', {
+				type: 'button',
+				'class': 'button button-small wairm-resend',
+				'data-id': $row.data( 'id' ),
+				text: i18n.resend
+			} );
+			$actions.prepend( $btn );
 		}
 	}
 

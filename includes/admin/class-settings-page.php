@@ -128,6 +128,10 @@ final class Settings_Page {
 
 	public function render_page(): void {
 		$active_tab = sanitize_key( $_GET['tab'] ?? 'api' );
+		$valid_tabs = [ 'api', 'email', 'general' ];
+		if ( ! in_array( $active_tab, $valid_tabs, true ) ) {
+			$active_tab = 'api';
+		}
 		?>
 		<div class="wrap wairm-settings">
 			<h1><?php esc_html_e( 'AI Review Manager Settings', 'woo-ai-review-manager' ); ?></h1>
@@ -180,11 +184,16 @@ final class Settings_Page {
 										<span class="wairm-ai-unavailable"><?php esc_html_e( 'No AI connectors are configured for text generation.', 'woo-ai-review-manager' ); ?></span>
 									</p>
 									<p class="description">
-										<?php printf(
-											/* translators: %s: link to Connectors settings */
-											esc_html__( 'Install and activate at least one AI provider connector in %s.', 'woo-ai-review-manager' ),
-											'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
-										); ?>
+										<?php
+										echo wp_kses(
+											sprintf(
+												/* translators: %s: link to Connectors settings */
+												__( 'Install and activate at least one AI provider connector in %s.', 'woo-ai-review-manager' ),
+												'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
+											),
+											[ 'a' => [ 'href' => [] ] ]
+										);
+										?>
 									</p>
 								<?php else : ?>
 									<p>
@@ -226,11 +235,16 @@ final class Settings_Page {
 									<?php endforeach; ?>
 								</ul>
 								<p class="description">
-									<?php printf(
-										/* translators: %s: link to Connectors settings */
-										esc_html__( 'Manage connectors in %s.', 'woo-ai-review-manager' ),
-										'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
-									); ?>
+									<?php
+									echo wp_kses(
+										sprintf(
+											/* translators: %s: link to Connectors settings */
+											__( 'Manage connectors in %s.', 'woo-ai-review-manager' ),
+											'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
+										),
+										[ 'a' => [ 'href' => [] ] ]
+									);
+									?>
 								</p>
 							</td>
 						</tr>

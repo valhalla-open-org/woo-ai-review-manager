@@ -18,29 +18,8 @@
 }
 
 .wairm-dashboard .wairm-notice-bar {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin: 16px 0 20px;
-	padding: 14px 20px;
 	background: var(--accent-light);
 	border: 1px solid var(--accent);
-	border-radius: var(--radius-sm);
-	font-family: var(--font-body);
-	font-size: 13px;
-	line-height: 1.5;
-	color: var(--ink-soft);
-}
-
-.wairm-dashboard .wairm-notice-bar a {
-	color: var(--accent);
-	font-weight: 600;
-	text-decoration: none;
-}
-
-.wairm-dashboard .wairm-notice-bar a:hover {
-	color: var(--accent-dark);
-	text-decoration: underline;
 }
 
 /* -------------------------------------------------------
@@ -367,43 +346,7 @@
 	color: var(--ink-muted);
 }
 
-/* -------------------------------------------------------
-   Dashboard – Top Products Table
-   ------------------------------------------------------- */
-.wairm-dashboard .wp-list-table {
-	border: 1px solid var(--border);
-	border-radius: var(--radius);
-	overflow: hidden;
-	box-shadow: var(--shadow-sm);
-}
-
-.wairm-dashboard .wp-list-table thead th {
-	font-family: var(--font-body);
-	font-size: 11px;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: var(--ink-muted);
-	background: var(--surface-raised);
-	border-bottom: 1px solid var(--border);
-	padding: 10px 14px;
-}
-
-.wairm-dashboard .wp-list-table td {
-	font-family: var(--font-body);
-	font-size: 13px;
-	color: var(--ink-soft);
-	padding: 10px 14px;
-	border-bottom: 1px solid var(--border-light);
-}
-
-.wairm-dashboard .wp-list-table tbody tr:last-child td {
-	border-bottom: none;
-}
-
-.wairm-dashboard .wp-list-table tbody tr:hover td {
-	background: var(--surface-raised);
-}
+/* Dashboard table uses shared .wp-list-table styles above. */
 
 .wairm-score-bar-track {
 	display: inline-block;
@@ -493,56 +436,10 @@
 	letter-spacing: -0.01em;
 }
 
-.wairm-invitations .subsubsub {
-	font-family: var(--font-body);
-	margin-bottom: 12px;
-}
-
-.wairm-invitations .subsubsub a {
-	font-weight: 500;
-	color: var(--ink-muted);
-	transition: color 0.15s;
-}
-
-.wairm-invitations .subsubsub a:hover {
-	color: var(--accent);
-}
-
-.wairm-invitations .subsubsub a.current {
-	color: var(--accent);
-	font-weight: 600;
-}
-
-.wairm-invitations .subsubsub .count {
-	color: var(--ink-muted);
-	font-weight: 400;
-}
-
 /* -------------------------------------------------------
    Invitations Page – Status Badges
    ------------------------------------------------------- */
-.wairm-invitation-status {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	padding: 3px 11px;
-	border-radius: 20px;
-	font-family: var(--font-body);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.03em;
-	text-transform: uppercase;
-	line-height: 1.5;
-}
-
-.wairm-invitation-status::before {
-	content: '';
-	display: block;
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
+/* Inherits from .wairm-badge-base via shared section. */
 
 .wairm-invitation-status.status-pending {
 	background: var(--mixed-bg);
@@ -579,44 +476,14 @@
 }
 .wairm-invitation-status.status-expired::before { background: var(--ink-muted); }
 
-/* -------------------------------------------------------
-   Invitations Page – Table
-   ------------------------------------------------------- */
+/* Invitations table uses shared .wp-list-table styles above. */
 .wairm-invitations .wp-list-table {
-	border: 1px solid var(--border);
-	border-radius: var(--radius);
-	overflow: hidden;
-	box-shadow: var(--shadow-sm);
 	margin-top: 16px;
 }
 
-.wairm-invitations .wp-list-table thead th {
-	font-family: var(--font-body);
-	font-size: 11px;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: var(--ink-muted);
-	background: var(--surface-raised);
-	border-bottom: 1px solid var(--border);
-	padding: 10px 14px;
-}
-
 .wairm-invitations .wp-list-table td {
-	font-family: var(--font-body);
-	font-size: 13px;
-	color: var(--ink-soft);
 	padding: 12px 14px;
-	border-bottom: 1px solid var(--border-light);
 	vertical-align: middle;
-}
-
-.wairm-invitations .wp-list-table tbody tr:last-child td {
-	border-bottom: none;
-}
-
-.wairm-invitations .wp-list-table tbody tr:hover td {
-	background: var(--surface-raised);
 }
 
 .wairm-invitations .wp-list-table td strong {
@@ -910,58 +777,11 @@
 }
 
 .wairm-responses .wairm-notice-bar {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin: 16px 0 20px;
-	padding: 14px 20px;
 	background: var(--mixed-bg);
 	border: 1px solid var(--mixed);
-	border-radius: var(--radius-sm);
-	font-family: var(--font-body);
-	font-size: 13px;
-	line-height: 1.5;
-	color: var(--ink-soft);
 }
 
-.wairm-responses .wairm-notice-bar a {
-	color: var(--accent);
-	font-weight: 600;
-	text-decoration: none;
-}
-
-.wairm-responses .wairm-notice-bar a:hover {
-	color: var(--accent-dark);
-	text-decoration: underline;
-}
-
-/* -------------------------------------------------------
-   Responses Page – Filter Tabs
-   ------------------------------------------------------- */
-.wairm-responses .subsubsub {
-	font-family: var(--font-body);
-	margin-bottom: 12px;
-}
-
-.wairm-responses .subsubsub a {
-	font-weight: 500;
-	color: var(--ink-muted);
-	transition: color 0.15s;
-}
-
-.wairm-responses .subsubsub a:hover {
-	color: var(--accent);
-}
-
-.wairm-responses .subsubsub a.current {
-	color: var(--accent);
-	font-weight: 600;
-}
-
-.wairm-responses .subsubsub .count {
-	color: var(--ink-muted);
-	font-weight: 400;
-}
+/* Filter tabs use shared .subsubsub styles above. */
 
 /* -------------------------------------------------------
    Responses Page – Response Cards
@@ -995,28 +815,7 @@
 	margin-bottom: 14px;
 }
 
-.wairm-response-status {
-	display: inline-flex;
-	align-items: center;
-	gap: 5px;
-	padding: 3px 11px;
-	border-radius: 20px;
-	font-family: var(--font-body);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.03em;
-	text-transform: uppercase;
-	line-height: 1.5;
-}
-
-.wairm-response-status::before {
-	content: '';
-	display: block;
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	flex-shrink: 0;
-}
+/* .wairm-response-status inherits from .wairm-badge-base via shared section. */
 
 .wairm-response-status.status-generated {
 	background: var(--accent-light);
@@ -1296,6 +1095,149 @@
 	--shadow-lg: 0 8px 24px rgba(15,10,30,.09), 0 2px 6px rgba(15,10,30,.04);
 	--font-display: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
 	--font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* -------------------------------------------------------
+   Shared – Badge Base
+   (Used by .wairm-invitation-status, .wairm-response-status)
+   ------------------------------------------------------- */
+.wairm-badge-base {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 11px;
+	border-radius: 20px;
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	line-height: 1.5;
+}
+
+.wairm-badge-base::before {
+	content: '';
+	display: block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+/* -------------------------------------------------------
+   Shared – Notice Bar Base
+   ------------------------------------------------------- */
+.wairm-notice-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 16px 0 20px;
+	padding: 14px 20px;
+	border-radius: var(--radius-sm);
+	font-family: var(--font-body);
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--ink-soft);
+}
+
+.wairm-notice-bar a {
+	color: var(--accent);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.wairm-notice-bar a:hover {
+	color: var(--accent-dark);
+	text-decoration: underline;
+}
+
+/* -------------------------------------------------------
+   Shared – Filter Tabs (subsubsub)
+   ------------------------------------------------------- */
+.wairm-invitations .subsubsub,
+.wairm-responses .subsubsub {
+	font-family: var(--font-body);
+	margin-bottom: 12px;
+}
+
+.wairm-invitations .subsubsub a,
+.wairm-responses .subsubsub a {
+	font-weight: 500;
+	color: var(--ink-muted);
+	transition: color 0.15s;
+}
+
+.wairm-invitations .subsubsub a:hover,
+.wairm-responses .subsubsub a:hover {
+	color: var(--accent);
+}
+
+.wairm-invitations .subsubsub a.current,
+.wairm-responses .subsubsub a.current {
+	color: var(--accent);
+	font-weight: 600;
+}
+
+.wairm-invitations .subsubsub .count,
+.wairm-responses .subsubsub .count {
+	color: var(--ink-muted);
+	font-weight: 400;
+}
+
+/* -------------------------------------------------------
+   Shared – Table Styles
+   ------------------------------------------------------- */
+.wairm-dashboard .wp-list-table,
+.wairm-invitations .wp-list-table {
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	overflow: hidden;
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-dashboard .wp-list-table thead th,
+.wairm-invitations .wp-list-table thead th {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--ink-muted);
+	background: var(--surface-raised);
+	border-bottom: 1px solid var(--border);
+	padding: 10px 14px;
+}
+
+.wairm-dashboard .wp-list-table td,
+.wairm-invitations .wp-list-table td {
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--ink-soft);
+	padding: 10px 14px;
+	border-bottom: 1px solid var(--border-light);
+}
+
+.wairm-dashboard .wp-list-table tbody tr:last-child td,
+.wairm-invitations .wp-list-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.wairm-dashboard .wp-list-table tbody tr:hover td,
+.wairm-invitations .wp-list-table tbody tr:hover td {
+	background: var(--surface-raised);
+}
+
+/* -------------------------------------------------------
+   Shared – Utility Classes
+   ------------------------------------------------------- */
+.wairm-card-dismissed {
+	opacity: 0.5;
+	transition: opacity 0.3s;
+}
+
+.wairm-spinner-inline {
+	float: none;
+	margin: 0;
 }
 
 /* -------------------------------------------------------
@@ -2166,9 +2108,10 @@
 }
 
 /* -------------------------------------------------------
-   Responsive – Dashboard
+   Responsive – Dashboard & Responses (600px)
    ------------------------------------------------------- */
 @media screen and (max-width: 600px) {
+	/* Dashboard */
 	.wairm-stats-grid {
 		grid-template-columns: 1fr 1fr;
 		gap: 10px;
@@ -2195,12 +2138,8 @@
 	.wairm-dashboard .wp-list-table {
 		table-layout: auto;
 	}
-}
 
-/* -------------------------------------------------------
-   Responsive – Responses
-   ------------------------------------------------------- */
-@media screen and (max-width: 600px) {
+	/* Responses */
 	.wairm-response-card {
 		padding: 16px;
 	}

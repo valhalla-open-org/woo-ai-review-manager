@@ -277,8 +277,8 @@ document.addEventListener( 'DOMContentLoaded', function () {
 
 	function showLoading() {
 		output.innerHTML = '<div class="wairm-insight-loading">' +
-			'<span class="spinner is-active" style="float: none; margin: 0;"></span>' +
-			i18n.generating +
+			'<span class="spinner is-active wairm-spinner-inline"></span>' +
+			esc( i18n.generating ) +
 			'</div>';
 		generateBtn.disabled = true;
 	}
@@ -286,7 +286,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 	function showError( message ) {
 		output.innerHTML = '<div class="wairm-insight-error">' +
 			'<span class="dashicons dashicons-warning"></span>' +
-			message +
+			esc( message ) +
 			'</div>';
 		generateBtn.disabled = false;
 	}

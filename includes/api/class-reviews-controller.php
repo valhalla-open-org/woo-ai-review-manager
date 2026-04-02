@@ -42,12 +42,42 @@ final class Reviews_Controller {
 						'default'           => '',
 						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => static function ( $value ): bool {
-							return '' === $value || in_array( $value, [ 'positive', 'neutral', 'negative' ], true );
+							return '' === $value || in_array( $value, \WooAIReviewManager\AI_Client::VALID_SENTIMENTS, true );
 						},
 					],
 				],
+				'schema' => [ $this, 'get_item_schema' ],
 			]
 		);
+	}
+
+	/**
+	 * Get the response schema for a single review item.
+	 */
+	public function get_item_schema(): array {
+		return [
+			'$schema'    => 'http://json-schema.org/draft-04/schema#',
+			'title'      => 'wairm-review',
+			'type'       => 'array',
+			'items'      => [
+				'type'       => 'object',
+				'properties' => [
+					'id'                     => [ 'type' => 'integer', 'description' => __( 'Sentiment record ID.', 'woo-ai-review-manager' ) ],
+					'comment_id'             => [ 'type' => 'integer', 'description' => __( 'Comment ID.', 'woo-ai-review-manager' ) ],
+					'product_id'             => [ 'type' => 'integer', 'description' => __( 'Product ID.', 'woo-ai-review-manager' ) ],
+					'product_name'           => [ 'type' => 'string', 'description' => __( 'Product name.', 'woo-ai-review-manager' ) ],
+					'author'                 => [ 'type' => 'string', 'description' => __( 'Review author name.', 'woo-ai-review-manager' ) ],
+					'content'                => [ 'type' => 'string', 'description' => __( 'Review text.', 'woo-ai-review-manager' ) ],
+					'date'                   => [ 'type' => 'string', 'format' => 'date-time', 'description' => __( 'Review date.', 'woo-ai-review-manager' ) ],
+					'sentiment'              => [ 'type' => 'string', 'enum' => \WooAIReviewManager\AI_Client::VALID_SENTIMENTS, 'description' => __( 'Sentiment classification.', 'woo-ai-review-manager' ) ],
+					'score'                  => [ 'type' => 'number', 'description' => __( 'Sentiment score (0.0–1.0).', 'woo-ai-review-manager' ) ],
+					'key_phrases'            => [ 'type' => 'array', 'items' => [ 'type' => 'string' ], 'description' => __( 'Key phrases extracted from the review.', 'woo-ai-review-manager' ) ],
+					'ai_response_suggestion' => [ 'type' => [ 'string', 'null' ], 'description' => __( 'AI-generated response suggestion.', 'woo-ai-review-manager' ) ],
+					'ai_response_status'     => [ 'type' => [ 'string', 'null' ], 'description' => __( 'Response status.', 'woo-ai-review-manager' ) ],
+					'analyzed_at'            => [ 'type' => 'string', 'format' => 'date-time', 'description' => __( 'Analysis timestamp.', 'woo-ai-review-manager' ) ],
+				],
+			],
+		];
 	}
 
 	public function check_permissions(): bool {
