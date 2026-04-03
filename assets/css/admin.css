@@ -47,7 +47,7 @@
 
 .wairm-stat-card {
 	background: var(--surface);
-	border: 1px solid var(--border);
+	border: 1.5px solid var(--border);
 	border-radius: var(--radius);
 	padding: 22px 20px;
 	text-align: center;
@@ -92,13 +92,7 @@
 	margin-top: 6px;
 }
 
-.wairm-stat-card.positive { border-top: 3px solid var(--positive); }
-.wairm-stat-card.neutral  { border-top: 3px solid var(--mixed); }
-.wairm-stat-card.negative { border-top: 3px solid var(--negative); }
-
-.wairm-stat-card.positive .stat-number { color: var(--positive); }
-.wairm-stat-card.neutral  .stat-number { color: var(--mixed); }
-.wairm-stat-card.negative .stat-number { color: var(--negative); }
+/* Legacy stat-card color borders removed — KPI cards use .wairm-kpi-card instead. */
 
 /* -------------------------------------------------------
    Dashboard – KPI Cards
