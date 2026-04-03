@@ -93,6 +93,25 @@ No sparkline. Instead shows tagged pill badges:
 - Review count / email rate: `((current - previous) / previous) * 100` → show as "+12%" or "-5%"
 - Avg score: absolute difference → show as "+0.05" or "-0.03"
 - Color: `--positive` for improvement, `--negative` for decline, `--ink-muted` for no change
+- **Directional indicators (required)**: Always pair color with an arrow character — `▲` for improvement, `▼` for decline. Do not rely on color alone to convey direction (WCAG color-not-only).
+
+### Sparkline Accessibility
+
+Each KPI card's sparkline SVG must include a descriptive `aria-label` that conveys the trend in text:
+- Example: `aria-label="Total reviews trending upward over the last 30 days"`
+- The surrounding card container should use `role="group"` with an `aria-label` combining all card data: `aria-label="Total Reviews: 142, up 12% from previous period, trending upward"`
+
+### Sparkline Tooltips
+
+On hover/focus, sparkline data points show a tooltip with the exact date and value:
+- Tooltip appears on closest data point to cursor position
+- Shows: date (formatted per locale) + value (e.g., "Mar 15: 8 reviews")
+- Implementation: invisible `<rect>` hit areas over each data point segment, CSS tooltip via `::after` or a positioned `<div>`
+- On touch devices: tap sparkline area to show tooltip, tap elsewhere to dismiss
+
+### Tabular Figures
+
+All KPI card numbers must use `font-variant-numeric: tabular-nums` so digit widths remain stable when values change (prevents layout shift on data refresh).
 
 ---
 
@@ -153,6 +172,7 @@ Right half of row 2. Three progressive horizontal bars showing the invitation-to
 - Three bars: Sent (100% width, full opacity), Clicked (proportional, 75% opacity), Reviewed (proportional, 50% opacity)
 - Bar color: `--accent` (#6d3beb) with decreasing opacity per step
 - Conversion percentages shown inline: Clicked shows % of Sent, Reviewed shows % of Sent
+- **Drop-off callout**: Between the Sent→Clicked and Clicked→Reviewed bars, show a small muted annotation highlighting the biggest drop-off step (e.g., "37% drop-off" in `--ink-muted`, 10px). Only shown for the step with the largest absolute loss.
 - Bar: 10px tall, `--surface-sunken` track, same border-radius as sentiment bars
 - Data source: `wairm_review_invitations` table
   - Sent: `COUNT(*) WHERE status != 'pending'` (with date filter on `sent_at`)
@@ -210,6 +230,124 @@ AI Reviews                    [Responses (3)] [Invitations] [Insights] [Settings
 
 ---
 
+## Empty States
+
+Every widget must handle the zero-data case gracefully. This is critical for new installs and fresh period filters.
+
+| Widget | Empty Condition | Display |
+|--------|----------------|---------|
+| KPI Cards | No analyzed reviews in period | Show "0" as the value, no sparkline, delta shows "—" in `--ink-muted`. No error styling. |
+| Sentiment Breakdown | No analyzed reviews in period | Show three empty bar tracks (no fill) with "0 (0%)" for each. A centered muted message below: "No reviews analyzed in this period." |
+| Email Funnel | No invitations sent in period | Show three empty bar tracks. Centered muted message: "No invitations sent in this period." with a link to Invitations page. |
+| Recent Reviews | No analyzed reviews exist | Full-height centered message: "No reviews yet." with subtext "Reviews will appear here once customers leave feedback and sentiment analysis runs." |
+| Top Products | No products with reviews | Full-height centered message: "No product data yet." with subtext "Product scores will appear after reviews are analyzed." |
+
+### First-Run State
+
+When the plugin is freshly installed and no reviews have been analyzed at all (not just filtered to empty), show a single full-width welcome banner in place of rows 1–2:
+
+```
+┌──────────────────────────────────────────────────────┐
+│  Welcome to AI Reviews                               │
+│                                                      │
+│  Your dashboard will populate as reviews come in.    │
+│  To get started:                                     │
+│  1. Verify your AI connector in Settings             │
+│  2. Send your first review invitation                │
+│                                                      │
+│  [Go to Settings]    [Send Invitations]              │
+└──────────────────────────────────────────────────────┘
+```
+
+Row 3 (Recent Reviews + Top Products) still renders with their individual empty states below the banner.
+
+---
+
+## Loading States
+
+Dashboard data loads server-side via PHP, so full-page loading is handled by WordPress. However, two scenarios need client-side loading states:
+
+### Batch Analysis Progress
+
+Unchanged from current — progress bar with "Analyzed X of Y..." text.
+
+### Period Filter Switch
+
+When the user clicks a period filter button:
+1. Add `.is-loading` class to the dashboard container
+2. All widget content areas show a subtle pulse animation (CSS `animate-pulse` on a `--surface-sunken` overlay at 0.4 opacity)
+3. Period filter buttons are disabled during reload
+4. Page reloads with the new period parameter (existing behavior — full page reload)
+
+If future iterations switch to AJAX-based period filtering, each widget should show a skeleton shimmer (10px-tall rounded rectangles matching bar positions) while data loads.
+
+---
+
+## Accessibility
+
+### Keyboard Navigation
+
+All interactive elements must be keyboard-accessible in logical tab order:
+
+1. Period filter buttons (left to right)
+2. Toolbar buttons (left to right)
+3. KPI card sparkline tooltips (via focus on invisible button overlay)
+4. Recent reviews "Respond →" links (top to bottom)
+
+### Focus States
+
+All interactive elements must show a visible focus ring:
+- `outline: 2px solid var(--accent)` with `outline-offset: 2px`
+- Period filter buttons, toolbar buttons, respond links, and any clickable element
+- Never remove focus rings (`outline: none` is prohibited on interactive elements)
+
+### ARIA
+
+- Each widget card: `role="region"` with `aria-label` matching the widget title (e.g., `aria-label="Sentiment Breakdown"`)
+- Sentiment bars and email funnel bars: `role="img"` with `aria-label` describing the data (e.g., `aria-label="Positive: 88 reviews, 62 percent"`)
+- Period filter: `role="group"` with `aria-label="Filter by time period"`, active button gets `aria-pressed="true"`
+- KPI delta arrows: included in the text content, not as decorative pseudo-elements, so screen readers announce them
+
+### Reduced Motion
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .wairm-kpi-card { animation: none; }
+  .wairm-bar-fill { transition: none; }
+  .wairm-toolbar-btn,
+  .wairm-period-filter button { transition: none; }
+}
+```
+
+All entrance animations and bar transitions are disabled. Content renders immediately in its final state.
+
+### Color Contrast
+
+All text must meet WCAG AA (4.5:1 minimum):
+- Delta text on white: `--positive` (#0d9264) = 4.6:1 (passes). `--negative` (#c9303e) = 4.8:1 (passes).
+- Label text (`--ink-muted` #6b6380 on white) = 4.5:1 (passes).
+- If any value is borderline, use `--ink-soft` (#3d3654, 9.3:1) as fallback.
+
+---
+
+## Interaction States
+
+### Hover
+
+- **Toolbar buttons**: `background: var(--surface-raised)` transition 150ms ease
+- **Period filter buttons**: `border-color: var(--accent); color: var(--accent)` transition 150ms ease
+- **"Respond →" links**: `text-decoration: underline` transition 150ms ease
+- **KPI cards**: `box-shadow: var(--shadow-md); transform: translateY(-1px)` transition 200ms ease
+- **Review rows**: `background: var(--surface-raised)` transition 150ms ease
+
+All hover states use `cursor: pointer` on clickable elements.
+
+### Active/Pressed
+
+- **Buttons**: `transform: scale(0.98)` 90ms ease for press feedback, restore on release
+
+---
+
 ## Responsive Behavior
 
 | Breakpoint | Layout |
@@ -239,6 +377,13 @@ AI Reviews                    [Responses (3)] [Invitations] [Insights] [Settings
 - `.wairm-toolbar-btn` — individual toolbar button
 - `.wairm-toolbar-btn.has-badge` — button with count badge
 
+### Global Additions
+
+- All `.wairm-kpi-card .stat-number` elements: `font-variant-numeric: tabular-nums`
+- All interactive elements: `cursor: pointer` and `outline: 2px solid var(--accent); outline-offset: 2px` on `:focus-visible`
+- `.wairm-widget-empty` — centered empty state message (muted text, optional CTA link)
+- `.wairm-widget-loading` — pulse shimmer overlay for loading states
+
 ### Existing Classes Retained
 
 - `.wairm-stats-grid` → renamed/repurposed for KPI grid
@@ -254,6 +399,7 @@ AI Reviews                    [Responses (3)] [Invitations] [Insights] [Settings
 - KPI cards: staggered entrance animation (existing `wairm-card-enter`, 0.06s delay between cards)
 - Bar fills: `width` transition 0.4s ease-out on load (CSS transition, triggered by adding a class after DOM ready)
 - Sparkline: no animation (renders immediately)
+- All animations respect `prefers-reduced-motion: reduce` (see Accessibility section)
 
 ---
 
