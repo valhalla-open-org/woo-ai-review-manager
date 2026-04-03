@@ -490,13 +490,51 @@ final class Dashboard_Page {
 				5
 			)
 		);
+		// Calculate deltas.
+		$review_delta     = $this->format_delta( (float) ( $stats->total_reviews ?? 0 ), (float) $prev_stats->total_reviews, 'percent', $period );
+		$score_delta      = $this->format_delta( (float) ( $stats->avg_score ?? 0 ), $prev_stats->avg_score, 'absolute', $period );
+		$conversion_delta = $this->format_delta( $current_conversion, $prev_stats->conversion_rate, 'absolute', $period );
+
+		$needs_action_count = $negative_needing_response + $pending_count;
+
+		// First-run check.
+		$total_all_time = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
 		?>
 		<div class="wrap wairm-dashboard">
 			<div class="wairm-page-header">
-				<h1><?php esc_html_e( 'AI Review Manager Dashboard', 'woo-ai-review-manager' ); ?></h1>
-				<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=reviews' ), 'wairm_export_csv' ) ); ?>" class="page-title-action">
-					<?php esc_html_e( 'Export Reviews CSV', 'woo-ai-review-manager' ); ?>
-				</a>
+				<h1><?php esc_html_e( 'AI Reviews', 'woo-ai-review-manager' ); ?></h1>
+				<div class="wairm-toolbar">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses' ) ); ?>"
+					   class="wairm-toolbar-btn <?php echo $actionable_responses > 0 ? 'has-badge' : ''; ?>">
+						<?php esc_html_e( 'Responses', 'woo-ai-review-manager' ); ?>
+						<?php if ( $actionable_responses > 0 ) : ?>
+							<span class="toolbar-badge"><?php echo absint( $actionable_responses ); ?></span>
+						<?php endif; ?>
+					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ); ?>" class="wairm-toolbar-btn">
+						<?php esc_html_e( 'Invitations', 'woo-ai-review-manager' ); ?>
+					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-insights' ) ); ?>" class="wairm-toolbar-btn">
+						<?php esc_html_e( 'Insights', 'woo-ai-review-manager' ); ?>
+					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="wairm-toolbar-btn">
+						<?php esc_html_e( 'Settings', 'woo-ai-review-manager' ); ?>
+					</a>
+					<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=reviews' ), 'wairm_export_csv' ) ); ?>" class="wairm-toolbar-btn">
+						<?php esc_html_e( 'Export CSV', 'woo-ai-review-manager' ); ?>
+					</a>
+					<?php if ( $pending_count > 0 ) : ?>
+						<button class="wairm-toolbar-btn" id="wairm-analyze-old-reviews">
+							<?php
+							printf(
+								/* translators: %d: number of unanalyzed reviews */
+								esc_html__( 'Analyze %d Reviews', 'woo-ai-review-manager' ),
+								$pending_count
+							);
+							?>
+						</button>
+					<?php endif; ?>
+				</div>
 			</div>
 
 			<?php if ( ! empty( $checklist ) ) : ?>
@@ -523,7 +561,6 @@ final class Dashboard_Page {
 				<p>
 					<?php
 					printf(
-						/* translators: 1: count of failed emails, 2: link open, 3: link close */
 						esc_html( _n(
 							'%1$d email failed to send. %2$sView invitations%3$s to investigate.',
 							'%1$d emails failed to send. %2$sView invitations%3$s to investigate.',
@@ -539,7 +576,35 @@ final class Dashboard_Page {
 			</div>
 			<?php endif; ?>
 
-			<div class="wairm-period-filter">
+			<?php if ( $pending_count > 0 ) : ?>
+			<div id="wairm-analyze-progress" class="wairm-progress-wrap" style="display: none;">
+				<div class="wairm-progress-track">
+					<div id="wairm-progress-bar" class="wairm-progress-fill"></div>
+				</div>
+				<p id="wairm-progress-text" class="wairm-progress-text"></p>
+			</div>
+			<?php endif; ?>
+
+			<?php if ( 0 === $total_all_time ) : ?>
+			<div class="wairm-welcome-banner">
+				<h2><?php esc_html_e( 'Welcome to AI Reviews', 'woo-ai-review-manager' ); ?></h2>
+				<p><?php esc_html_e( 'Your dashboard will populate as reviews come in. To get started:', 'woo-ai-review-manager' ); ?></p>
+				<ol>
+					<li><?php esc_html_e( 'Verify your AI connector in Settings', 'woo-ai-review-manager' ); ?></li>
+					<li><?php esc_html_e( 'Send your first review invitation', 'woo-ai-review-manager' ); ?></li>
+				</ol>
+				<div class="wairm-welcome-actions">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="button button-primary">
+						<?php esc_html_e( 'Go to Settings', 'woo-ai-review-manager' ); ?>
+					</a>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ); ?>" class="button">
+						<?php esc_html_e( 'Send Invitations', 'woo-ai-review-manager' ); ?>
+					</a>
+				</div>
+			</div>
+			<?php endif; ?>
+
+			<div class="wairm-period-filter" role="group" aria-label="<?php esc_attr_e( 'Filter by time period', 'woo-ai-review-manager' ); ?>">
 				<?php
 				$period_base = admin_url( 'admin.php?page=wairm-dashboard' );
 				$periods     = [
@@ -550,205 +615,260 @@ final class Dashboard_Page {
 				];
 				foreach ( $periods as $key => $label ) :
 				?>
-					<a href="<?php echo esc_url( add_query_arg( 'period', $key, $period_base ) ); ?>" class="button <?php echo $period === $key ? 'button-primary' : ''; ?>">
+					<a href="<?php echo esc_url( add_query_arg( 'period', $key, $period_base ) ); ?>"
+					   class="button <?php echo $period === $key ? 'button-primary' : ''; ?>"
+					   <?php echo $period === $key ? 'aria-pressed="true"' : 'aria-pressed="false"'; ?>>
 						<?php echo esc_html( $label ); ?>
 					</a>
 				<?php endforeach; ?>
 			</div>
 
+			<!-- KPI Cards Row -->
 			<div class="wairm-stats-grid">
-				<div class="wairm-stat-card">
-					<h3><?php esc_html_e( 'Total Analyzed', 'woo-ai-review-manager' ); ?></h3>
-					<div class="stat-number"><?php echo absint( $stats->total_reviews ?? 0 ); ?></div>
-				</div>
-
-				<div class="wairm-stat-card positive">
-					<h3><?php esc_html_e( 'Positive', 'woo-ai-review-manager' ); ?></h3>
-					<div class="stat-number"><?php echo absint( $stats->positive ?? 0 ); ?></div>
-					<?php if ( $stats->total_reviews > 0 ) : ?>
-						<div class="stat-percent"><?php echo esc_html( round( ( $stats->positive / $stats->total_reviews ) * 100, 1 ) ); ?>%</div>
-					<?php endif; ?>
-				</div>
-
-				<div class="wairm-stat-card neutral">
-					<h3><?php esc_html_e( 'Neutral', 'woo-ai-review-manager' ); ?></h3>
-					<div class="stat-number"><?php echo absint( $stats->neutral ?? 0 ); ?></div>
-					<?php if ( $stats->total_reviews > 0 ) : ?>
-						<div class="stat-percent"><?php echo esc_html( round( ( $stats->neutral / $stats->total_reviews ) * 100, 1 ) ); ?>%</div>
-					<?php endif; ?>
-				</div>
-
-				<div class="wairm-stat-card negative">
-					<h3><?php esc_html_e( 'Negative', 'woo-ai-review-manager' ); ?></h3>
-					<div class="stat-number"><?php echo absint( $stats->negative ?? 0 ); ?></div>
-					<?php if ( $stats->total_reviews > 0 ) : ?>
-						<div class="stat-percent"><?php echo esc_html( round( ( $stats->negative / $stats->total_reviews ) * 100, 1 ) ); ?>%</div>
-					<?php endif; ?>
-				</div>
-			</div>
-
-			<div class="wairm-quick-actions-section">
-				<h2><?php esc_html_e( 'Quick Actions', 'woo-ai-review-manager' ); ?></h2>
-				<div class="wairm-quick-actions">
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses' ) ); ?>" class="button button-primary">
-						<?php esc_html_e( 'Manage Responses', 'woo-ai-review-manager' ); ?>
-						<?php if ( $actionable_responses > 0 ) : ?>
-							<span class="wairm-badge"><?php echo absint( $actionable_responses ); ?></span>
+				<?php $sparkline_reviews = $this->render_sparkline_svg( $sparkline_data['reviews'], $review_delta['is_positive'] ); ?>
+				<div class="wairm-kpi-card" role="group"
+				     aria-label="<?php printf( esc_attr__( 'Total Reviews: %d', 'woo-ai-review-manager' ), absint( $stats->total_reviews ?? 0 ) ); ?>">
+					<div class="kpi-label"><?php esc_html_e( 'Total Reviews', 'woo-ai-review-manager' ); ?></div>
+					<div class="wairm-kpi-body">
+						<div>
+							<div class="kpi-value"><?php echo absint( $stats->total_reviews ?? 0 ); ?></div>
+							<?php echo $review_delta['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</div>
+						<?php if ( $sparkline_reviews ) : ?>
+							<div class="wairm-kpi-sparkline" aria-label="<?php esc_attr_e( 'Review count trend', 'woo-ai-review-manager' ); ?>">
+								<?php echo $sparkline_reviews; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							</div>
 						<?php endif; ?>
-					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ); ?>" class="button">
-						<?php esc_html_e( 'Invitations', 'woo-ai-review-manager' ); ?>
-					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-insights' ) ); ?>" class="button">
-						<?php esc_html_e( 'Insights', 'woo-ai-review-manager' ); ?>
-					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="button">
-						<?php esc_html_e( 'Settings', 'woo-ai-review-manager' ); ?>
-					</a>
-
-					<?php if ( $pending_count > 0 ) : ?>
-					<button class="button" id="wairm-analyze-old-reviews">
-						<?php
-						printf(
-							/* translators: %d: number of unanalyzed reviews */
-							esc_html__( 'Analyze %d Unanalyzed Reviews', 'woo-ai-review-manager' ),
-							$pending_count
-						);
-						?>
-					</button>
-					<?php endif; ?>
-
-				</div>
-
-				<?php if ( $pending_count > 0 ) : ?>
-				<div id="wairm-analyze-progress" class="wairm-progress-wrap" style="display: none;">
-					<div class="wairm-progress-track">
-						<div id="wairm-progress-bar" class="wairm-progress-fill"></div>
 					</div>
-					<p id="wairm-progress-text" class="wairm-progress-text"></p>
 				</div>
-				<?php endif; ?>
+
+				<?php $sparkline_scores = $this->render_sparkline_svg( $sparkline_data['scores'], $score_delta['is_positive'] ); ?>
+				<div class="wairm-kpi-card" role="group"
+				     aria-label="<?php printf( esc_attr__( 'Average Score: %s', 'woo-ai-review-manager' ), number_format( (float) ( $stats->avg_score ?? 0 ), 2 ) ); ?>">
+					<div class="kpi-label"><?php esc_html_e( 'Avg Score', 'woo-ai-review-manager' ); ?></div>
+					<div class="wairm-kpi-body">
+						<div>
+							<div class="kpi-value"><?php echo esc_html( number_format( (float) ( $stats->avg_score ?? 0 ), 2 ) ); ?></div>
+							<?php echo $score_delta['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</div>
+						<?php if ( $sparkline_scores ) : ?>
+							<div class="wairm-kpi-sparkline" aria-label="<?php esc_attr_e( 'Sentiment score trend', 'woo-ai-review-manager' ); ?>">
+								<?php echo $sparkline_scores; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							</div>
+						<?php endif; ?>
+					</div>
+				</div>
+
+				<?php $sparkline_conv = $this->render_sparkline_svg( $sparkline_data['conversions'], $conversion_delta['is_positive'] ); ?>
+				<div class="wairm-kpi-card" role="group"
+				     aria-label="<?php printf( esc_attr__( 'Email to Review conversion: %s%%', 'woo-ai-review-manager' ), (string) $current_conversion ); ?>">
+					<div class="kpi-label"><?php esc_html_e( 'Email → Review', 'woo-ai-review-manager' ); ?></div>
+					<div class="wairm-kpi-body">
+						<div>
+							<div class="kpi-value"><?php echo esc_html( $current_conversion . '%' ); ?></div>
+							<?php echo $conversion_delta['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</div>
+						<?php if ( $sparkline_conv ) : ?>
+							<div class="wairm-kpi-sparkline" aria-label="<?php esc_attr_e( 'Conversion rate trend', 'woo-ai-review-manager' ); ?>">
+								<?php echo $sparkline_conv; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							</div>
+						<?php endif; ?>
+					</div>
+				</div>
+
+				<div class="wairm-kpi-card <?php echo $needs_action_count > 0 ? 'needs-action' : 'all-clear'; ?>" role="group"
+				     aria-label="<?php printf( esc_attr__( 'Needs Action: %d items', 'woo-ai-review-manager' ), $needs_action_count ); ?>">
+					<div class="kpi-label"><?php esc_html_e( 'Needs Action', 'woo-ai-review-manager' ); ?></div>
+					<div>
+						<div class="kpi-value"><?php echo absint( $needs_action_count ); ?></div>
+						<div class="wairm-kpi-pills">
+							<?php if ( $negative_needing_response > 0 ) : ?>
+								<span class="wairm-kpi-pill pill-negative">
+									<?php printf( esc_html__( '%d negative', 'woo-ai-review-manager' ), $negative_needing_response ); ?>
+								</span>
+							<?php endif; ?>
+							<?php if ( $pending_count > 0 ) : ?>
+								<span class="wairm-kpi-pill pill-pending">
+									<?php printf( esc_html__( '%d pending', 'woo-ai-review-manager' ), $pending_count ); ?>
+								</span>
+							<?php endif; ?>
+							<?php if ( 0 === $needs_action_count ) : ?>
+								<span class="wairm-kpi-pill pill-clear"><?php esc_html_e( 'All clear', 'woo-ai-review-manager' ); ?></span>
+							<?php endif; ?>
+						</div>
+					</div>
+				</div>
 			</div>
 
+			<!-- Mid Row: Sentiment Breakdown + Email Funnel -->
+			<div class="wairm-mid-row">
+				<div class="wairm-widget-card" role="region" aria-label="<?php esc_attr_e( 'Sentiment Breakdown', 'woo-ai-review-manager' ); ?>">
+					<h2 class="widget-title"><?php esc_html_e( 'Sentiment Breakdown', 'woo-ai-review-manager' ); ?></h2>
+					<?php if ( (int) ( $stats->total_reviews ?? 0 ) > 0 ) : ?>
+						<?php
+						$total      = (int) $stats->total_reviews;
+						$sentiments = [
+							'positive' => [ 'count' => (int) $stats->positive, 'label' => __( 'Positive', 'woo-ai-review-manager' ) ],
+							'neutral'  => [ 'count' => (int) $stats->neutral,  'label' => __( 'Neutral', 'woo-ai-review-manager' ) ],
+							'negative' => [ 'count' => (int) $stats->negative, 'label' => __( 'Negative', 'woo-ai-review-manager' ) ],
+						];
+						foreach ( $sentiments as $key => $s ) :
+							$pct = round( ( $s['count'] / $total ) * 100, 1 );
+						?>
+						<div class="wairm-sentiment-row">
+							<div class="bar-label">
+								<span class="bar-label-left">
+									<span class="wairm-sentiment-dot dot-<?php echo esc_attr( $key ); ?>"></span>
+									<span><?php echo esc_html( $s['label'] ); ?></span>
+								</span>
+								<span class="bar-label-right"
+								      role="img"
+								      aria-label="<?php printf( esc_attr__( '%1$s: %2$d reviews, %3$s percent', 'woo-ai-review-manager' ), esc_attr( $s['label'] ), $s['count'], (string) $pct ); ?>">
+									<?php echo absint( $s['count'] ); ?>
+									<span class="bar-pct">(<?php echo esc_html( (string) $pct ); ?>%)</span>
+								</span>
+							</div>
+							<div class="wairm-bar-track">
+								<div class="wairm-bar-fill fill-<?php echo esc_attr( $key === 'neutral' ? 'neutral' : $key ); ?>"
+								     data-width="<?php echo esc_attr( (string) $pct ); ?>"
+								     style="width: 0;"></div>
+							</div>
+						</div>
+						<?php endforeach; ?>
+					<?php else : ?>
+						<div class="wairm-widget-empty">
+							<p><?php esc_html_e( 'No reviews analyzed in this period.', 'woo-ai-review-manager' ); ?></p>
+						</div>
+					<?php endif; ?>
+				</div>
+
+				<div class="wairm-widget-card" role="region" aria-label="<?php esc_attr_e( 'Email Funnel', 'woo-ai-review-manager' ); ?>">
+					<h2 class="widget-title"><?php esc_html_e( 'Email Funnel', 'woo-ai-review-manager' ); ?></h2>
+					<?php if ( $email_funnel->sent > 0 ) : ?>
+						<?php
+						$funnel_steps = [
+							[ 'label' => __( 'Sent', 'woo-ai-review-manager' ),     'count' => $email_funnel->sent,     'pct' => 100,                                                                    'width' => 100 ],
+							[ 'label' => __( 'Clicked', 'woo-ai-review-manager' ),   'count' => $email_funnel->clicked,  'pct' => round( ( $email_funnel->clicked / $email_funnel->sent ) * 100, 1 ),      'width' => round( ( $email_funnel->clicked / $email_funnel->sent ) * 100, 1 ) ],
+							[ 'label' => __( 'Reviewed', 'woo-ai-review-manager' ),  'count' => $email_funnel->reviewed, 'pct' => round( ( $email_funnel->reviewed / $email_funnel->sent ) * 100, 1 ),     'width' => round( ( $email_funnel->reviewed / $email_funnel->sent ) * 100, 1 ) ],
+						];
+
+						$dropoffs = [
+							$email_funnel->sent - $email_funnel->clicked,
+							$email_funnel->clicked - $email_funnel->reviewed,
+						];
+						$biggest_dropoff_idx = $dropoffs[0] >= $dropoffs[1] ? 0 : 1;
+
+						foreach ( $funnel_steps as $idx => $step ) :
+						?>
+						<div class="wairm-funnel-step">
+							<div class="funnel-label">
+								<span class="funnel-label-name"><?php echo esc_html( $step['label'] ); ?></span>
+								<span class="funnel-label-value"
+								      role="img"
+								      aria-label="<?php printf( esc_attr__( '%1$s: %2$d, %3$s percent of sent', 'woo-ai-review-manager' ), esc_attr( $step['label'] ), $step['count'], (string) $step['pct'] ); ?>">
+									<?php echo absint( $step['count'] ); ?>
+									<?php if ( $idx > 0 ) : ?>
+										<span class="funnel-pct">(<?php echo esc_html( (string) $step['pct'] ); ?>%)</span>
+									<?php endif; ?>
+								</span>
+							</div>
+							<div class="wairm-bar-track">
+								<div class="wairm-bar-fill fill-accent"
+								     data-width="<?php echo esc_attr( (string) $step['width'] ); ?>"
+								     style="width: 0;"></div>
+							</div>
+						</div>
+						<?php
+						if ( $idx < 2 && $idx === $biggest_dropoff_idx && $dropoffs[ $idx ] > 0 ) :
+							$dropoff_pct = round( ( $dropoffs[ $idx ] / $email_funnel->sent ) * 100, 1 );
+						?>
+						<div class="wairm-funnel-dropoff">
+							<?php printf( esc_html__( '%s%% drop-off', 'woo-ai-review-manager' ), (string) $dropoff_pct ); ?>
+						</div>
+						<?php endif; ?>
+						<?php endforeach; ?>
+					<?php else : ?>
+						<div class="wairm-widget-empty">
+							<p><?php esc_html_e( 'No invitations sent in this period.', 'woo-ai-review-manager' ); ?></p>
+							<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ); ?>" class="empty-subtext">
+								<?php esc_html_e( 'Go to Invitations', 'woo-ai-review-manager' ); ?>
+							</a>
+						</div>
+					<?php endif; ?>
+				</div>
+			</div>
+
+			<!-- Bottom Row: Recent Reviews + Top Products -->
 			<div class="wairm-two-column">
 				<div class="wairm-column">
-					<h2><?php esc_html_e( 'Recent Reviews', 'woo-ai-review-manager' ); ?></h2>
-					<?php if ( $recent ) : ?>
-						<div class="wairm-recent-reviews">
-							<?php foreach ( $recent as $review ) : ?>
-							<div class="wairm-review-card sentiment-<?php echo esc_attr( $review->sentiment ); ?>">
-								<div class="review-header">
-									<span class="product-name"><?php echo esc_html( $review->product_name ); ?></span>
-									<span class="sentiment-badge sentiment-<?php echo esc_attr( $review->sentiment ); ?>"><?php echo esc_html( ucfirst( $review->sentiment ) ); ?></span>
-									<span class="review-date"><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $review->comment_date ) ) ); ?></span>
+					<div class="wairm-widget-card" role="region" aria-label="<?php esc_attr_e( 'Recent Reviews', 'woo-ai-review-manager' ); ?>">
+						<h2 class="widget-title"><?php esc_html_e( 'Recent Reviews', 'woo-ai-review-manager' ); ?></h2>
+						<?php if ( $recent ) : ?>
+							<div class="wairm-recent-reviews">
+								<?php foreach ( $recent as $review ) : ?>
+								<div class="wairm-review-card">
+									<div class="review-header">
+										<span class="product-name"><?php echo esc_html( $review->product_name ); ?></span>
+										<span class="sentiment-badge sentiment-<?php echo esc_attr( $review->sentiment ); ?>"><?php echo esc_html( ucfirst( $review->sentiment ) ); ?></span>
+										<span class="review-date"><?php echo esc_html( human_time_diff( strtotime( $review->comment_date ), current_time( 'timestamp' ) ) . ' ' . __( 'ago', 'woo-ai-review-manager' ) ); ?></span>
+									</div>
+									<div class="review-excerpt"><?php echo esc_html( wp_trim_words( $review->comment_content, 30 ) ); ?></div>
+									<div class="review-meta">
+										<?php if ( $review->ai_response_suggestion && 'sent' !== $review->ai_response_status ) : ?>
+											<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses&status=actionable' ) ); ?>" class="wairm-respond-link">
+												<?php esc_html_e( 'Respond', 'woo-ai-review-manager' ); ?> &rarr;
+											</a>
+										<?php elseif ( 'sent' === $review->ai_response_status ) : ?>
+											<span class="dashicons dashicons-yes-alt" title="<?php esc_attr_e( 'Reply posted', 'woo-ai-review-manager' ); ?>"></span>
+										<?php endif; ?>
+									</div>
 								</div>
-								<div class="review-excerpt"><?php echo esc_html( wp_trim_words( $review->comment_content, 30 ) ); ?></div>
-								<div class="review-meta">
-									<span class="review-author"><?php echo esc_html( $review->comment_author ); ?></span>
-									<span class="review-score"><?php esc_html_e( 'Score:', 'woo-ai-review-manager' ); ?> <?php echo esc_html( number_format( (float) $review->score, 2 ) ); ?></span>
-									<?php if ( $review->ai_response_suggestion && 'sent' !== $review->ai_response_status ) : ?>
-										<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses&status=actionable' ) ); ?>" class="button button-small">
-											<?php esc_html_e( 'Respond', 'woo-ai-review-manager' ); ?>
-										</a>
-									<?php elseif ( 'sent' === $review->ai_response_status ) : ?>
-										<span class="dashicons dashicons-yes-alt" title="<?php esc_attr_e( 'Reply posted', 'woo-ai-review-manager' ); ?>"></span>
-									<?php endif; ?>
-								</div>
+								<?php endforeach; ?>
 							</div>
-							<?php endforeach; ?>
-						</div>
-					<?php else : ?>
-						<p><?php esc_html_e( 'No reviews analyzed yet.', 'woo-ai-review-manager' ); ?></p>
-					<?php endif; ?>
+						<?php else : ?>
+							<div class="wairm-widget-empty">
+								<p><?php esc_html_e( 'No reviews yet.', 'woo-ai-review-manager' ); ?></p>
+								<p class="empty-subtext"><?php esc_html_e( 'Reviews will appear here once customers leave feedback and sentiment analysis runs.', 'woo-ai-review-manager' ); ?></p>
+							</div>
+						<?php endif; ?>
+					</div>
 				</div>
 
 				<div class="wairm-column">
-					<h2><?php esc_html_e( 'Top Products', 'woo-ai-review-manager' ); ?></h2>
-					<?php if ( $top_products ) : ?>
-						<table class="wp-list-table widefat fixed striped">
-							<thead>
-								<tr>
-									<th><?php esc_html_e( 'Product', 'woo-ai-review-manager' ); ?></th>
-									<th><?php esc_html_e( 'Reviews', 'woo-ai-review-manager' ); ?></th>
-									<th><?php esc_html_e( 'Avg. Score', 'woo-ai-review-manager' ); ?></th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ( $top_products as $product ) : ?>
-								<tr>
-									<td><?php echo esc_html( $product->product_name ); ?></td>
-									<td><?php echo absint( $product->review_count ); ?></td>
-									<td>
-										<?php echo esc_html( number_format( (float) $product->avg_score, 2 ) ); ?>
-										<?php
-										$score_class = $product->avg_score > 0.65 ? 'score-positive' : ( $product->avg_score > 0.35 ? 'score-mixed' : 'score-negative' );
-										?>
-										<span class="wairm-score-bar-track">
-											<span class="wairm-score-bar-fill <?php echo esc_attr( $score_class ); ?>" style="width: <?php echo esc_attr( (string) round( (float) $product->avg_score * 100 ) ); ?>%;"></span>
-										</span>
-									</td>
-								</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					<?php else : ?>
-						<p><?php esc_html_e( 'No product data yet.', 'woo-ai-review-manager' ); ?></p>
-					<?php endif; ?>
-
-					<?php
-					$text_supported  = \WooAIReviewManager\AI_Client::is_text_supported();
-					$dash_providers  = \WooAIReviewManager\AI_Client::discover_providers();
-					$dash_model_pref = get_option( 'wairm_model_preference', '' );
-					?>
-					<div class="wairm-api-status">
-						<h3><?php esc_html_e( 'AI Status', 'woo-ai-review-manager' ); ?></h3>
-						<?php if ( $text_supported ) : ?>
-							<p>
-								<span class="wairm-ai-available"><?php esc_html_e( 'AI text generation is available.', 'woo-ai-review-manager' ); ?></span>
-							</p>
-							<?php
-							$configured_providers = array_filter( $dash_providers, static function ( $p ) {
-								return $p['configured'];
-							} );
-							if ( ! empty( $configured_providers ) ) :
-							?>
-								<p>
-									<?php
-									$provider_names = wp_list_pluck( $configured_providers, 'name' );
-									printf(
-										/* translators: %s: comma-separated list of provider names */
-										esc_html__( 'Active connectors: %s', 'woo-ai-review-manager' ),
-										esc_html( implode( ', ', $provider_names ) )
-									);
-									?>
-								</p>
-							<?php endif; ?>
-							<?php if ( ! empty( $dash_model_pref ) ) : ?>
-								<p>
-									<?php
-									echo wp_kses(
-										sprintf(
-											/* translators: %s: model ID wrapped in <code> */
-											__( 'Preferred model: %s', 'woo-ai-review-manager' ),
-											'<code>' . esc_html( $dash_model_pref ) . '</code>'
-										),
-										[ 'code' => [] ]
-									);
-									?>
-								</p>
-							<?php endif; ?>
-						<?php elseif ( \WooAIReviewManager\AI_Client::is_available() ) : ?>
-							<p>
-								<span class="wairm-ai-unavailable"><?php esc_html_e( 'No AI connectors configured for text generation.', 'woo-ai-review-manager' ); ?></span>
-							</p>
-							<a href="<?php echo esc_url( admin_url( 'options-connectors.php' ) ); ?>" class="button button-secondary">
-								<?php esc_html_e( 'Configure AI Connectors', 'woo-ai-review-manager' ); ?>
-							</a>
+					<div class="wairm-widget-card" role="region" aria-label="<?php esc_attr_e( 'Top Products', 'woo-ai-review-manager' ); ?>">
+						<h2 class="widget-title"><?php esc_html_e( 'Top Products', 'woo-ai-review-manager' ); ?></h2>
+						<?php if ( $top_products ) : ?>
+							<table class="wp-list-table widefat fixed striped">
+								<thead>
+									<tr>
+										<th><?php esc_html_e( 'Product', 'woo-ai-review-manager' ); ?></th>
+										<th><?php esc_html_e( 'Reviews', 'woo-ai-review-manager' ); ?></th>
+										<th><?php esc_html_e( 'Avg. Score', 'woo-ai-review-manager' ); ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ( $top_products as $product ) : ?>
+									<tr>
+										<td><?php echo esc_html( $product->product_name ); ?></td>
+										<td><?php echo absint( $product->review_count ); ?></td>
+										<td>
+											<?php echo esc_html( number_format( (float) $product->avg_score, 2 ) ); ?>
+											<?php
+											$score_class = $product->avg_score > 0.65 ? 'score-positive' : ( $product->avg_score > 0.35 ? 'score-mixed' : 'score-negative' );
+											?>
+											<span class="wairm-score-bar-track">
+												<span class="wairm-score-bar-fill <?php echo esc_attr( $score_class ); ?>" style="width: <?php echo esc_attr( (string) round( (float) $product->avg_score * 100 ) ); ?>%;"></span>
+											</span>
+										</td>
+									</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
 						<?php else : ?>
-							<p>
-								<span class="wairm-ai-unavailable"><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></span>
-							</p>
-							<p><?php esc_html_e( 'This plugin requires WordPress 7.0 or later.', 'woo-ai-review-manager' ); ?></p>
+							<div class="wairm-widget-empty">
+								<p><?php esc_html_e( 'No product data yet.', 'woo-ai-review-manager' ); ?></p>
+								<p class="empty-subtext"><?php esc_html_e( 'Product scores will appear after reviews are analyzed.', 'woo-ai-review-manager' ); ?></p>
+							</div>
 						<?php endif; ?>
 					</div>
 				</div>
