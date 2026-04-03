@@ -101,6 +101,453 @@
 .wairm-stat-card.negative .stat-number { color: var(--negative); }
 
 /* -------------------------------------------------------
+   Dashboard – KPI Cards
+   ------------------------------------------------------- */
+.wairm-kpi-card {
+	background: var(--surface);
+	border: 1.5px solid var(--border);
+	border-radius: var(--radius);
+	padding: 18px 16px;
+	box-shadow: var(--shadow-sm);
+	transition: box-shadow 0.2s ease, transform 0.2s ease;
+	animation: wairm-card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.wairm-kpi-card:nth-child(1) { animation-delay: 0s; }
+.wairm-kpi-card:nth-child(2) { animation-delay: 0.06s; }
+.wairm-kpi-card:nth-child(3) { animation-delay: 0.12s; }
+.wairm-kpi-card:nth-child(4) { animation-delay: 0.18s; }
+
+.wairm-kpi-card:hover {
+	box-shadow: var(--shadow-md);
+	transform: translateY(-1px);
+}
+
+.wairm-kpi-card .kpi-label {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--ink-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	margin-bottom: 8px;
+}
+
+.wairm-kpi-body {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+}
+
+.wairm-kpi-card .kpi-value {
+	font-family: var(--font-display);
+	font-size: 32px;
+	font-weight: 400;
+	line-height: 1;
+	letter-spacing: -0.02em;
+	color: var(--ink);
+	font-variant-numeric: tabular-nums;
+}
+
+.wairm-kpi-delta {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 600;
+	margin-top: 4px;
+}
+
+.wairm-kpi-delta.is-positive { color: var(--positive); }
+.wairm-kpi-delta.is-negative { color: var(--negative); }
+.wairm-kpi-delta.is-neutral  { color: var(--ink-muted); }
+
+.wairm-kpi-delta .delta-context {
+	font-weight: 400;
+	color: var(--ink-muted);
+}
+
+.wairm-kpi-sparkline {
+	flex-shrink: 0;
+	margin-bottom: 4px;
+	position: relative;
+}
+
+.wairm-kpi-sparkline svg {
+	display: block;
+}
+
+.wairm-kpi-pills {
+	display: flex;
+	gap: 6px;
+	margin-top: 6px;
+	flex-wrap: wrap;
+}
+
+.wairm-kpi-pill {
+	font-family: var(--font-body);
+	font-size: 10px;
+	font-weight: 600;
+	padding: 2px 8px;
+	border-radius: 4px;
+}
+
+.wairm-kpi-pill.pill-negative {
+	background: var(--negative-bg);
+	color: var(--negative);
+	border: 1px solid var(--negative-border);
+}
+
+.wairm-kpi-pill.pill-pending {
+	background: var(--mixed-bg);
+	color: var(--mixed);
+	border: 1px solid var(--mixed-border);
+}
+
+.wairm-kpi-pill.pill-clear {
+	background: var(--positive-bg);
+	color: var(--positive);
+	border: 1px solid var(--positive-border);
+}
+
+.wairm-kpi-card.needs-action .kpi-value { color: var(--negative); }
+.wairm-kpi-card.all-clear .kpi-value    { color: var(--positive); }
+
+/* -------------------------------------------------------
+   Dashboard – Widget Card (shared)
+   ------------------------------------------------------- */
+.wairm-widget-card {
+	background: var(--surface);
+	border: 1.5px solid var(--border);
+	border-radius: var(--radius);
+	padding: 20px;
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-widget-card .widget-title {
+	font-family: var(--font-display);
+	font-size: 15px;
+	color: var(--ink);
+	margin: 0 0 16px;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Sentiment Breakdown Bars
+   ------------------------------------------------------- */
+.wairm-sentiment-row {
+	margin-bottom: 12px;
+}
+
+.wairm-sentiment-row:last-child {
+	margin-bottom: 0;
+}
+
+.wairm-sentiment-row .bar-label {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-family: var(--font-body);
+	font-size: 12px;
+	margin-bottom: 5px;
+}
+
+.wairm-sentiment-row .bar-label-left {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.wairm-sentiment-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	display: inline-block;
+	flex-shrink: 0;
+}
+
+.wairm-sentiment-dot.dot-positive { background: var(--positive); }
+.wairm-sentiment-dot.dot-neutral  { background: var(--mixed); }
+.wairm-sentiment-dot.dot-negative { background: var(--negative); }
+
+.wairm-sentiment-row .bar-label-left span:last-child {
+	font-weight: 600;
+	color: var(--ink-soft);
+}
+
+.wairm-sentiment-row .bar-label-right {
+	font-weight: 600;
+	color: var(--ink);
+}
+
+.wairm-sentiment-row .bar-label-right .bar-pct {
+	font-weight: 400;
+	color: var(--ink-muted);
+}
+
+.wairm-bar-track {
+	height: 10px;
+	background: var(--surface-sunken);
+	border-radius: 5px;
+	overflow: hidden;
+}
+
+.wairm-bar-fill {
+	height: 10px;
+	border-radius: 5px;
+	width: 0;
+	transition: width 0.4s ease-out;
+}
+
+.wairm-bar-fill.fill-positive { background: var(--positive); }
+.wairm-bar-fill.fill-neutral  { background: var(--mixed); }
+.wairm-bar-fill.fill-negative { background: var(--negative); }
+
+/* -------------------------------------------------------
+   Dashboard – Email Funnel
+   ------------------------------------------------------- */
+.wairm-funnel-step {
+	margin-bottom: 10px;
+}
+
+.wairm-funnel-step:last-child {
+	margin-bottom: 0;
+}
+
+.wairm-funnel-step .funnel-label {
+	display: flex;
+	justify-content: space-between;
+	font-family: var(--font-body);
+	font-size: 12px;
+	margin-bottom: 4px;
+}
+
+.wairm-funnel-step .funnel-label-name {
+	color: var(--ink-soft);
+	font-weight: 500;
+}
+
+.wairm-funnel-step .funnel-label-value {
+	color: var(--ink);
+	font-weight: 600;
+}
+
+.wairm-funnel-step .funnel-label-value .funnel-pct {
+	color: var(--ink-muted);
+	font-size: 11px;
+	font-weight: 400;
+}
+
+.wairm-bar-fill.fill-accent { background: var(--accent); }
+
+.wairm-funnel-step:nth-child(2) .wairm-bar-fill { opacity: 0.75; }
+.wairm-funnel-step:nth-child(3) .wairm-bar-fill { opacity: 0.50; }
+
+.wairm-funnel-dropoff {
+	font-family: var(--font-body);
+	font-size: 10px;
+	color: var(--ink-muted);
+	text-align: right;
+	padding: 2px 0 4px;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Header Toolbar
+   ------------------------------------------------------- */
+.wairm-toolbar {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.wairm-toolbar-btn {
+	font-family: var(--font-body);
+	font-size: 12px;
+	color: var(--ink-soft);
+	text-decoration: none;
+	padding: 5px 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+	cursor: pointer;
+	transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.wairm-toolbar-btn:hover {
+	background: var(--surface-raised);
+	color: var(--ink);
+}
+
+.wairm-toolbar-btn:active {
+	transform: scale(0.98);
+}
+
+.wairm-toolbar-btn.has-badge {
+	color: var(--accent);
+}
+
+.wairm-toolbar-btn .toolbar-badge {
+	display: inline-block;
+	background: var(--accent);
+	color: var(--surface);
+	font-size: 10px;
+	font-weight: 700;
+	padding: 1px 6px;
+	border-radius: 10px;
+	margin-left: 4px;
+	line-height: 1.4;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Mid Row
+   ------------------------------------------------------- */
+.wairm-mid-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 14px;
+	margin-bottom: 18px;
+}
+
+@media screen and (max-width: 960px) {
+	.wairm-mid-row {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* -------------------------------------------------------
+   Dashboard – Empty States
+   ------------------------------------------------------- */
+.wairm-widget-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 24px 16px;
+	min-height: 120px;
+}
+
+.wairm-widget-empty p {
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--ink-muted);
+	margin: 0;
+	line-height: 1.5;
+}
+
+.wairm-widget-empty .empty-subtext {
+	font-size: 12px;
+	color: var(--ink-muted);
+	margin-top: 4px;
+}
+
+.wairm-welcome-banner {
+	background: var(--surface);
+	border: 1.5px solid var(--border);
+	border-radius: var(--radius);
+	padding: 28px 24px;
+	margin-bottom: 18px;
+	box-shadow: var(--shadow-sm);
+}
+
+.wairm-welcome-banner h2 {
+	font-family: var(--font-display);
+	font-size: 20px;
+	font-weight: 400;
+	color: var(--ink);
+	margin: 0 0 8px;
+}
+
+.wairm-welcome-banner p {
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--ink-soft);
+	margin: 0 0 4px;
+	line-height: 1.6;
+}
+
+.wairm-welcome-banner ol {
+	font-family: var(--font-body);
+	font-size: 13px;
+	color: var(--ink-soft);
+	margin: 8px 0 16px 20px;
+	line-height: 1.8;
+}
+
+.wairm-welcome-actions {
+	display: flex;
+	gap: 8px;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Respond Link
+   ------------------------------------------------------- */
+.wairm-respond-link {
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+	text-decoration: none;
+	cursor: pointer;
+	transition: text-decoration 0.15s ease;
+}
+
+.wairm-respond-link:hover {
+	text-decoration: underline;
+}
+
+/* -------------------------------------------------------
+   Dashboard – Accessibility: Focus & Reduced Motion
+   ------------------------------------------------------- */
+.wairm-dashboard .wairm-toolbar-btn:focus-visible,
+.wairm-dashboard .wairm-period-filter a:focus-visible,
+.wairm-dashboard .wairm-review-card .button-small:focus-visible,
+.wairm-dashboard .wairm-respond-link:focus-visible,
+.wairm-dashboard .wairm-kpi-card:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wairm-kpi-card {
+		animation: none;
+	}
+
+	.wairm-bar-fill {
+		transition: none;
+	}
+
+	.wairm-toolbar-btn,
+	.wairm-period-filter a,
+	.wairm-kpi-card,
+	.wairm-review-card {
+		transition: none;
+	}
+}
+
+/* -------------------------------------------------------
+   Dashboard – Sparkline Tooltip
+   ------------------------------------------------------- */
+.wairm-sparkline-tooltip {
+	position: absolute;
+	background: var(--ink);
+	color: var(--surface);
+	font-family: var(--font-body);
+	font-size: 11px;
+	font-weight: 500;
+	padding: 4px 8px;
+	border-radius: 4px;
+	white-space: nowrap;
+	pointer-events: none;
+	z-index: 10;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+	transform: translateX(-50%);
+}
+
+.wairm-sparkline-tooltip.is-visible {
+	opacity: 1;
+}
+
+/* -------------------------------------------------------
    Dashboard – Two-Column Layout
    ------------------------------------------------------- */
 .wairm-two-column {
