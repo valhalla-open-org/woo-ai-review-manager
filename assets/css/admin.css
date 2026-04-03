@@ -658,7 +658,8 @@
 .wairm-settings .form-table input[type="text"],
 .wairm-settings .form-table input[type="email"],
 .wairm-settings .form-table input[type="number"],
-.wairm-settings .form-table select {
+.wairm-settings .form-table select,
+.wairm-settings .form-table textarea {
 	font-family: var(--font-body);
 	font-size: 13px;
 	border: 1px solid var(--border);
@@ -669,7 +670,8 @@
 }
 
 .wairm-settings .form-table input:focus,
-.wairm-settings .form-table select:focus {
+.wairm-settings .form-table select:focus,
+.wairm-settings .form-table textarea:focus {
 	border-color: var(--accent);
 	box-shadow: 0 0 0 1px var(--accent-light);
 	outline: none;
@@ -774,6 +776,17 @@
 	background: var(--accent-dark);
 	box-shadow: var(--shadow-md);
 	transform: translateY(-1px);
+}
+
+#wairm-delete-all-data {
+	background: var(--negative);
+	border-color: var(--negative);
+	color: #fff;
+}
+
+#wairm-delete-all-data:hover {
+	background: #a1222d;
+	border-color: #a1222d;
 }
 
 .wairm-settings .submit .button-primary:active {
@@ -2531,11 +2544,19 @@
 	border-radius: var(--radius-sm);
 }
 
+.wairm-email-preview-frame {
+	width: 100%;
+	height: 600px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: #fff;
+}
+
 .wairm-test-email-form {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	margin-top: 10px;
+	margin-top: 12px;
 }
 
 .wairm-test-success {

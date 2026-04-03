@@ -389,7 +389,16 @@ final class Email_Sender {
 	 * Replace {customer_name} and {store_name} placeholders in the email subject.
 	 */
 	private static function resolve_subject_placeholders( object $email ): string {
-		$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) );
+		$is_reminder = isset( $email->email_type ) && 'reminder' === $email->email_type;
+
+		if ( $is_reminder ) {
+			$subject = get_option( 'wairm_reminder_subject', '' );
+			if ( empty( $subject ) ) {
+				$subject = __( 'We\'d still love to hear from you!', 'woo-ai-review-manager' );
+			}
+		} else {
+			$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) );
+		}
 
 		return str_replace(
 			[ '{customer_name}', '{store_name}' ],
@@ -427,6 +436,7 @@ final class Email_Sender {
 		);
 
 		$expiry_days = absint( get_option( 'wairm_invitation_expiry_days', 30 ) );
+		$is_reminder = isset( $email->email_type ) && 'reminder' === $email->email_type;
 
 		ob_start();
 		?>
@@ -452,15 +462,40 @@ final class Email_Sender {
 			<div class="container">
 				<h1><?php echo esc_html( self::resolve_subject_placeholders( $email ) ); ?></h1>
 
-				<p><?php
-					printf(
-						/* translators: %s: customer name */
-						esc_html__( 'Hi %s, thank you for your recent order!', 'woo-ai-review-manager' ),
-						esc_html( $email->customer_name )
-					);
-				?></p>
+				<?php
+				if ( $is_reminder ) {
+					$greeting = get_option( 'wairm_reminder_greeting', '' );
+					if ( empty( $greeting ) ) {
+						$greeting = __( 'Hi {customer_name}, just a friendly reminder!', 'woo-ai-review-manager' );
+					}
+				} else {
+					$greeting = get_option( 'wairm_email_greeting', '' );
+					if ( empty( $greeting ) ) {
+						$greeting = __( 'Hi {customer_name}, thank you for your recent order!', 'woo-ai-review-manager' );
+					}
+				}
+				$greeting = str_replace(
+					[ '{customer_name}', '{store_name}' ],
+					[ sanitize_text_field( $email->customer_name ), sanitize_text_field( get_bloginfo( 'name' ) ) ],
+					$greeting
+				);
+				?>
+				<p><?php echo esc_html( $greeting ); ?></p>
 
-				<p><?php esc_html_e( 'We would love to hear what you think about the products you purchased:', 'woo-ai-review-manager' ); ?></p>
+				<?php
+				if ( $is_reminder ) {
+					$body_text = get_option( 'wairm_reminder_body_text', '' );
+					if ( empty( $body_text ) ) {
+						$body_text = __( 'We noticed you haven\'t had a chance to review your recent purchase yet. Your feedback helps other shoppers and helps us improve:', 'woo-ai-review-manager' );
+					}
+				} else {
+					$body_text = get_option( 'wairm_email_body_text', '' );
+					if ( empty( $body_text ) ) {
+						$body_text = __( 'We would love to hear what you think about the products you purchased:', 'woo-ai-review-manager' );
+					}
+				}
+				?>
+				<p><?php echo esc_html( $body_text ); ?></p>
 
 				<?php foreach ( $products as $product ) : ?>
 				<div class="product">
@@ -476,9 +511,22 @@ final class Email_Sender {
 
 				<p><?php esc_html_e( 'Please take a moment to share your experience by clicking the button below:', 'woo-ai-review-manager' ); ?></p>
 
-				<p style="text-align: center;">
+				<?php
+				if ( $is_reminder ) {
+					$button_text = get_option( 'wairm_reminder_button_text', '' );
+					if ( empty( $button_text ) ) {
+						$button_text = __( 'Write a Review', 'woo-ai-review-manager' );
+					}
+				} else {
+					$button_text = get_option( 'wairm_email_button_text', '' );
+					if ( empty( $button_text ) ) {
+						$button_text = __( 'Leave a Review', 'woo-ai-review-manager' );
+					}
+				}
+				?>
+				<p>
 					<a href="<?php echo esc_url( $review_link ); ?>" class="cta-button">
-						<?php esc_html_e( 'Leave a Review', 'woo-ai-review-manager' ); ?>
+						<?php echo esc_html( $button_text ); ?>
 					</a>
 				</p>
 

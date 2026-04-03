@@ -26,7 +26,7 @@ final class Dashboard_Page {
 			'manage_woocommerce',
 			'wairm-dashboard',
 			[ $this, 'render_page' ],
-			'dashicons-chart-bar',
+			'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgaGVpZ2h0PSIyMCIgd2lkdGg9IjIwIj48cGF0aCBmaWxsPSJibGFjayIgZD0iTTE3LjA4NTkgNC41YzAuNzgxLTAuNzgwNzkgMi4wNDcyLTAuNzgwNzggMi44MjgyIDBMMjEuNSA2LjA4NTk0YzAuNzgwOCAwLjc4MSAwLjc4MDggMi4wNDcxMiAwIDIuODI4MTJMOC43MDcwMyAyMS43MDdDOC41MTk1MSAyMS44OTQ1IDguMjY1MTYgMjIgOCAyMkg1Yy0wLjU1MjIxIDAtMC45OTk4OC0wLjQ0NzgtMS0xdi0zbDAuMDA0ODgtMC4wOTg2YzAuMDIyNzQtMC4yMjg5IDAuMTI0MDctMC40NDQ0IDAuMjg4MDktMC42MDg0ek02IDEuNWMwLjUwNDkzIDAgMC45MjY3OSAwLjMyNjQ0IDEuMDgwMDggMC43NzI0NmwwLjAyNzM0IDAuMDkwODIgMC4wNjY0MSAwLjIyODUyQzcuNTQ0MjcgMy43MjEgOC40NzU1IDQuNTk4MjYgOS42MzY3MiA0Ljg5MjU4IDEwLjEyODQgNS4wMTcxMiAxMC41IDUuNDYxNTEgMTAuNSA2YzAgMC41Mzg0OC0wLjM3MTcgMC45ODE5LTAuODYzMjggMS4xMDY0NS0xLjIzODY2IDAuMzEzODYtMi4yMTY0MyAxLjI5MTYxLTIuNTMwMjcgMi41MzAyN0M2Ljk4MTkxIDEwLjEyODQgNi41Mzg0OSAxMC41IDYgMTAuNXMtMC45ODE5MS0wLjM3MTYtMS4xMDY0NS0wLjg2MzI4QzQuNTc5NyA4LjM5ODA2IDMuNjAxOTQgNy40MjAzMSAyLjM2MzI4IDcuMTA2NDVjLTAuNDYwOTctMC4xMTY3OC0wLjgxNjg2LTAuNTEzODItMC44NTkzNy0xLjAwNjg0TDEuNSA2bDAuMDAzOTEtMC4wOTk2MWMwLjA0MjQ5LTAuNDkzMDUgMC4zOTgzOS0wLjg5MTAzIDAuODU5MzctMS4wMDc4MSAxLjIzODQ2LTAuMzEzOSAyLjIxNTM5LTEuMjkwODUgMi41MjkzLTIuNTI5M0M1LjAxNzEyIDEuODcxNjUgNS40NjE1MSAxLjUgNiAxLjVtOS43MDcgNy4yMDcwMyAxLjU4NiAxLjU4NTk3TDIwLjA4NTkgNy41IDE4LjUgNS45MTQwNnoiLz48L3N2Zz4=',
 			56
 		);
 
@@ -99,7 +99,7 @@ final class Dashboard_Page {
 			wp_send_json_error( [ 'message' => __( 'AI Client is not available. Please configure AI credentials first.', 'woo-ai-review-manager' ) ] );
 		}
 
-		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 5 );
+		$result = \WooAIReviewManager\Sentiment_Analyzer::process_pending( 1 );
 
 		wp_send_json_success( $result );
 	}
