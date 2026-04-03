@@ -2,6 +2,63 @@
 document.addEventListener( 'DOMContentLoaded', function () {
 	'use strict';
 
+	// Animate bar fills on load.
+	var bars = document.querySelectorAll( '.wairm-bar-fill[data-width]' );
+	requestAnimationFrame( function () {
+		bars.forEach( function ( bar ) {
+			bar.style.width = bar.getAttribute( 'data-width' ) + '%';
+		} );
+	} );
+
+	// Sparkline tooltips.
+	var sparklines = document.querySelectorAll( '.wairm-kpi-sparkline' );
+	sparklines.forEach( function ( container ) {
+		var svg = container.querySelector( 'svg' );
+		if ( ! svg ) return;
+
+		var tooltip = document.createElement( 'div' );
+		tooltip.className = 'wairm-sparkline-tooltip';
+		container.appendChild( tooltip );
+
+		svg.addEventListener( 'mouseenter', function () {
+			tooltip.classList.add( 'is-visible' );
+		} );
+
+		svg.addEventListener( 'mouseleave', function () {
+			tooltip.classList.remove( 'is-visible' );
+		} );
+
+		svg.addEventListener( 'mousemove', function ( e ) {
+			var rect = svg.getBoundingClientRect();
+			var x = e.clientX - rect.left;
+			var pct = x / rect.width;
+
+			var card = container.closest( '.wairm-kpi-card' );
+			var cardIndex = card ? Array.from( card.parentNode.children ).indexOf( card ) : 0;
+
+			var series;
+			if ( typeof wairm !== 'undefined' && wairm.sparkline_data ) {
+				if ( cardIndex === 0 ) series = wairm.sparkline_data.reviews;
+				else if ( cardIndex === 1 ) series = wairm.sparkline_data.scores;
+				else if ( cardIndex === 2 ) series = wairm.sparkline_data.conversions;
+			}
+
+			if ( ! series || series.length === 0 ) return;
+
+			var idx = Math.min( Math.round( pct * ( series.length - 1 ) ), series.length - 1 );
+			var val = series[ idx ];
+
+			var display;
+			if ( cardIndex === 1 ) display = Number( val ).toFixed( 2 );
+			else if ( cardIndex === 2 ) display = Number( val ).toFixed( 1 ) + '%';
+			else display = String( val );
+
+			tooltip.textContent = display;
+			tooltip.style.left = ( pct * 100 ) + '%';
+			tooltip.style.bottom = '100%';
+		} );
+	} );
+
 	// Analyze old reviews with batch processing and progress bar.
 	var analyzeBtn = document.getElementById( 'wairm-analyze-old-reviews' );
 	if ( analyzeBtn ) {
