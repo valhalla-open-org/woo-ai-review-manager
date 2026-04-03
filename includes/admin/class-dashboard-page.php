@@ -65,15 +65,16 @@ final class Dashboard_Page {
 	/**
 	 * Localize dashboard script with chart data.
 	 */
-	private function localize_dashboard_data( object $stats, int $pending_count, int $actionable_responses ): void {
+	private function localize_dashboard_data( object $stats, int $pending_count, int $actionable_responses, array $sparkline_data ): void {
 		wp_localize_script(
 			'wairm-dashboard',
 			'wairm',
 			[
-				'ajax_url'             => admin_url( 'admin-ajax.php' ),
-				'nonce'                => wp_create_nonce( 'wairm_dashboard' ),
-				'pending_count'        => $pending_count,
-				'i18n'                 => [
+				'ajax_url'        => admin_url( 'admin-ajax.php' ),
+				'nonce'           => wp_create_nonce( 'wairm_dashboard' ),
+				'pending_count'   => $pending_count,
+				'sparkline_data'  => $sparkline_data,
+				'i18n'            => [
 					'analyze_button'  => __( 'Analyze Old Reviews', 'woo-ai-review-manager' ),
 					'analyzing'       => __( 'Analyzing...', 'woo-ai-review-manager' ),
 					'batch_progress'  => /* translators: 1: processed, 2: total */ __( 'Analyzed %1$d of %2$d...', 'woo-ai-review-manager' ),
@@ -142,6 +143,241 @@ final class Dashboard_Page {
 		return $incomplete;
 	}
 
+	/**
+	 * Get sparkline trend data for KPI cards.
+	 *
+	 * @param string $period Current period filter value.
+	 * @return array{reviews: array, scores: array, conversions: array}
+	 */
+	private function get_sparkline_data( string $period ): array {
+		global $wpdb;
+
+		$sentiment_table   = $wpdb->prefix . 'wairm_review_sentiment';
+		$invitations_table = $wpdb->prefix . 'wairm_review_invitations';
+
+		$use_weekly = in_array( $period, [ '90', 'all' ], true );
+		$group_expr = $use_weekly ? 'YEARWEEK(s.analyzed_at, 1)' : 'DATE(s.analyzed_at)';
+		$inv_group  = $use_weekly ? 'YEARWEEK(i.sent_at, 1)' : 'DATE(i.sent_at)';
+
+		$date_filter     = '';
+		$inv_date_filter = '';
+		if ( 'all' !== $period ) {
+			$cutoff          = gmdate( 'Y-m-d H:i:s', strtotime( "-{$period} days" ) );
+			$date_filter     = $wpdb->prepare( ' AND s.analyzed_at >= %s', $cutoff );
+			$inv_date_filter = $wpdb->prepare( ' AND i.sent_at >= %s', $cutoff );
+		}
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$review_trends = $wpdb->get_results(
+			"SELECT {$group_expr} as period_key,
+					COUNT(*) as review_count,
+					AVG(score) as avg_score
+			 FROM {$sentiment_table} s
+			 WHERE 1=1 {$date_filter}
+			 GROUP BY period_key
+			 ORDER BY period_key ASC"
+		);
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$conversion_trends = $wpdb->get_results(
+			"SELECT {$inv_group} as period_key,
+					COUNT(*) as total_sent,
+					SUM(CASE WHEN i.status = 'reviewed' THEN 1 ELSE 0 END) as reviewed
+			 FROM {$invitations_table} i
+			 WHERE i.status != 'pending' {$inv_date_filter}
+			 GROUP BY period_key
+			 ORDER BY period_key ASC"
+		);
+
+		return [
+			'reviews'     => array_map( static fn( $r ) => (int) $r->review_count, $review_trends ),
+			'scores'      => array_map( static fn( $r ) => round( (float) $r->avg_score, 2 ), $review_trends ),
+			'conversions' => array_map( static function ( $r ) {
+				return $r->total_sent > 0 ? round( ( $r->reviewed / $r->total_sent ) * 100, 1 ) : 0;
+			}, $conversion_trends ),
+		];
+	}
+
+	/**
+	 * Get stats for the previous equivalent period (for delta calculation).
+	 *
+	 * @param string $period Current period filter value.
+	 * @return object{total_reviews: int, avg_score: float, conversion_rate: float}
+	 */
+	private function get_previous_period_stats( string $period ): object {
+		global $wpdb;
+
+		$sentiment_table   = $wpdb->prefix . 'wairm_review_sentiment';
+		$invitations_table = $wpdb->prefix . 'wairm_review_invitations';
+
+		$defaults = (object) [
+			'total_reviews'   => 0,
+			'avg_score'       => 0.0,
+			'conversion_rate' => 0.0,
+		];
+
+		if ( 'all' === $period ) {
+			return $defaults;
+		}
+
+		$days       = (int) $period;
+		$prev_end   = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
+		$prev_start = gmdate( 'Y-m-d H:i:s', strtotime( '-' . ( $days * 2 ) . ' days' ) );
+
+		$prev_sentiment = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT COUNT(*) as total_reviews, AVG(score) as avg_score
+				 FROM {$sentiment_table}
+				 WHERE analyzed_at >= %s AND analyzed_at < %s",
+				$prev_start,
+				$prev_end
+			)
+		);
+
+		$prev_email = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT
+					COUNT(*) as total_sent,
+					SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) as reviewed
+				 FROM {$invitations_table}
+				 WHERE status != 'pending'
+				   AND sent_at >= %s AND sent_at < %s",
+				$prev_start,
+				$prev_end
+			)
+		);
+
+		return (object) [
+			'total_reviews'   => (int) ( $prev_sentiment->total_reviews ?? 0 ),
+			'avg_score'       => round( (float) ( $prev_sentiment->avg_score ?? 0 ), 2 ),
+			'conversion_rate' => ( $prev_email && $prev_email->total_sent > 0 )
+				? round( ( $prev_email->reviewed / $prev_email->total_sent ) * 100, 1 )
+				: 0.0,
+		];
+	}
+
+	/**
+	 * Get email funnel counts for the current period.
+	 *
+	 * @param string $date_where SQL WHERE fragment for date filtering.
+	 * @return object{sent: int, clicked: int, reviewed: int}
+	 */
+	private function get_email_funnel( string $date_where ): object {
+		global $wpdb;
+
+		$invitations_table = $wpdb->prefix . 'wairm_review_invitations';
+		$inv_date_where    = str_replace( 's.analyzed_at', 'i.sent_at', $date_where );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$row = $wpdb->get_row(
+			"SELECT
+				COUNT(CASE WHEN i.status IN ('sent','clicked','reviewed','expired') THEN 1 END) as sent,
+				COUNT(CASE WHEN i.status IN ('clicked','reviewed') THEN 1 END) as clicked,
+				COUNT(CASE WHEN i.status = 'reviewed' THEN 1 END) as reviewed
+			 FROM {$invitations_table} i
+			 WHERE 1=1 {$inv_date_where}"
+		);
+
+		return (object) [
+			'sent'     => (int) ( $row->sent ?? 0 ),
+			'clicked'  => (int) ( $row->clicked ?? 0 ),
+			'reviewed' => (int) ( $row->reviewed ?? 0 ),
+		];
+	}
+
+	/**
+	 * Generate an inline SVG sparkline from a data array.
+	 *
+	 * @param array<float|int> $data        Data points.
+	 * @param bool             $is_positive Whether the trend is positive.
+	 * @return string SVG markup.
+	 */
+	private function render_sparkline_svg( array $data, bool $is_positive ): string {
+		if ( count( $data ) < 2 ) {
+			return '';
+		}
+
+		$width  = 64;
+		$height = 28;
+		$color  = $is_positive ? 'var(--positive)' : 'var(--negative)';
+		$count  = count( $data );
+		$max    = max( $data );
+		$min    = min( $data );
+		$range  = $max - $min ?: 1;
+
+		$points = [];
+		for ( $i = 0; $i < $count; $i++ ) {
+			$x = round( ( $i / ( $count - 1 ) ) * $width, 1 );
+			$y = round( $height - ( ( $data[ $i ] - $min ) / $range ) * ( $height - 4 ) - 2, 1 );
+			$points[] = "{$x},{$y}";
+		}
+
+		$polyline  = implode( ' ', $points );
+		$fill_path = "M{$points[0]} " . implode( ' L', array_slice( $points, 1 ) ) . " L{$width},{$height} L0,{$height} Z";
+
+		$gradient_id = 'sg' . wp_unique_id();
+
+		return sprintf(
+			'<svg width="%1$d" height="%2$d" viewBox="0 0 %1$d %2$d" aria-hidden="true" focusable="false">
+				<defs><linearGradient id="%3$s" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%%" stop-color="%4$s" stop-opacity="0.15"/>
+					<stop offset="100%%" stop-color="%4$s" stop-opacity="0"/>
+				</linearGradient></defs>
+				<path d="%5$s" fill="url(#%3$s)"/>
+				<polyline points="%6$s" fill="none" stroke="%4$s" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>',
+			$width,
+			$height,
+			esc_attr( $gradient_id ),
+			esc_attr( $color ),
+			esc_attr( $fill_path ),
+			esc_attr( $polyline )
+		);
+	}
+
+	/**
+	 * Format a delta value for display.
+	 *
+	 * @param float  $current  Current value.
+	 * @param float  $previous Previous value.
+	 * @param string $format   'percent' for % change, 'absolute' for raw difference.
+	 * @param string $period   Current period ('all' = no delta shown).
+	 * @return array{html: string, is_positive: bool}
+	 */
+	private function format_delta( float $current, float $previous, string $format, string $period ): array {
+		if ( 'all' === $period || 0.0 === $previous ) {
+			return [
+				'html'        => '<span class="wairm-kpi-delta is-neutral">&mdash;</span>',
+				'is_positive' => true,
+			];
+		}
+
+		if ( 'percent' === $format ) {
+			$change  = ( ( $current - $previous ) / $previous ) * 100;
+			$display = ( $change >= 0 ? '+' : '' ) . round( $change, 1 ) . '%';
+		} else {
+			$change  = $current - $previous;
+			$display = ( $change >= 0 ? '+' : '' ) . number_format( $change, 2 );
+		}
+
+		$is_positive = $change >= 0;
+		$arrow       = $is_positive ? '&#9650;' : '&#9660;';
+		$class       = $is_positive ? 'is-positive' : 'is-negative';
+
+		$html = sprintf(
+			'<span class="wairm-kpi-delta %s">%s %s <span class="delta-context">%s</span></span>',
+			esc_attr( $class ),
+			$arrow,
+			esc_html( $display ),
+			esc_html__( 'vs prev period', 'woo-ai-review-manager' )
+		);
+
+		return [
+			'html'        => $html,
+			'is_positive' => $is_positive,
+		];
+	}
+
 	public function render_page(): void {
 		global $wpdb;
 
@@ -197,7 +433,30 @@ final class Dashboard_Page {
 			"SELECT COUNT(*) FROM {$wpdb->prefix}wairm_email_queue WHERE status = 'failed'"
 		);
 
-		$this->localize_dashboard_data( $stats, $pending_count, $actionable_responses );
+		// New dashboard data.
+		$sparkline_data = $this->get_sparkline_data( $period );
+		$prev_stats     = $this->get_previous_period_stats( $period );
+		$email_funnel   = $this->get_email_funnel( $date_where );
+
+		// Current period conversion rate.
+		$current_conversion = $email_funnel->sent > 0
+			? round( ( $email_funnel->reviewed / $email_funnel->sent ) * 100, 1 )
+			: 0.0;
+
+		// Negative reviews needing response.
+		$negative_needing_response = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table}
+				 WHERE sentiment = %s
+				   AND ai_response_suggestion IS NOT NULL
+				   AND ai_response_status IN (%s, %s)",
+				'negative',
+				'generated',
+				'approved'
+			)
+		);
+
+		$this->localize_dashboard_data( $stats, $pending_count, $actionable_responses, $sparkline_data );
 
 		// Setup checklist.
 		$checklist = $this->get_setup_checklist();
