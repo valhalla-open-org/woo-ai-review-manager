@@ -501,6 +501,7 @@ final class Dashboard_Page {
 		$total_all_time = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
 		?>
 		<div class="wrap wairm-dashboard">
+			<hr class="wp-header-end">
 			<div class="wairm-page-header">
 				<h1><?php esc_html_e( 'AI Reviews', 'woo-ai-review-manager' ); ?></h1>
 				<div class="wairm-toolbar">
