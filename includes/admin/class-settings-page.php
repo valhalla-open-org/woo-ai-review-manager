@@ -95,12 +95,12 @@ final class Settings_Page {
 		] );
 		register_setting( 'wairm_settings_email', 'wairm_reminder_enabled', [
 			'type'              => 'string',
-			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_reminder_enabled', $v, [ $this, 'sanitize_yes_no' ] ),
 			'default'           => 'yes',
 		] );
 		register_setting( 'wairm_settings_email', 'wairm_reminder_delay_days', [
 			'type'              => 'integer',
-			'sanitize_callback' => 'absint',
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_reminder_delay_days', $v, 'absint' ),
 			'default'           => 14,
 		] );
 		register_setting( 'wairm_settings_email', 'wairm_invitation_expiry_days', [
@@ -134,25 +134,25 @@ final class Settings_Page {
 			'default'           => '',
 		] );
 
-		// Reminder email content.
+		// Reminder email content (pro only).
 		register_setting( 'wairm_settings_email', 'wairm_reminder_subject', [
 			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_reminder_subject', $v, 'sanitize_text_field' ),
 			'default'           => '',
 		] );
 		register_setting( 'wairm_settings_email', 'wairm_reminder_greeting', [
 			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_reminder_greeting', $v, 'sanitize_text_field' ),
 			'default'           => '',
 		] );
 		register_setting( 'wairm_settings_email', 'wairm_reminder_body_text', [
 			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_textarea_field',
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_reminder_body_text', $v, 'sanitize_textarea_field' ),
 			'default'           => '',
 		] );
 		register_setting( 'wairm_settings_email', 'wairm_reminder_button_text', [
 			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_reminder_button_text', $v, 'sanitize_text_field' ),
 			'default'           => '',
 		] );
 
@@ -164,17 +164,17 @@ final class Settings_Page {
 		] );
 		register_setting( 'wairm_settings_general', 'wairm_auto_respond_positive', [
 			'type'              => 'string',
-			'sanitize_callback' => [ $this, 'sanitize_yes_no' ],
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_auto_respond_positive', $v, [ $this, 'sanitize_yes_no' ] ),
 			'default'           => 'no',
 		] );
 		register_setting( 'wairm_settings_general', 'wairm_reply_as', [
 			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_key',
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_reply_as', $v, 'sanitize_key' ),
 			'default'           => 'store',
 		] );
 		register_setting( 'wairm_settings_general', 'wairm_support_email', [
 			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_email',
+			'sanitize_callback' => fn( $v ) => $this->sanitize_pro_only( 'wairm_support_email', $v, 'sanitize_email' ),
 			'default'           => '',
 		] );
 	}
@@ -184,6 +184,16 @@ final class Settings_Page {
 	 */
 	public function sanitize_yes_no( $value ): string {
 		return 'yes' === $value ? 'yes' : 'no';
+	}
+
+	/**
+	 * Return existing option value if user is not on a paid plan.
+	 */
+	private function sanitize_pro_only( string $option, $value, callable $sanitize ) {
+		if ( ! warc_fs()->is_paying() ) {
+			return get_option( $option, '' );
+		}
+		return $sanitize( $value );
 	}
 
 	/**

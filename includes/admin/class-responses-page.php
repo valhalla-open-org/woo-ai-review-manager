@@ -28,10 +28,15 @@ final class Responses_Page {
 	}
 
 	public function add_submenu_page(): void {
+		$menu_label = __( 'AI Responses', 'woo-ai-review-manager' );
+		if ( ! warc_fs()->is_paying() ) {
+			$menu_label .= ' <span class="wairm-pro-badge" style="font-size:9px;padding:1px 5px;margin-left:4px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-radius:3px;vertical-align:middle;">PRO</span>';
+		}
+
 		add_submenu_page(
 			'wairm-dashboard',
 			__( 'AI Responses', 'woo-ai-review-manager' ),
-			__( 'AI Responses', 'woo-ai-review-manager' ),
+			$menu_label,
 			'manage_woocommerce',
 			'wairm-responses',
 			[ $this, 'render_page' ]
@@ -102,6 +107,10 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
+		if ( ! warc_fs()->is_paying() ) {
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
 		global $wpdb;
 
 		$id     = absint( $_POST['sentiment_id'] ?? 0 );
@@ -152,6 +161,10 @@ final class Responses_Page {
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		if ( ! warc_fs()->is_paying() ) {
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -235,6 +248,10 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
+		if ( ! warc_fs()->is_paying() ) {
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
 		if ( ! \WooAIReviewManager\AI_Client::is_available() ) {
 			wp_send_json_error( [ 'message' => __( 'AI Client is not available.', 'woo-ai-review-manager' ) ] );
 		}
@@ -297,6 +314,10 @@ final class Responses_Page {
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		if ( ! warc_fs()->is_paying() ) {
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -412,6 +433,10 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
+		if ( ! warc_fs()->is_paying() ) {
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
 		global $wpdb;
 		$id = absint( $_POST['sentiment_id'] ?? 0 );
 
@@ -447,6 +472,10 @@ final class Responses_Page {
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+		}
+
+		if ( ! warc_fs()->is_paying() ) {
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
 		global $wpdb;

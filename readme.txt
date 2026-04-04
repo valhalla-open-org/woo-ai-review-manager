@@ -14,12 +14,19 @@ Automated review collection, sentiment analysis, and AI-powered response suggest
 
 WooCommerce AI Review Manager helps store owners collect, analyze, and respond to customer reviews using AI.
 
-**Key Features:**
+**Free Features:**
 
-* **Post-Purchase Review Invitations** - Automatically send email invitations after order completion with customizable templates and reminders.
+* **Post-Purchase Review Invitations** - Automatically send email invitations after order completion with customizable templates.
 * **AI Sentiment Analysis** - Analyze review sentiment, score, and key phrases using the WordPress AI Client API.
-* **Smart Response Suggestions** - AI-generated response suggestions for negative reviews, with optional positive review responses.
-* **Analytics Dashboard** - Visual dashboard with sentiment trends, KPI cards, and email funnel metrics.
+* **Analytics Dashboard** - KPI cards, sentiment breakdown, recent reviews, and top products.
+* **Negative Review Flagging** - Automatically flag reviews below your configured threshold.
+
+**Pro Features:**
+
+* **AI Response Suggestions** - AI-generated response suggestions you can approve, edit, and post as replies.
+* **Auto-respond to Positive Reviews** - Optionally generate responses for positive reviews too.
+* **Email Reminders** - Automated follow-up emails to increase review conversion rates.
+* **Advanced Dashboard** - Sparkline trends, period comparisons, and email funnel analytics.
 * **AI-Powered Insights** - Generate product, trend, operational, and strategic insights from your review data.
 * **CSV Export** - Export review and sentiment data for external analysis.
 

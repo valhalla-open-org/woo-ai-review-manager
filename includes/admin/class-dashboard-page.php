@@ -520,8 +520,8 @@ final class Dashboard_Page {
 			<div class="wairm-page-header">
 				<h1><?php esc_html_e( 'AI Reviews', 'woo-ai-review-manager' ); ?></h1>
 				<div class="wairm-toolbar">
-					<a href="<?php echo $is_paying ? esc_url( admin_url( 'admin.php?page=wairm-responses' ) ) : '#'; ?>"
-					   class="wairm-toolbar-btn <?php echo ! $is_paying ? 'wairm-pro-disabled' : ''; ?> <?php echo $is_paying && $actionable_responses > 0 ? 'has-badge' : ''; ?>">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses' ) ); ?>"
+					   class="wairm-toolbar-btn <?php echo $is_paying && $actionable_responses > 0 ? 'has-badge' : ''; ?>">
 						<?php esc_html_e( 'Responses', 'woo-ai-review-manager' ); ?>
 						<?php if ( $is_paying && $actionable_responses > 0 ) : ?>
 							<span class="toolbar-badge"><?php echo absint( $actionable_responses ); ?></span>
