@@ -96,9 +96,9 @@ final class Review_Collector {
 			[ '%d', '%s', '%s' ]
 		);
 
-		// Queue reminder if enabled.
+		// Queue reminder if enabled (pro only).
 		$reminder_enabled = get_option( 'wairm_reminder_enabled', 'yes' );
-		if ( 'yes' === $reminder_enabled ) {
+		if ( 'yes' === $reminder_enabled && warc_fs()->is_paying() ) {
 			$reminder_days = absint( get_option( 'wairm_reminder_delay_days', 14 ) );
 			$reminder_at   = gmdate( 'Y-m-d H:i:s', strtotime( "+{$reminder_days} days", strtotime( $now ) ) );
 

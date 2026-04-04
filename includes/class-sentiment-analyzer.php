@@ -80,13 +80,15 @@ final class Sentiment_Analyzer {
 			[ '%d', '%d', '%s', '%f', '%s' ]
 		);
 
-		// Auto-generate response for negative reviews, and optionally for positive/neutral.
-		$threshold       = (float) get_option( 'wairm_negative_threshold', '0.30' );
-		$should_generate = $result['score'] < $threshold
-			|| 'yes' === get_option( 'wairm_auto_respond_positive', 'no' );
+		// Auto-generate response suggestions (pro only — avoids spending AI tokens for free users).
+		if ( warc_fs()->is_paying() ) {
+			$threshold       = (float) get_option( 'wairm_negative_threshold', '0.30' );
+			$should_generate = $result['score'] < $threshold
+				|| 'yes' === get_option( 'wairm_auto_respond_positive', 'no' );
 
-		if ( $should_generate ) {
-			$this->generate_response_suggestion( $wpdb->insert_id, $comment, $product_name, $result['sentiment'] );
+			if ( $should_generate ) {
+				$this->generate_response_suggestion( $wpdb->insert_id, $comment, $product_name, $result['sentiment'] );
+			}
 		}
 	}
 

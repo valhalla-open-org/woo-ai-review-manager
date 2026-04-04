@@ -555,8 +555,18 @@ final class Settings_Page {
 					</table>
 
 					<!-- ── Reminder Email ── -->
-					<h2><?php esc_html_e( 'Reminder Email', 'woo-ai-review-manager' ); ?></h2>
+					<h2>
+						<?php esc_html_e( 'Reminder Email', 'woo-ai-review-manager' ); ?>
+						<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span><?php endif; ?>
+					</h2>
 					<p class="description"><?php esc_html_e( 'Sent to customers who haven\'t reviewed after the initial invitation. Uses same placeholders.', 'woo-ai-review-manager' ); ?></p>
+					<?php if ( ! warc_fs()->is_paying() ) : ?>
+						<div class="wairm-pro-gate">
+							<div class="wairm-upgrade-banner">
+								<p><?php esc_html_e( 'Automated follow-up reminders help increase your review conversion rate.', 'woo-ai-review-manager' ); ?></p>
+								<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'woo-ai-review-manager' ); ?></a>
+							</div>
+					<?php endif; ?>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
@@ -564,7 +574,7 @@ final class Settings_Page {
 							</th>
 							<td>
 								<label>
-									<input type="checkbox" id="wairm_reminder_enabled" name="wairm_reminder_enabled" value="yes" <?php checked( get_option( 'wairm_reminder_enabled', 'yes' ), 'yes' ); ?> />
+									<input type="checkbox" id="wairm_reminder_enabled" name="wairm_reminder_enabled" value="yes" <?php checked( get_option( 'wairm_reminder_enabled', 'yes' ), 'yes' ); ?> <?php disabled( ! warc_fs()->is_paying() ); ?> />
 									<?php esc_html_e( 'Send a reminder if the customer doesn\'t review', 'woo-ai-review-manager' ); ?>
 								</label>
 							</td>
@@ -574,7 +584,7 @@ final class Settings_Page {
 								<label for="wairm_reminder_delay_days"><?php esc_html_e( 'Send After', 'woo-ai-review-manager' ); ?></label>
 							</th>
 							<td>
-								<input type="number" id="wairm_reminder_delay_days" name="wairm_reminder_delay_days" value="<?php echo esc_attr( get_option( 'wairm_reminder_delay_days', '14' ) ); ?>" min="1" max="60" />
+								<input type="number" id="wairm_reminder_delay_days" name="wairm_reminder_delay_days" value="<?php echo esc_attr( get_option( 'wairm_reminder_delay_days', '14' ) ); ?>" min="1" max="60" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 								<span><?php esc_html_e( 'days after initial invitation', 'woo-ai-review-manager' ); ?></span>
 							</td>
 						</tr>
@@ -583,7 +593,7 @@ final class Settings_Page {
 								<label for="wairm_reminder_subject"><?php esc_html_e( 'Subject', 'woo-ai-review-manager' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_reminder_subject" name="wairm_reminder_subject" value="<?php echo esc_attr( get_option( 'wairm_reminder_subject', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'We\'d still love to hear from you!', 'woo-ai-review-manager' ); ?>" />
+								<input type="text" id="wairm_reminder_subject" name="wairm_reminder_subject" value="<?php echo esc_attr( get_option( 'wairm_reminder_subject', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'We\'d still love to hear from you!', 'woo-ai-review-manager' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 							</td>
 						</tr>
 						<tr>
@@ -591,7 +601,7 @@ final class Settings_Page {
 								<label for="wairm_reminder_greeting"><?php esc_html_e( 'Greeting', 'woo-ai-review-manager' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_reminder_greeting" name="wairm_reminder_greeting" value="<?php echo esc_attr( get_option( 'wairm_reminder_greeting', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Hi {customer_name}, just a friendly reminder!', 'woo-ai-review-manager' ); ?>" />
+								<input type="text" id="wairm_reminder_greeting" name="wairm_reminder_greeting" value="<?php echo esc_attr( get_option( 'wairm_reminder_greeting', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Hi {customer_name}, just a friendly reminder!', 'woo-ai-review-manager' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 							</td>
 						</tr>
 						<tr>
@@ -599,7 +609,7 @@ final class Settings_Page {
 								<label for="wairm_reminder_body_text"><?php esc_html_e( 'Body Text', 'woo-ai-review-manager' ); ?></label>
 							</th>
 							<td>
-								<textarea id="wairm_reminder_body_text" name="wairm_reminder_body_text" rows="3" class="regular-text" placeholder="<?php echo esc_attr__( 'We noticed you haven\'t had a chance to review your recent purchase yet. Your feedback helps other shoppers and helps us improve:', 'woo-ai-review-manager' ); ?>"><?php echo esc_textarea( get_option( 'wairm_reminder_body_text', '' ) ); ?></textarea>
+								<textarea id="wairm_reminder_body_text" name="wairm_reminder_body_text" rows="3" class="regular-text" placeholder="<?php echo esc_attr__( 'We noticed you haven\'t had a chance to review your recent purchase yet. Your feedback helps other shoppers and helps us improve:', 'woo-ai-review-manager' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?>><?php echo esc_textarea( get_option( 'wairm_reminder_body_text', '' ) ); ?></textarea>
 							</td>
 						</tr>
 						<tr>
@@ -607,10 +617,13 @@ final class Settings_Page {
 								<label for="wairm_reminder_button_text"><?php esc_html_e( 'Button Text', 'woo-ai-review-manager' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_reminder_button_text" name="wairm_reminder_button_text" value="<?php echo esc_attr( get_option( 'wairm_reminder_button_text', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Write a Review', 'woo-ai-review-manager' ); ?>" />
+								<input type="text" id="wairm_reminder_button_text" name="wairm_reminder_button_text" value="<?php echo esc_attr( get_option( 'wairm_reminder_button_text', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Write a Review', 'woo-ai-review-manager' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 							</td>
 						</tr>
 					</table>
+					<?php if ( ! warc_fs()->is_paying() ) : ?>
+						</div>
+					<?php endif; ?>
 
 					<!-- ── Preview & Test ── -->
 					<h2><?php esc_html_e( 'Preview & Test', 'woo-ai-review-manager' ); ?></h2>
@@ -640,13 +653,25 @@ final class Settings_Page {
 								</p>
 							</td>
 						</tr>
+						<?php if ( ! warc_fs()->is_paying() ) : ?>
+						</table>
+						<div class="wairm-pro-gate">
+							<div class="wairm-upgrade-banner">
+								<p><?php esc_html_e( 'AI response suggestions, auto-reply settings, and support email configuration are available in the Pro version.', 'woo-ai-review-manager' ); ?></p>
+								<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'woo-ai-review-manager' ); ?></a>
+							</div>
+							<table class="form-table">
+						<?php endif; ?>
 						<tr>
 							<th scope="row">
-								<label for="wairm_auto_respond_positive"><?php esc_html_e( 'Auto-respond to Positive Reviews', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_auto_respond_positive">
+									<?php esc_html_e( 'Auto-respond to Positive Reviews', 'woo-ai-review-manager' ); ?>
+									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span><?php endif; ?>
+								</label>
 							</th>
 							<td>
 								<label>
-									<input type="checkbox" id="wairm_auto_respond_positive" name="wairm_auto_respond_positive" value="yes" <?php checked( get_option( 'wairm_auto_respond_positive', 'no' ), 'yes' ); ?> />
+									<input type="checkbox" id="wairm_auto_respond_positive" name="wairm_auto_respond_positive" value="yes" <?php checked( get_option( 'wairm_auto_respond_positive', 'no' ), 'yes' ); ?> <?php disabled( ! warc_fs()->is_paying() ); ?> />
 									<?php esc_html_e( 'Automatically generate response suggestions for positive reviews', 'woo-ai-review-manager' ); ?>
 								</label>
 								<p class="description">
@@ -656,11 +681,14 @@ final class Settings_Page {
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_reply_as"><?php esc_html_e( 'Post Replies As', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_reply_as">
+									<?php esc_html_e( 'Post Replies As', 'woo-ai-review-manager' ); ?>
+									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span><?php endif; ?>
+								</label>
 							</th>
 							<td>
 								<?php $reply_as = get_option( 'wairm_reply_as', 'store' ); ?>
-								<select id="wairm_reply_as" name="wairm_reply_as">
+								<select id="wairm_reply_as" name="wairm_reply_as" <?php disabled( ! warc_fs()->is_paying() ); ?>>
 									<option value="store" <?php selected( $reply_as, 'store' ); ?>>
 										<?php
 										$store_label = get_option( 'wairm_email_from_name', '' );
@@ -685,15 +713,23 @@ final class Settings_Page {
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_support_email"><?php esc_html_e( 'Support Email', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_support_email">
+									<?php esc_html_e( 'Support Email', 'woo-ai-review-manager' ); ?>
+									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span><?php endif; ?>
+								</label>
 							</th>
 							<td>
-								<input type="email" id="wairm_support_email" name="wairm_support_email" value="<?php echo esc_attr( get_option( 'wairm_support_email', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" />
+								<input type="email" id="wairm_support_email" name="wairm_support_email" value="<?php echo esc_attr( get_option( 'wairm_support_email', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 								<p class="description">
 									<?php esc_html_e( 'Email address for customer support. The AI will reference this in response suggestions when directing customers to reach out. Defaults to the site admin email if left empty.', 'woo-ai-review-manager' ); ?>
 								</p>
 							</td>
 						</tr>
+						<?php if ( ! warc_fs()->is_paying() ) : ?>
+							</table>
+						</div>
+						<table class="form-table">
+						<?php endif; ?>
 						<tr>
 							<th scope="row">
 								<?php esc_html_e( 'Data & Privacy', 'woo-ai-review-manager' ); ?>

@@ -433,15 +433,23 @@ final class Dashboard_Page {
 			"SELECT COUNT(*) FROM {$wpdb->prefix}wairm_email_queue WHERE status = 'failed'"
 		);
 
-		// New dashboard data.
-		$sparkline_data = $this->get_sparkline_data( $period );
-		$prev_stats     = $this->get_previous_period_stats( $period );
-		$email_funnel   = $this->get_email_funnel( $date_where );
+		// Pro dashboard data.
+		$is_paying = warc_fs()->is_paying();
 
-		// Current period conversion rate.
-		$current_conversion = $email_funnel->sent > 0
-			? round( ( $email_funnel->reviewed / $email_funnel->sent ) * 100, 1 )
-			: 0.0;
+		if ( $is_paying ) {
+			$sparkline_data = $this->get_sparkline_data( $period );
+			$prev_stats     = $this->get_previous_period_stats( $period );
+			$email_funnel   = $this->get_email_funnel( $date_where );
+
+			$current_conversion = $email_funnel->sent > 0
+				? round( ( $email_funnel->reviewed / $email_funnel->sent ) * 100, 1 )
+				: 0.0;
+		} else {
+			$sparkline_data     = [ 'reviews' => [], 'scores' => [], 'conversions' => [] ];
+			$prev_stats         = (object) [ 'total_reviews' => 0, 'avg_score' => 0, 'conversion_rate' => 0 ];
+			$email_funnel       = (object) [ 'sent' => 0, 'clicked' => 0, 'reviewed' => 0 ];
+			$current_conversion = 0.0;
+		}
 
 		// Negative reviews needing response.
 		$negative_needing_response = (int) $wpdb->get_var(
@@ -491,9 +499,16 @@ final class Dashboard_Page {
 			)
 		);
 		// Calculate deltas.
-		$review_delta     = $this->format_delta( (float) ( $stats->total_reviews ?? 0 ), (float) $prev_stats->total_reviews, 'percent', $period );
-		$score_delta      = $this->format_delta( (float) ( $stats->avg_score ?? 0 ), $prev_stats->avg_score, 'absolute', $period );
-		$conversion_delta = $this->format_delta( $current_conversion, $prev_stats->conversion_rate, 'absolute', $period );
+		if ( $is_paying ) {
+			$review_delta     = $this->format_delta( (float) ( $stats->total_reviews ?? 0 ), (float) $prev_stats->total_reviews, 'percent', $period );
+			$score_delta      = $this->format_delta( (float) ( $stats->avg_score ?? 0 ), $prev_stats->avg_score, 'absolute', $period );
+			$conversion_delta = $this->format_delta( $current_conversion, $prev_stats->conversion_rate, 'absolute', $period );
+		} else {
+			$empty_delta      = [ 'html' => '', 'is_positive' => true ];
+			$review_delta     = $empty_delta;
+			$score_delta      = $empty_delta;
+			$conversion_delta = $empty_delta;
+		}
 
 		$needs_action_count = $negative_needing_response + $pending_count;
 
@@ -505,24 +520,34 @@ final class Dashboard_Page {
 			<div class="wairm-page-header">
 				<h1><?php esc_html_e( 'AI Reviews', 'woo-ai-review-manager' ); ?></h1>
 				<div class="wairm-toolbar">
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-responses' ) ); ?>"
-					   class="wairm-toolbar-btn <?php echo $actionable_responses > 0 ? 'has-badge' : ''; ?>">
+					<a href="<?php echo $is_paying ? esc_url( admin_url( 'admin.php?page=wairm-responses' ) ) : '#'; ?>"
+					   class="wairm-toolbar-btn <?php echo ! $is_paying ? 'wairm-pro-disabled' : ''; ?> <?php echo $is_paying && $actionable_responses > 0 ? 'has-badge' : ''; ?>">
 						<?php esc_html_e( 'Responses', 'woo-ai-review-manager' ); ?>
-						<?php if ( $actionable_responses > 0 ) : ?>
+						<?php if ( $is_paying && $actionable_responses > 0 ) : ?>
 							<span class="toolbar-badge"><?php echo absint( $actionable_responses ); ?></span>
+						<?php elseif ( ! $is_paying ) : ?>
+							<span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span>
 						<?php endif; ?>
 					</a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ); ?>" class="wairm-toolbar-btn">
 						<?php esc_html_e( 'Invitations', 'woo-ai-review-manager' ); ?>
 					</a>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-insights' ) ); ?>" class="wairm-toolbar-btn">
+					<a href="<?php echo $is_paying ? esc_url( admin_url( 'admin.php?page=wairm-insights' ) ) : '#'; ?>"
+					   class="wairm-toolbar-btn <?php echo ! $is_paying ? 'wairm-pro-disabled' : ''; ?>">
 						<?php esc_html_e( 'Insights', 'woo-ai-review-manager' ); ?>
+						<?php if ( ! $is_paying ) : ?>
+							<span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span>
+						<?php endif; ?>
 					</a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="wairm-toolbar-btn">
 						<?php esc_html_e( 'Settings', 'woo-ai-review-manager' ); ?>
 					</a>
-					<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=reviews' ), 'wairm_export_csv' ) ); ?>" class="wairm-toolbar-btn">
+					<a href="<?php echo $is_paying ? esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=reviews' ), 'wairm_export_csv' ) ) : '#'; ?>"
+					   class="wairm-toolbar-btn <?php echo ! $is_paying ? 'wairm-pro-disabled' : ''; ?>">
 						<?php esc_html_e( 'Export CSV', 'woo-ai-review-manager' ); ?>
+						<?php if ( ! $is_paying ) : ?>
+							<span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span>
+						<?php endif; ?>
 					</a>
 					<?php if ( $pending_count > 0 ) : ?>
 						<button class="wairm-toolbar-btn" id="wairm-analyze-old-reviews">
@@ -745,6 +770,14 @@ final class Dashboard_Page {
 
 				<div class="wairm-widget-card" role="region" aria-label="<?php esc_attr_e( 'Email Funnel', 'woo-ai-review-manager' ); ?>">
 					<h2 class="widget-title"><?php esc_html_e( 'Email Funnel', 'woo-ai-review-manager' ); ?></h2>
+					<?php if ( ! $is_paying ) : ?>
+						<div class="wairm-widget-empty">
+							<p><?php esc_html_e( 'Track how invitations convert to clicks and reviews.', 'woo-ai-review-manager' ); ?></p>
+							<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button" style="margin-top: 8px;">
+								<?php esc_html_e( 'Upgrade to Pro', 'woo-ai-review-manager' ); ?>
+							</a>
+						</div>
+					<?php else : ?>
 					<?php if ( $email_funnel->sent > 0 ) : ?>
 						<?php
 						$funnel_steps = [
@@ -795,6 +828,7 @@ final class Dashboard_Page {
 								<?php esc_html_e( 'Go to Invitations', 'woo-ai-review-manager' ); ?>
 							</a>
 						</div>
+					<?php endif; ?>
 					<?php endif; ?>
 				</div>
 			</div>

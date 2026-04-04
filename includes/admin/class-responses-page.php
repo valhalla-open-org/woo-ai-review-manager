@@ -636,6 +636,13 @@ final class Responses_Page {
 					</p>
 				</div>
 			<?php else : ?>
+				<?php if ( ! warc_fs()->is_paying() ) : ?>
+					<div class="wairm-upgrade-banner" style="margin-bottom: 20px;">
+						<p><?php esc_html_e( 'Upgrade to Pro to approve, edit, and post AI response suggestions as replies to your reviews.', 'woo-ai-review-manager' ); ?></p>
+						<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'woo-ai-review-manager' ); ?></a>
+					</div>
+				<?php endif; ?>
+				<?php if ( warc_fs()->is_paying() ) : ?>
 				<div class="wairm-bulk-bar" id="wairm-bulk-bar" style="display:none;">
 					<label><input type="checkbox" id="wairm-select-all"> <?php esc_html_e( 'Select all', 'woo-ai-review-manager' ); ?></label>
 					<span class="wairm-bulk-count"></span>
@@ -643,11 +650,12 @@ final class Responses_Page {
 					<button type="button" class="button button-primary wairm-bulk-post"><?php esc_html_e( 'Post Reply', 'woo-ai-review-manager' ); ?></button>
 					<button type="button" class="button wairm-bulk-dismiss"><?php esc_html_e( 'Dismiss', 'woo-ai-review-manager' ); ?></button>
 				</div>
+				<?php endif; ?>
 
 				<div class="wairm-response-list">
 					<?php foreach ( $rows as $row ) : ?>
 					<div class="wairm-response-card" data-id="<?php echo absint( $row->id ); ?>" data-status="<?php echo esc_attr( $row->ai_response_status ); ?>">
-						<?php if ( in_array( $row->ai_response_status, [ 'generated', 'approved' ], true ) ) : ?>
+						<?php if ( warc_fs()->is_paying() && in_array( $row->ai_response_status, [ 'generated', 'approved' ], true ) ) : ?>
 						<label class="wairm-bulk-check"><input type="checkbox" class="wairm-card-checkbox" value="<?php echo absint( $row->id ); ?>"></label>
 						<?php endif; ?>
 						<div class="wairm-response-header">
@@ -673,6 +681,7 @@ final class Responses_Page {
 							<span class="review-score"><?php esc_html_e( 'Score:', 'woo-ai-review-manager' ); ?> <?php echo esc_html( number_format( (float) $row->score, 2 ) ); ?></span>
 						</div>
 
+						<?php if ( warc_fs()->is_paying() ) : ?>
 						<div class="wairm-response-suggestion">
 							<strong><?php esc_html_e( 'AI Suggested Response:', 'woo-ai-review-manager' ); ?></strong>
 							<textarea class="wairm-response-text large-text" rows="3"><?php echo esc_textarea( $row->ai_response_suggestion ); ?></textarea>
@@ -709,6 +718,16 @@ final class Responses_Page {
 								</span>
 							<?php endif; ?>
 						</div>
+						<?php else : ?>
+						<div class="wairm-response-actions">
+							<button type="button" class="button button-primary" disabled><?php esc_html_e( 'Post Reply', 'woo-ai-review-manager' ); ?></button>
+							<button type="button" class="button" disabled><?php esc_html_e( 'Approve', 'woo-ai-review-manager' ); ?></button>
+							<button type="button" class="button" disabled><?php esc_html_e( 'Dismiss', 'woo-ai-review-manager' ); ?></button>
+							<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button" style="background:#7c3aed;border-color:#6d28d9;color:#fff;text-shadow:none;white-space:nowrap;">
+								<?php esc_html_e( 'Upgrade to Pro — AI responses, auto-replies & more', 'woo-ai-review-manager' ); ?>
+							</a>
+						</div>
+						<?php endif; ?>
 					</div>
 					<?php endforeach; ?>
 				</div>

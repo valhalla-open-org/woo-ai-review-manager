@@ -48,7 +48,7 @@ if ( function_exists( 'warc_fs' ) ) {
 					'has_premium_version' => true,
 					'has_addons'          => false,
 					'has_paid_plans'      => true,
-					'is_org_compliant'    => false,
+					'is_org_compliant'    => true,
 					'menu'                => array(
 						'slug'    => 'wairm-dashboard',
 						'contact' => false,
