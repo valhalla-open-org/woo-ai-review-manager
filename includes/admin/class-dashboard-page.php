@@ -532,12 +532,8 @@ final class Dashboard_Page {
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ); ?>" class="wairm-toolbar-btn">
 						<?php esc_html_e( 'Invitations', 'woo-ai-review-manager' ); ?>
 					</a>
-					<a href="<?php echo $is_paying ? esc_url( admin_url( 'admin.php?page=wairm-insights' ) ) : '#'; ?>"
-					   class="wairm-toolbar-btn <?php echo ! $is_paying ? 'wairm-pro-disabled' : ''; ?>">
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-insights' ) ); ?>" class="wairm-toolbar-btn">
 						<?php esc_html_e( 'Insights', 'woo-ai-review-manager' ); ?>
-						<?php if ( ! $is_paying ) : ?>
-							<span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span>
-						<?php endif; ?>
 					</a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings' ) ); ?>" class="wairm-toolbar-btn">
 						<?php esc_html_e( 'Settings', 'woo-ai-review-manager' ); ?>

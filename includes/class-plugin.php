@@ -65,40 +65,6 @@ final class Plugin {
 		);
 	}
 
-	/**
-	 * Register placeholder menu pages for pro features so free users can see them.
-	 */
-	private function register_pro_upgrade_pages(): void {
-		$pages = [
-			[
-				'title' => __( 'Insights', 'woo-ai-review-manager' ),
-				'slug'  => 'wairm-insights',
-				'desc'  => __( 'Get AI-generated insights about product feedback, trends, and operational improvements.', 'woo-ai-review-manager' ),
-			],
-		];
-
-		add_action( 'admin_menu', function () use ( $pages ): void {
-			foreach ( $pages as $page ) {
-				add_submenu_page(
-					'wairm-dashboard',
-					$page['title'],
-					$page['title'] . ' <span class="wairm-pro-badge" style="font-size:9px;padding:1px 5px;margin-left:4px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-radius:3px;vertical-align:middle;">PRO</span>',
-					'manage_woocommerce',
-					$page['slug'],
-					function () use ( $page ): void {
-						printf(
-							'<div class="wrap"><div class="wairm-pro-page-prompt"><h2>%s</h2><p>%s</p><a href="%s" class="button button-primary">%s</a></div></div>',
-							esc_html( $page['title'] ),
-							esc_html( $page['desc'] ),
-							esc_url( warc_fs()->get_upgrade_url() ),
-							esc_html__( 'Upgrade to Pro', 'woo-ai-review-manager' )
-						);
-					}
-				);
-			}
-		} );
-	}
-
 	private function init_hooks(): void {
 		$is_paying = warc_fs()->is_paying();
 
@@ -109,12 +75,10 @@ final class Plugin {
 			new Admin\Settings_Page();
 
 			new Admin\Responses_Page();
+			new Admin\Insights_Page();
 
 			if ( $is_paying ) {
-				new Admin\Insights_Page();
 				new Admin\CSV_Export();
-			} else {
-				$this->register_pro_upgrade_pages();
 			}
 		}
 

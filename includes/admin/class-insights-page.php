@@ -86,6 +86,9 @@ final class Insights_Page {
 		if ( ! isset( self::CATEGORIES[ $active_tab ] ) ) {
 			$active_tab = 'product';
 		}
+		if ( ! warc_fs()->is_paying() && 'product' !== $active_tab ) {
+			$active_tab = 'product';
+		}
 
 		$initial_data = null;
 		$initial_html = null;
@@ -160,6 +163,10 @@ final class Insights_Page {
 		$category = sanitize_key( $_POST['category'] ?? '' );
 		if ( ! isset( self::CATEGORIES[ $category ] ) ) {
 			wp_send_json_error( [ 'message' => __( 'Invalid category.', 'woo-ai-review-manager' ) ] );
+		}
+
+		if ( ! warc_fs()->is_paying() && 'product' !== $category ) {
+			wp_send_json_error( [ 'message' => __( 'This insight category requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
 		$period = sanitize_key( $_POST['period'] ?? '90' );
@@ -256,6 +263,10 @@ final class Insights_Page {
 
 		if ( ! $row ) {
 			wp_send_json_error( [ 'message' => __( 'Insight not found.', 'woo-ai-review-manager' ) ] );
+		}
+
+		if ( ! warc_fs()->is_paying() && 'product' !== $row->category ) {
+			wp_send_json_error( [ 'message' => __( 'This insight category requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
 		}
 
 		$data = json_decode( $row->content, true );
@@ -439,6 +450,11 @@ final class Insights_Page {
 			$active_tab = 'product';
 		}
 
+		// Free users can only access the product tab.
+		if ( ! warc_fs()->is_paying() && 'product' !== $active_tab ) {
+			$active_tab = 'product';
+		}
+
 		$history      = $this->get_history( $active_tab );
 		$has_insights = ! empty( $history );
 
@@ -465,12 +481,18 @@ final class Insights_Page {
 			<h1><?php esc_html_e( 'Review Insights', 'woo-ai-review-manager' ); ?></h1>
 			<hr class="wp-header-end">
 
+			<?php $is_paying = warc_fs()->is_paying(); ?>
 			<nav class="nav-tab-wrapper wairm-insights-tabs">
 				<?php foreach ( self::CATEGORIES as $slug => $label ) : ?>
+					<?php $is_free_tab = 'product' === $slug; ?>
 					<a href="<?php echo esc_url( add_query_arg( 'tab', $slug, $base_url ) ); ?>"
-					   class="nav-tab <?php echo $active_tab === $slug ? 'nav-tab-active' : ''; ?>"
-					   data-tab="<?php echo esc_attr( $slug ); ?>">
+					   class="nav-tab <?php echo $active_tab === $slug ? 'nav-tab-active' : ''; ?> <?php echo ! $is_paying && ! $is_free_tab ? 'wairm-pro-disabled' : ''; ?>"
+					   data-tab="<?php echo esc_attr( $slug ); ?>"
+					   <?php echo ! $is_paying && ! $is_free_tab ? 'onclick="return false;"' : ''; ?>>
 						<?php echo esc_html( $label ); ?>
+						<?php if ( ! $is_paying && ! $is_free_tab ) : ?>
+							<span class="wairm-pro-badge" style="font-size:9px;padding:1px 4px;"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span>
+						<?php endif; ?>
 					</a>
 				<?php endforeach; ?>
 			</nav>
