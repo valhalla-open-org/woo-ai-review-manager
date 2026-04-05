@@ -22,7 +22,7 @@ final class CSV_Export {
 	 */
 	public function handle_export(): void {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_die( esc_html__( 'Permission denied.', 'woo-ai-review-manager' ), 403 );
+			wp_die( esc_html__( 'Permission denied.', 'ai-review-manager-for-woocommerce' ), 403 );
 		}
 
 		check_admin_referer( 'wairm_export_csv' );
@@ -40,7 +40,7 @@ final class CSV_Export {
 				$this->export_responses();
 				break;
 			default:
-				wp_die( esc_html__( 'Invalid export type.', 'woo-ai-review-manager' ) );
+				wp_die( esc_html__( 'Invalid export type.', 'ai-review-manager-for-woocommerce' ) );
 		}
 	}
 

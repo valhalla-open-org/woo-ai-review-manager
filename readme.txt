@@ -1,4 +1,4 @@
-=== WooCommerce AI Review Manager ===
+=== AI Review Manager for WooCommerce ===
 Contributors: valhallaopen
 Tags: woocommerce, reviews, ai, sentiment analysis, review management
 Requires at least: 7.0
@@ -12,7 +12,7 @@ Automated review collection, sentiment analysis, and AI-powered response suggest
 
 == Description ==
 
-WooCommerce AI Review Manager helps store owners collect, analyze, and respond to customer reviews using AI.
+AI Review Manager for WooCommerce helps store owners collect, analyze, and respond to customer reviews using AI.
 
 **Free Features:**
 

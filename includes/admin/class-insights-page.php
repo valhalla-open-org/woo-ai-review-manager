@@ -51,8 +51,8 @@ final class Insights_Page {
 	public function add_submenu_page(): void {
 		add_submenu_page(
 			'wairm-dashboard',
-			__( 'Insights', 'woo-ai-review-manager' ),
-			__( 'Insights', 'woo-ai-review-manager' ),
+			__( 'Insights', 'ai-review-manager-for-woocommerce' ),
+			__( 'Insights', 'ai-review-manager-for-woocommerce' ),
 			'manage_woocommerce',
 			'wairm-insights',
 			[ $this, 'render_page' ]
@@ -120,33 +120,33 @@ final class Insights_Page {
 				'initial_html'  => $initial_html,
 				'product_urls'  => $this->get_product_url_map(),
 				'i18n'         => [
-					'generating'       => __( 'Analyzing reviews...', 'woo-ai-review-manager' ),
-					'error'            => __( 'Failed to generate insights. Please try again.', 'woo-ai-review-manager' ),
-					'reviews'          => __( 'reviews', 'woo-ai-review-manager' ),
-					'no_data'          => __( 'Insufficient data', 'woo-ai-review-manager' ),
-					'strengths'        => __( 'Strengths', 'woo-ai-review-manager' ),
-					'complaints'       => __( 'Complaints', 'woo-ai-review-manager' ),
-					'sizing'           => __( 'Sizing', 'woo-ai-review-manager' ),
-					'priority_action'  => __( 'Priority Action', 'woo-ai-review-manager' ),
-					'emerging_issues'  => __( 'Emerging Issues', 'woo-ai-review-manager' ),
-					'product_shifts'   => __( 'Product Shifts', 'woo-ai-review-manager' ),
-					'patterns'         => __( 'Patterns', 'woo-ai-review-manager' ),
-					'shipping'         => __( 'Shipping & Fulfillment', 'woo-ai-review-manager' ),
-					'expectations'     => __( 'Expectations vs Reality', 'woo-ai-review-manager' ),
-					'price_value'      => __( 'Price & Value', 'woo-ai-review-manager' ),
-					'support'          => __( 'Customer Support', 'woo-ai-review-manager' ),
-					'priority_actions' => __( 'Priority Actions', 'woo-ai-review-manager' ),
-					'feature_requests' => __( 'Feature Requests', 'woo-ai-review-manager' ),
-					'competitive'      => __( 'Competitive Mentions', 'woo-ai-review-manager' ),
-					'repeat_signals'   => __( 'Repeat Purchase Signals', 'woo-ai-review-manager' ),
-					'marketing_quotes' => __( 'Marketing Quotes', 'woo-ai-review-manager' ),
-					'improving'        => __( 'Improving', 'woo-ai-review-manager' ),
-					'stable'           => __( 'Stable', 'woo-ai-review-manager' ),
-					'declining'        => __( 'Declining', 'woo-ai-review-manager' ),
-					'positive'         => __( 'Positive', 'woo-ai-review-manager' ),
-					'mixed'            => __( 'Mixed', 'woo-ai-review-manager' ),
-					'negative'         => __( 'Negative', 'woo-ai-review-manager' ),
-					'mentions'         => __( 'mentions', 'woo-ai-review-manager' ),
+					'generating'       => __( 'Analyzing reviews...', 'ai-review-manager-for-woocommerce' ),
+					'error'            => __( 'Failed to generate insights. Please try again.', 'ai-review-manager-for-woocommerce' ),
+					'reviews'          => __( 'reviews', 'ai-review-manager-for-woocommerce' ),
+					'no_data'          => __( 'Insufficient data', 'ai-review-manager-for-woocommerce' ),
+					'strengths'        => __( 'Strengths', 'ai-review-manager-for-woocommerce' ),
+					'complaints'       => __( 'Complaints', 'ai-review-manager-for-woocommerce' ),
+					'sizing'           => __( 'Sizing', 'ai-review-manager-for-woocommerce' ),
+					'priority_action'  => __( 'Priority Action', 'ai-review-manager-for-woocommerce' ),
+					'emerging_issues'  => __( 'Emerging Issues', 'ai-review-manager-for-woocommerce' ),
+					'product_shifts'   => __( 'Product Shifts', 'ai-review-manager-for-woocommerce' ),
+					'patterns'         => __( 'Patterns', 'ai-review-manager-for-woocommerce' ),
+					'shipping'         => __( 'Shipping & Fulfillment', 'ai-review-manager-for-woocommerce' ),
+					'expectations'     => __( 'Expectations vs Reality', 'ai-review-manager-for-woocommerce' ),
+					'price_value'      => __( 'Price & Value', 'ai-review-manager-for-woocommerce' ),
+					'support'          => __( 'Customer Support', 'ai-review-manager-for-woocommerce' ),
+					'priority_actions' => __( 'Priority Actions', 'ai-review-manager-for-woocommerce' ),
+					'feature_requests' => __( 'Feature Requests', 'ai-review-manager-for-woocommerce' ),
+					'competitive'      => __( 'Competitive Mentions', 'ai-review-manager-for-woocommerce' ),
+					'repeat_signals'   => __( 'Repeat Purchase Signals', 'ai-review-manager-for-woocommerce' ),
+					'marketing_quotes' => __( 'Marketing Quotes', 'ai-review-manager-for-woocommerce' ),
+					'improving'        => __( 'Improving', 'ai-review-manager-for-woocommerce' ),
+					'stable'           => __( 'Stable', 'ai-review-manager-for-woocommerce' ),
+					'declining'        => __( 'Declining', 'ai-review-manager-for-woocommerce' ),
+					'positive'         => __( 'Positive', 'ai-review-manager-for-woocommerce' ),
+					'mixed'            => __( 'Mixed', 'ai-review-manager-for-woocommerce' ),
+					'negative'         => __( 'Negative', 'ai-review-manager-for-woocommerce' ),
+					'mentions'         => __( 'mentions', 'ai-review-manager-for-woocommerce' ),
 				],
 			]
 		);
@@ -159,16 +159,16 @@ final class Insights_Page {
 		check_ajax_referer( 'wairm_insights', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		$category = sanitize_key( $_POST['category'] ?? '' );
 		if ( ! isset( self::CATEGORIES[ $category ] ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid category.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid category.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		if ( ! warc_fs()->is_paying() && 'product' !== $category ) {
-			wp_send_json_error( [ 'message' => __( 'This insight category requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'This insight category requires a Pro license.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		$period = sanitize_key( $_POST['period'] ?? '90' );
@@ -181,14 +181,14 @@ final class Insights_Page {
 			wp_send_json_error( [
 				'message' => sprintf(
 					/* translators: %s: period label */
-					__( 'Not enough reviews for "%s" to generate meaningful insights. At least 3 analyzed reviews are needed.', 'woo-ai-review-manager' ),
+					__( 'Not enough reviews for "%s" to generate meaningful insights. At least 3 analyzed reviews are needed.', 'ai-review-manager-for-woocommerce' ),
 					self::PERIODS[ $period ]
 				),
 			] );
 		}
 
 		if ( ! \WooAIReviewManager\AI_Client::is_available() ) {
-			wp_send_json_error( [ 'message' => __( 'AI Client is not available.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'AI Client is not available.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Sample if we have more than the limit.
@@ -223,7 +223,7 @@ final class Insights_Page {
 
 		$insight_id = $wpdb->insert_id;
 		if ( ! $insight_id ) {
-			wp_send_json_error( [ 'message' => __( 'Failed to save insight.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Failed to save insight.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		$history = $this->get_history( $category );
@@ -246,14 +246,14 @@ final class Insights_Page {
 		check_ajax_referer( 'wairm_insights', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
 
 		$insight_id = absint( $_POST['insight_id'] ?? 0 );
 		if ( ! $insight_id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -266,11 +266,11 @@ final class Insights_Page {
 		);
 
 		if ( ! $row ) {
-			wp_send_json_error( [ 'message' => __( 'Insight not found.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Insight not found.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		if ( ! warc_fs()->is_paying() && 'product' !== $row->category ) {
-			wp_send_json_error( [ 'message' => __( 'This insight category requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'This insight category requires a Pro license.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		$data = json_decode( $row->content, true );
@@ -488,7 +488,7 @@ final class Insights_Page {
 		$base_url = admin_url( 'admin.php?page=wairm-insights' );
 		?>
 		<div class="wrap wairm-insights">
-			<h1><?php esc_html_e( 'Review Insights', 'woo-ai-review-manager' ); ?></h1>
+			<h1><?php esc_html_e( 'Review Insights', 'ai-review-manager-for-woocommerce' ); ?></h1>
 			<hr class="wp-header-end">
 
 			<?php $is_paying = warc_fs()->is_paying(); ?>
@@ -501,7 +501,7 @@ final class Insights_Page {
 					   <?php echo ! $is_paying && ! $is_free_tab ? 'onclick="return false;"' : ''; ?>>
 						<?php echo esc_html( $label ); ?>
 						<?php if ( ! $is_paying && ! $is_free_tab ) : ?>
-							<span class="wairm-pro-badge" style="font-size:9px;padding:1px 4px;"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span>
+							<span class="wairm-pro-badge" style="font-size:9px;padding:1px 4px;"><?php esc_html_e( 'Pro', 'ai-review-manager-for-woocommerce' ); ?></span>
 						<?php endif; ?>
 					</a>
 				<?php endforeach; ?>
@@ -530,7 +530,7 @@ final class Insights_Page {
 									echo esc_html(
 										wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $entry['generated_at'] ) )
 										. ' — ' . $period_text
-										. ' (' . $entry['review_count'] . ' ' . __( 'reviews', 'woo-ai-review-manager' ) . ')'
+										. ' (' . $entry['review_count'] . ' ' . __( 'reviews', 'ai-review-manager-for-woocommerce' ) . ')'
 									);
 									?>
 								</option>
@@ -540,7 +540,7 @@ final class Insights_Page {
 
 						<button type="button" class="button button-primary" id="wairm-generate-insight">
 							<span class="dashicons dashicons-update"></span>
-							<?php echo $has_insights ? esc_html__( 'Generate New', 'woo-ai-review-manager' ) : esc_html__( 'Generate', 'woo-ai-review-manager' ); ?>
+							<?php echo $has_insights ? esc_html__( 'Generate New', 'ai-review-manager-for-woocommerce' ) : esc_html__( 'Generate', 'ai-review-manager-for-woocommerce' ); ?>
 						</button>
 					</div>
 				</div>
@@ -557,8 +557,8 @@ final class Insights_Page {
 							<div class="wairm-insight-empty-icon">
 								<span class="dashicons dashicons-lightbulb"></span>
 							</div>
-							<p><?php esc_html_e( 'No insights generated yet for this category.', 'woo-ai-review-manager' ); ?></p>
-							<p class="description"><?php esc_html_e( 'Select a time period and click "Generate" to analyze your reviews.', 'woo-ai-review-manager' ); ?></p>
+							<p><?php esc_html_e( 'No insights generated yet for this category.', 'ai-review-manager-for-woocommerce' ); ?></p>
+							<p class="description"><?php esc_html_e( 'Select a time period and click "Generate" to analyze your reviews.', 'ai-review-manager-for-woocommerce' ); ?></p>
 						</div>
 					<?php endif; ?>
 				</div>

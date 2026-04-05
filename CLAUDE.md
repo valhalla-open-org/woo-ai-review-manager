@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-WooCommerce AI Review Manager — a WordPress plugin that collects customer reviews, runs AI sentiment analysis, generates response suggestions, and sends post-purchase invitation emails. It targets **WordPress 7.0+** with the new AI Client API (`wp_ai_client_prompt`), **WooCommerce 8.0+**, and **PHP 8.0+**.
+AI Review Manager for WooCommerce — a WordPress plugin that collects customer reviews, runs AI sentiment analysis, generates response suggestions, and sends post-purchase invitation emails. It targets **WordPress 7.0+** with the new AI Client API (`wp_ai_client_prompt`), **WooCommerce 8.0+**, and **PHP 8.0+**.
 
 ## Development Environment
 
@@ -16,7 +16,7 @@ To test locally, activate the plugin in a WordPress site with WooCommerce instal
 
 ### Bootstrap Flow
 
-`woo-ai-review-manager.php` defines constants (`WAIRM_*`), checks dependencies (WooCommerce + `wp_ai_client_prompt`), registers the autoloader, then calls `Plugin::instance()` on `plugins_loaded` priority 20.
+`ai-review-manager-for-woocommerce.php` defines constants (`WAIRM_*`), checks dependencies (WooCommerce + `wp_ai_client_prompt`), registers the autoloader, then calls `Plugin::instance()` on `plugins_loaded` priority 20.
 
 ### Autoloader
 
@@ -66,7 +66,7 @@ Two controllers under `wairm/v1`:
 - Options are prefixed `wairm_`
 - Database tables are prefixed `wairm_`
 - AJAX actions are prefixed `wairm_`
-- Text domain: `woo-ai-review-manager`
+- Text domain: `ai-review-manager-for-woocommerce`
 - Translations exist for `de_DE` and `es_ES` in `languages/`
 - AI prompts instruct the model to respond in the site's locale language via `get_locale()`
 

@@ -28,14 +28,14 @@ final class Responses_Page {
 	}
 
 	public function add_submenu_page(): void {
-		$menu_label = __( 'AI Responses', 'woo-ai-review-manager' );
+		$menu_label = __( 'AI Responses', 'ai-review-manager-for-woocommerce' );
 		if ( ! warc_fs()->is_paying() ) {
 			$menu_label .= ' <span class="wairm-pro-badge" style="font-size:9px;padding:1px 5px;margin-left:4px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-radius:3px;vertical-align:middle;">PRO</span>';
 		}
 
 		add_submenu_page(
 			'wairm-dashboard',
-			__( 'AI Responses', 'woo-ai-review-manager' ),
+			__( 'AI Responses', 'ai-review-manager-for-woocommerce' ),
 			$menu_label,
 			'manage_woocommerce',
 			'wairm-responses',
@@ -70,28 +70,28 @@ final class Responses_Page {
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'nonce'    => wp_create_nonce( 'wairm_responses' ),
 				'i18n'     => [
-					'confirm_dismiss'      => __( 'Dismiss this response suggestion?', 'woo-ai-review-manager' ),
-					'confirm_post'         => __( 'Post this as a reply to the review? This will be visible to customers.', 'woo-ai-review-manager' ),
-					'posted'               => __( 'Reply posted successfully.', 'woo-ai-review-manager' ),
-					'updated'              => __( 'Response updated.', 'woo-ai-review-manager' ),
-					'regenerating'         => __( 'Regenerating...', 'woo-ai-review-manager' ),
-					'regenerated'          => __( 'New suggestion generated.', 'woo-ai-review-manager' ),
-					'regenerate'           => __( 'Regenerate', 'woo-ai-review-manager' ),
-					'error'                => __( 'Something went wrong. Please try again.', 'woo-ai-review-manager' ),
-					'empty_response'       => __( 'Response text cannot be empty.', 'woo-ai-review-manager' ),
-					'status_approved'      => __( 'Approved', 'woo-ai-review-manager' ),
-					'status_dismissed'     => __( 'Dismissed', 'woo-ai-review-manager' ),
-					'status_posted'        => __( 'Posted', 'woo-ai-review-manager' ),
-					'status_new'           => __( 'New', 'woo-ai-review-manager' ),
-					'bulk_confirm_approve' => __( 'Approve all selected responses?', 'woo-ai-review-manager' ),
-					'bulk_confirm_dismiss' => __( 'Dismiss all selected responses?', 'woo-ai-review-manager' ),
-					'bulk_confirm_post'    => __( 'Post all selected responses as replies? They will be visible to customers.', 'woo-ai-review-manager' ),
-					'bulk_done'            => __( 'Bulk action completed.', 'woo-ai-review-manager' ),
-					'no_selection'         => __( 'No responses selected.', 'woo-ai-review-manager' ),
-					'undo_dismiss'         => __( 'Undo Dismiss', 'woo-ai-review-manager' ),
-					'undo_success'         => __( 'Response restored.', 'woo-ai-review-manager' ),
-					'reply_updated'        => __( 'Posted reply updated.', 'woo-ai-review-manager' ),
-					'edit_reply'           => __( 'Update Reply', 'woo-ai-review-manager' ),
+					'confirm_dismiss'      => __( 'Dismiss this response suggestion?', 'ai-review-manager-for-woocommerce' ),
+					'confirm_post'         => __( 'Post this as a reply to the review? This will be visible to customers.', 'ai-review-manager-for-woocommerce' ),
+					'posted'               => __( 'Reply posted successfully.', 'ai-review-manager-for-woocommerce' ),
+					'updated'              => __( 'Response updated.', 'ai-review-manager-for-woocommerce' ),
+					'regenerating'         => __( 'Regenerating...', 'ai-review-manager-for-woocommerce' ),
+					'regenerated'          => __( 'New suggestion generated.', 'ai-review-manager-for-woocommerce' ),
+					'regenerate'           => __( 'Regenerate', 'ai-review-manager-for-woocommerce' ),
+					'error'                => __( 'Something went wrong. Please try again.', 'ai-review-manager-for-woocommerce' ),
+					'empty_response'       => __( 'Response text cannot be empty.', 'ai-review-manager-for-woocommerce' ),
+					'status_approved'      => __( 'Approved', 'ai-review-manager-for-woocommerce' ),
+					'status_dismissed'     => __( 'Dismissed', 'ai-review-manager-for-woocommerce' ),
+					'status_posted'        => __( 'Posted', 'ai-review-manager-for-woocommerce' ),
+					'status_new'           => __( 'New', 'ai-review-manager-for-woocommerce' ),
+					'bulk_confirm_approve' => __( 'Approve all selected responses?', 'ai-review-manager-for-woocommerce' ),
+					'bulk_confirm_dismiss' => __( 'Dismiss all selected responses?', 'ai-review-manager-for-woocommerce' ),
+					'bulk_confirm_post'    => __( 'Post all selected responses as replies? They will be visible to customers.', 'ai-review-manager-for-woocommerce' ),
+					'bulk_done'            => __( 'Bulk action completed.', 'ai-review-manager-for-woocommerce' ),
+					'no_selection'         => __( 'No responses selected.', 'ai-review-manager-for-woocommerce' ),
+					'undo_dismiss'         => __( 'Undo Dismiss', 'ai-review-manager-for-woocommerce' ),
+					'undo_success'         => __( 'Response restored.', 'ai-review-manager-for-woocommerce' ),
+					'reply_updated'        => __( 'Posted reply updated.', 'ai-review-manager-for-woocommerce' ),
+					'edit_reply'           => __( 'Update Reply', 'ai-review-manager-for-woocommerce' ),
 				],
 			]
 		);
@@ -104,11 +104,11 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		if ( ! warc_fs()->is_paying() ) {
-			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -119,7 +119,7 @@ final class Responses_Page {
 
 		$valid_actions = [ 'approved', 'dismissed' ];
 		if ( ! $id || ! in_array( $action, $valid_actions, true ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Validate state transition — only generated/approved responses can be updated.
@@ -132,7 +132,7 @@ final class Responses_Page {
 		);
 
 		if ( ! in_array( $current_status, [ 'generated', 'approved' ], true ) ) {
-			wp_send_json_error( [ 'message' => __( 'This response can no longer be modified.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'This response can no longer be modified.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		$update = [ 'ai_response_status' => $action ];
@@ -162,11 +162,11 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		if ( ! warc_fs()->is_paying() ) {
-			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -175,7 +175,7 @@ final class Responses_Page {
 		$text = sanitize_textarea_field( wp_unslash( $_POST['response_text'] ?? '' ) );
 
 		if ( ! $id || empty( $text ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -187,12 +187,12 @@ final class Responses_Page {
 		);
 
 		if ( ! $row ) {
-			wp_send_json_error( [ 'message' => __( 'Sentiment record not found.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Sentiment record not found.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Only generated/approved responses can be posted.
 		if ( ! in_array( $row->ai_response_status, [ 'generated', 'approved' ], true ) ) {
-			wp_send_json_error( [ 'message' => __( 'This response has already been posted or dismissed.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'This response has already been posted or dismissed.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		$current_user = wp_get_current_user();
@@ -224,7 +224,7 @@ final class Responses_Page {
 		] );
 
 		if ( ! $comment_id ) {
-			wp_send_json_error( [ 'message' => __( 'Failed to post reply.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Failed to post reply.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -249,22 +249,22 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		if ( ! warc_fs()->is_paying() ) {
-			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		if ( ! \WooAIReviewManager\AI_Client::is_available() ) {
-			wp_send_json_error( [ 'message' => __( 'AI Client is not available.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'AI Client is not available.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		global $wpdb;
 
 		$id = absint( $_POST['sentiment_id'] ?? 0 );
 		if ( ! $id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -279,7 +279,7 @@ final class Responses_Page {
 		);
 
 		if ( ! $row ) {
-			wp_send_json_error( [ 'message' => __( 'Not found.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Not found.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		$product      = wc_get_product( (int) $row->product_id );
@@ -319,11 +319,11 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		if ( ! warc_fs()->is_paying() ) {
-			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -333,7 +333,7 @@ final class Responses_Page {
 		$action = sanitize_key( $_POST['bulk_action'] ?? '' );
 
 		if ( empty( $ids ) || ! in_array( $action, [ 'approved', 'dismissed', 'post' ], true ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		$table     = $wpdb->prefix . 'wairm_review_sentiment';
@@ -443,18 +443,18 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		if ( ! warc_fs()->is_paying() ) {
-			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
 		$id = absint( $_POST['sentiment_id'] ?? 0 );
 
 		if ( ! $id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -464,7 +464,7 @@ final class Responses_Page {
 		) );
 
 		if ( 'dismissed' !== $current ) {
-			wp_send_json_error( [ 'message' => __( 'This response is not dismissed.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'This response is not dismissed.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -486,11 +486,11 @@ final class Responses_Page {
 		check_ajax_referer( 'wairm_responses', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		if ( ! warc_fs()->is_paying() ) {
-			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'This feature requires a Pro license.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -499,7 +499,7 @@ final class Responses_Page {
 		$text = sanitize_textarea_field( wp_unslash( $_POST['response_text'] ?? '' ) );
 
 		if ( ! $id || empty( $text ) ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -509,7 +509,7 @@ final class Responses_Page {
 		) );
 
 		if ( ! $row || 'sent' !== $row->ai_response_status ) {
-			wp_send_json_error( [ 'message' => __( 'This response has not been posted yet.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'This response has not been posted yet.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Find the reply comment (child of the review comment).
@@ -520,7 +520,7 @@ final class Responses_Page {
 		) );
 
 		if ( ! $reply_id ) {
-			wp_send_json_error( [ 'message' => __( 'Reply comment not found.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Reply comment not found.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		wp_update_comment( [
@@ -615,9 +615,9 @@ final class Responses_Page {
 		<?php $pending_analysis = \WooAIReviewManager\Sentiment_Analyzer::count_pending(); ?>
 		<div class="wrap wairm-responses">
 			<div class="wairm-page-header">
-				<h1><?php esc_html_e( 'AI Response Suggestions', 'woo-ai-review-manager' ); ?></h1>
+				<h1><?php esc_html_e( 'AI Response Suggestions', 'ai-review-manager-for-woocommerce' ); ?></h1>
 				<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=responses' ), 'wairm_export_csv' ) ); ?>" class="page-title-action">
-					<?php esc_html_e( 'Export CSV', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Export CSV', 'ai-review-manager-for-woocommerce' ); ?>
 				</a>
 			</div>
 			<hr class="wp-header-end">
@@ -634,7 +634,7 @@ final class Responses_Page {
 								'%1$s review is awaiting AI analysis. %2$sRun analysis on the Dashboard%3$s to generate sentiment scores and response suggestions.',
 								'%1$s reviews are awaiting AI analysis. %2$sRun analysis on the Dashboard%3$s to generate sentiment scores and response suggestions.',
 								$pending_analysis,
-								'woo-ai-review-manager'
+								'ai-review-manager-for-woocommerce'
 							),
 							'<strong>' . esc_html( (string) $pending_analysis ) . '</strong>',
 							'<a href="' . esc_url( admin_url( 'admin.php?page=wairm-dashboard' ) ) . '">',
@@ -649,27 +649,27 @@ final class Responses_Page {
 
 			<ul class="subsubsub">
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'actionable', $base_url ) ); ?>" class="<?php echo 'actionable' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Needs Action', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Needs Action', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( $count_generated + $count_approved ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'generated', $base_url ) ); ?>" class="<?php echo 'generated' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'New', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'New', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( $count_generated ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'approved', $base_url ) ); ?>" class="<?php echo 'approved' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Approved', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Approved', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( $count_approved ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'sent', $base_url ) ); ?>" class="<?php echo 'sent' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Posted', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Posted', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( $count_sent ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'dismissed', $base_url ) ); ?>" class="<?php echo 'dismissed' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Dismissed', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Dismissed', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( $count_dismissed ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'all', $base_url ) ); ?>" class="<?php echo 'all' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'All', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'All', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( $count_all ); ?>)</span>
 				</a></li>
 			</ul>
@@ -681,9 +681,9 @@ final class Responses_Page {
 					<p>
 						<?php
 						if ( 'actionable' === $filter ) {
-							esc_html_e( 'No responses need your attention right now.', 'woo-ai-review-manager' );
+							esc_html_e( 'No responses need your attention right now.', 'ai-review-manager-for-woocommerce' );
 						} else {
-							esc_html_e( 'No responses found for this filter.', 'woo-ai-review-manager' );
+							esc_html_e( 'No responses found for this filter.', 'ai-review-manager-for-woocommerce' );
 						}
 						?>
 					</p>
@@ -691,17 +691,17 @@ final class Responses_Page {
 			<?php else : ?>
 				<?php if ( ! warc_fs()->is_paying() ) : ?>
 					<div class="wairm-upgrade-banner" style="margin-bottom: 20px;">
-						<p><?php esc_html_e( 'Upgrade to Pro to approve, edit, and post AI response suggestions as replies to your reviews.', 'woo-ai-review-manager' ); ?></p>
-						<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'woo-ai-review-manager' ); ?></a>
+						<p><?php esc_html_e( 'Upgrade to Pro to approve, edit, and post AI response suggestions as replies to your reviews.', 'ai-review-manager-for-woocommerce' ); ?></p>
+						<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'ai-review-manager-for-woocommerce' ); ?></a>
 					</div>
 				<?php endif; ?>
 				<?php if ( warc_fs()->is_paying() ) : ?>
 				<div class="wairm-bulk-bar" id="wairm-bulk-bar" style="display:none;">
-					<label><input type="checkbox" id="wairm-select-all"> <?php esc_html_e( 'Select all', 'woo-ai-review-manager' ); ?></label>
+					<label><input type="checkbox" id="wairm-select-all"> <?php esc_html_e( 'Select all', 'ai-review-manager-for-woocommerce' ); ?></label>
 					<span class="wairm-bulk-count"></span>
-					<button type="button" class="button wairm-bulk-approve"><?php esc_html_e( 'Approve', 'woo-ai-review-manager' ); ?></button>
-					<button type="button" class="button button-primary wairm-bulk-post"><?php esc_html_e( 'Post Reply', 'woo-ai-review-manager' ); ?></button>
-					<button type="button" class="button wairm-bulk-dismiss"><?php esc_html_e( 'Dismiss', 'woo-ai-review-manager' ); ?></button>
+					<button type="button" class="button wairm-bulk-approve"><?php esc_html_e( 'Approve', 'ai-review-manager-for-woocommerce' ); ?></button>
+					<button type="button" class="button button-primary wairm-bulk-post"><?php esc_html_e( 'Post Reply', 'ai-review-manager-for-woocommerce' ); ?></button>
+					<button type="button" class="button wairm-bulk-dismiss"><?php esc_html_e( 'Dismiss', 'ai-review-manager-for-woocommerce' ); ?></button>
 				</div>
 				<?php endif; ?>
 
@@ -729,55 +729,55 @@ final class Responses_Page {
 						</div>
 
 						<div class="wairm-response-review">
-							<strong><?php esc_html_e( 'Customer Review:', 'woo-ai-review-manager' ); ?></strong>
+							<strong><?php esc_html_e( 'Customer Review:', 'ai-review-manager-for-woocommerce' ); ?></strong>
 							<p><?php echo esc_html( $row->comment_content ); ?></p>
-							<span class="review-score"><?php esc_html_e( 'Score:', 'woo-ai-review-manager' ); ?> <?php echo esc_html( number_format( (float) $row->score, 2 ) ); ?></span>
+							<span class="review-score"><?php esc_html_e( 'Score:', 'ai-review-manager-for-woocommerce' ); ?> <?php echo esc_html( number_format( (float) $row->score, 2 ) ); ?></span>
 						</div>
 
 						<?php if ( warc_fs()->is_paying() ) : ?>
 						<div class="wairm-response-suggestion">
-							<strong><?php esc_html_e( 'AI Suggested Response:', 'woo-ai-review-manager' ); ?></strong>
+							<strong><?php esc_html_e( 'AI Suggested Response:', 'ai-review-manager-for-woocommerce' ); ?></strong>
 							<textarea class="wairm-response-text large-text" rows="3"><?php echo esc_textarea( $row->ai_response_suggestion ); ?></textarea>
 						</div>
 
 						<div class="wairm-response-actions">
 							<?php if ( in_array( $row->ai_response_status, [ 'generated', 'approved' ], true ) ) : ?>
-								<button type="button" class="button button-primary wairm-action-post" title="<?php esc_attr_e( 'Post as a visible reply to this review', 'woo-ai-review-manager' ); ?>">
-									<?php esc_html_e( 'Post Reply', 'woo-ai-review-manager' ); ?>
+								<button type="button" class="button button-primary wairm-action-post" title="<?php esc_attr_e( 'Post as a visible reply to this review', 'ai-review-manager-for-woocommerce' ); ?>">
+									<?php esc_html_e( 'Post Reply', 'ai-review-manager-for-woocommerce' ); ?>
 								</button>
-								<button type="button" class="button wairm-action-approve" title="<?php esc_attr_e( 'Approve and save edits for later', 'woo-ai-review-manager' ); ?>">
-									<?php esc_html_e( 'Approve', 'woo-ai-review-manager' ); ?>
+								<button type="button" class="button wairm-action-approve" title="<?php esc_attr_e( 'Approve and save edits for later', 'ai-review-manager-for-woocommerce' ); ?>">
+									<?php esc_html_e( 'Approve', 'ai-review-manager-for-woocommerce' ); ?>
 								</button>
-								<button type="button" class="button wairm-action-dismiss" title="<?php esc_attr_e( 'Dismiss this suggestion', 'woo-ai-review-manager' ); ?>">
-									<?php esc_html_e( 'Dismiss', 'woo-ai-review-manager' ); ?>
+								<button type="button" class="button wairm-action-dismiss" title="<?php esc_attr_e( 'Dismiss this suggestion', 'ai-review-manager-for-woocommerce' ); ?>">
+									<?php esc_html_e( 'Dismiss', 'ai-review-manager-for-woocommerce' ); ?>
 								</button>
 							<?php endif; ?>
 							<?php if ( \WooAIReviewManager\AI_Client::is_available() && 'sent' !== $row->ai_response_status ) : ?>
-								<button type="button" class="button wairm-action-regenerate" title="<?php esc_attr_e( 'Generate a new AI suggestion', 'woo-ai-review-manager' ); ?>">
-									<?php esc_html_e( 'Regenerate', 'woo-ai-review-manager' ); ?>
+								<button type="button" class="button wairm-action-regenerate" title="<?php esc_attr_e( 'Generate a new AI suggestion', 'ai-review-manager-for-woocommerce' ); ?>">
+									<?php esc_html_e( 'Regenerate', 'ai-review-manager-for-woocommerce' ); ?>
 								</button>
 							<?php endif; ?>
 							<?php if ( 'dismissed' === $row->ai_response_status ) : ?>
-								<button type="button" class="button wairm-action-undo-dismiss" title="<?php esc_attr_e( 'Restore this suggestion', 'woo-ai-review-manager' ); ?>">
-									<?php esc_html_e( 'Undo Dismiss', 'woo-ai-review-manager' ); ?>
+								<button type="button" class="button wairm-action-undo-dismiss" title="<?php esc_attr_e( 'Restore this suggestion', 'ai-review-manager-for-woocommerce' ); ?>">
+									<?php esc_html_e( 'Undo Dismiss', 'ai-review-manager-for-woocommerce' ); ?>
 								</button>
 							<?php endif; ?>
 							<?php if ( 'sent' === $row->ai_response_status ) : ?>
-								<button type="button" class="button wairm-action-edit-reply" title="<?php esc_attr_e( 'Edit the posted reply', 'woo-ai-review-manager' ); ?>">
-									<?php esc_html_e( 'Edit Reply', 'woo-ai-review-manager' ); ?>
+								<button type="button" class="button wairm-action-edit-reply" title="<?php esc_attr_e( 'Edit the posted reply', 'ai-review-manager-for-woocommerce' ); ?>">
+									<?php esc_html_e( 'Edit Reply', 'ai-review-manager-for-woocommerce' ); ?>
 								</button>
 								<span class="wairm-posted-label dashicons-before dashicons-yes-alt">
-									<?php esc_html_e( 'Reply posted', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Reply posted', 'ai-review-manager-for-woocommerce' ); ?>
 								</span>
 							<?php endif; ?>
 						</div>
 						<?php else : ?>
 						<div class="wairm-response-actions">
-							<button type="button" class="button button-primary" disabled><?php esc_html_e( 'Post Reply', 'woo-ai-review-manager' ); ?></button>
-							<button type="button" class="button" disabled><?php esc_html_e( 'Approve', 'woo-ai-review-manager' ); ?></button>
-							<button type="button" class="button" disabled><?php esc_html_e( 'Dismiss', 'woo-ai-review-manager' ); ?></button>
+							<button type="button" class="button button-primary" disabled><?php esc_html_e( 'Post Reply', 'ai-review-manager-for-woocommerce' ); ?></button>
+							<button type="button" class="button" disabled><?php esc_html_e( 'Approve', 'ai-review-manager-for-woocommerce' ); ?></button>
+							<button type="button" class="button" disabled><?php esc_html_e( 'Dismiss', 'ai-review-manager-for-woocommerce' ); ?></button>
 							<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button" style="background:#7c3aed;border-color:#6d28d9;color:#fff;text-shadow:none;white-space:nowrap;">
-								<?php esc_html_e( 'Upgrade to Pro — AI responses, auto-replies & more', 'woo-ai-review-manager' ); ?>
+								<?php esc_html_e( 'Upgrade to Pro — AI responses, auto-replies & more', 'ai-review-manager-for-woocommerce' ); ?>
 							</a>
 						</div>
 						<?php endif; ?>

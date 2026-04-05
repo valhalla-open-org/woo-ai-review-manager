@@ -50,8 +50,8 @@ final class Sentiment_Controller {
 			'title'      => 'wairm-product-sentiment',
 			'type'       => 'object',
 			'properties' => [
-				'product_id'   => [ 'type' => 'integer', 'description' => __( 'Product ID.', 'woo-ai-review-manager' ) ],
-				'product_name' => [ 'type' => 'string', 'description' => __( 'Product name.', 'woo-ai-review-manager' ) ],
+				'product_id'   => [ 'type' => 'integer', 'description' => __( 'Product ID.', 'ai-review-manager-for-woocommerce' ) ],
+				'product_name' => [ 'type' => 'string', 'description' => __( 'Product name.', 'ai-review-manager-for-woocommerce' ) ],
 				'stats'        => [
 					'type'       => 'object',
 					'properties' => [
@@ -89,7 +89,7 @@ final class Sentiment_Controller {
 		$product = wc_get_product( $product_id );
 		if ( ! $product ) {
 			return new \WP_REST_Response(
-				[ 'code' => 'not_found', 'message' => __( 'Product not found.', 'woo-ai-review-manager' ) ],
+				[ 'code' => 'not_found', 'message' => __( 'Product not found.', 'ai-review-manager-for-woocommerce' ) ],
 				404
 			);
 		}

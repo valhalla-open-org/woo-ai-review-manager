@@ -1,8 +1,8 @@
-# WooCommerce AI Review Manager
+# AI Review Manager for WooCommerce
 
 **Turn every customer review into a growth opportunity — automatically.**
 
-WooCommerce AI Review Manager uses the power of AI to analyze your store's reviews, generate thoughtful responses, and proactively collect new feedback — all from one intuitive dashboard.
+AI Review Manager for WooCommerce uses the power of AI to analyze your store's reviews, generate thoughtful responses, and proactively collect new feedback — all from one intuitive dashboard.
 
 ---
 
@@ -66,7 +66,7 @@ Powered by the new **WordPress AI Client API**, the plugin works with any AI pro
 ## Installation
 
 1. Download the plugin ZIP or clone this repository.
-2. Upload the `woo-ai-review-manager` folder to `/wp-content/plugins/`.
+2. Upload the `ai-review-manager-for-woocommerce` folder to `/wp-content/plugins/`.
 3. Activate the plugin through the WordPress admin.
 4. Go to **Settings → Connectors** to configure your preferred AI provider.
 
@@ -203,7 +203,7 @@ Yes, uncheck "Auto‑Analyze New Reviews" in settings.
 - [ ] Bulk response actions (approve/post/dismiss multiple at once)
 
 ## Support
-Create an issue on [GitHub](https://github.com/valhalla-open-org/woo-ai-review-manager).
+Create an issue on [GitHub](https://github.com/valhalla-open-org/ai-review-manager-for-woocommerce).
 
 ## License
 GPL‑2.0‑or‑later

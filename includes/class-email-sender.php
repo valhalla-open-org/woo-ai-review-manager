@@ -52,7 +52,7 @@ final class Email_Sender {
 		<head>
 			<meta charset="<?php echo esc_attr( $charset ); ?>">
 			<meta name="viewport" content="width=device-width, initial-scale=1">
-			<title><?php echo esc_html__( 'Leave a Review', 'woo-ai-review-manager' ) . ' — ' . esc_html( $site_name ); ?></title>
+			<title><?php echo esc_html__( 'Leave a Review', 'ai-review-manager-for-woocommerce' ) . ' — ' . esc_html( $site_name ); ?></title>
 			<?php wp_head(); ?>
 			<style>
 				/* Reset & base */
@@ -401,10 +401,10 @@ final class Email_Sender {
 		if ( $is_reminder ) {
 			$subject = get_option( 'wairm_reminder_subject', '' );
 			if ( empty( $subject ) ) {
-				$subject = __( 'We\'d still love to hear from you!', 'woo-ai-review-manager' );
+				$subject = __( 'We\'d still love to hear from you!', 'ai-review-manager-for-woocommerce' );
 			}
 		} else {
-			$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) );
+			$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'ai-review-manager-for-woocommerce' ) );
 		}
 
 		return str_replace(
@@ -473,12 +473,12 @@ final class Email_Sender {
 				if ( $is_reminder ) {
 					$greeting = get_option( 'wairm_reminder_greeting', '' );
 					if ( empty( $greeting ) ) {
-						$greeting = __( 'Hi {customer_name}, just a friendly reminder!', 'woo-ai-review-manager' );
+						$greeting = __( 'Hi {customer_name}, just a friendly reminder!', 'ai-review-manager-for-woocommerce' );
 					}
 				} else {
 					$greeting = get_option( 'wairm_email_greeting', '' );
 					if ( empty( $greeting ) ) {
-						$greeting = __( 'Hi {customer_name}, thank you for your recent order!', 'woo-ai-review-manager' );
+						$greeting = __( 'Hi {customer_name}, thank you for your recent order!', 'ai-review-manager-for-woocommerce' );
 					}
 				}
 				$greeting = str_replace(
@@ -493,12 +493,12 @@ final class Email_Sender {
 				if ( $is_reminder ) {
 					$body_text = get_option( 'wairm_reminder_body_text', '' );
 					if ( empty( $body_text ) ) {
-						$body_text = __( 'We noticed you haven\'t had a chance to review your recent purchase yet. Your feedback helps other shoppers and helps us improve:', 'woo-ai-review-manager' );
+						$body_text = __( 'We noticed you haven\'t had a chance to review your recent purchase yet. Your feedback helps other shoppers and helps us improve:', 'ai-review-manager-for-woocommerce' );
 					}
 				} else {
 					$body_text = get_option( 'wairm_email_body_text', '' );
 					if ( empty( $body_text ) ) {
-						$body_text = __( 'We would love to hear what you think about the products you purchased:', 'woo-ai-review-manager' );
+						$body_text = __( 'We would love to hear what you think about the products you purchased:', 'ai-review-manager-for-woocommerce' );
 					}
 				}
 				?>
@@ -511,23 +511,23 @@ final class Email_Sender {
 					<?php endif; ?>
 					<div class="product-info">
 						<div class="product-name"><?php echo esc_html( $product['name'] ); ?></div>
-						<a href="<?php echo esc_url( $product['url'] ); ?>" target="_blank"><?php esc_html_e( 'View product', 'woo-ai-review-manager' ); ?></a>
+						<a href="<?php echo esc_url( $product['url'] ); ?>" target="_blank"><?php esc_html_e( 'View product', 'ai-review-manager-for-woocommerce' ); ?></a>
 					</div>
 				</div>
 				<?php endforeach; ?>
 
-				<p><?php esc_html_e( 'Please take a moment to share your experience by clicking the button below:', 'woo-ai-review-manager' ); ?></p>
+				<p><?php esc_html_e( 'Please take a moment to share your experience by clicking the button below:', 'ai-review-manager-for-woocommerce' ); ?></p>
 
 				<?php
 				if ( $is_reminder ) {
 					$button_text = get_option( 'wairm_reminder_button_text', '' );
 					if ( empty( $button_text ) ) {
-						$button_text = __( 'Write a Review', 'woo-ai-review-manager' );
+						$button_text = __( 'Write a Review', 'ai-review-manager-for-woocommerce' );
 					}
 				} else {
 					$button_text = get_option( 'wairm_email_button_text', '' );
 					if ( empty( $button_text ) ) {
-						$button_text = __( 'Leave a Review', 'woo-ai-review-manager' );
+						$button_text = __( 'Leave a Review', 'ai-review-manager-for-woocommerce' );
 					}
 				}
 				?>
@@ -541,7 +541,7 @@ final class Email_Sender {
 					<?php
 					printf(
 						/* translators: %d: number of days */
-						esc_html__( 'This review link will expire in %d days.', 'woo-ai-review-manager' ),
+						esc_html__( 'This review link will expire in %d days.', 'ai-review-manager-for-woocommerce' ),
 						absint( $expiry_days )
 					);
 					?>
@@ -550,7 +550,7 @@ final class Email_Sender {
 				<div class="footer">
 					<p><?php echo esc_html( get_bloginfo( 'name' ) ); ?></p>
 					<p style="font-size: 13px;">
-						<?php esc_html_e( 'You are receiving this email because you recently made a purchase. If you do not wish to receive review invitations, please let us know.', 'woo-ai-review-manager' ); ?>
+						<?php esc_html_e( 'You are receiving this email because you recently made a purchase. If you do not wish to receive review invitations, please let us know.', 'ai-review-manager-for-woocommerce' ); ?>
 					</p>
 				</div>
 			</div>
@@ -574,7 +574,7 @@ final class Email_Sender {
 		] );
 
 		$fake_email = (object) [
-			'customer_name' => __( 'Test Customer', 'woo-ai-review-manager' ),
+			'customer_name' => __( 'Test Customer', 'ai-review-manager-for-woocommerce' ),
 			'product_ids'   => wp_json_encode( ! empty( $sample_ids ) ? $sample_ids : [ 0 ] ),
 			'token'         => 'test-preview',
 		];
@@ -589,7 +589,7 @@ final class Email_Sender {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public token-based URL, no nonce available.
 		$token = sanitize_text_field( wp_unslash( $_GET['wairm_token'] ?? '' ) );
 		if ( empty( $token ) ) {
-			return '<p>' . esc_html__( 'Invalid or missing review invitation.', 'woo-ai-review-manager' ) . '</p>';
+			return '<p>' . esc_html__( 'Invalid or missing review invitation.', 'ai-review-manager-for-woocommerce' ) . '</p>';
 		}
 
 		global $wpdb;
@@ -606,7 +606,7 @@ final class Email_Sender {
 		);
 
 		if ( ! $invitation ) {
-			return '<p>' . esc_html__( 'This review invitation is invalid or has expired.', 'woo-ai-review-manager' ) . '</p>';
+			return '<p>' . esc_html__( 'This review invitation is invalid or has expired.', 'ai-review-manager-for-woocommerce' ) . '</p>';
 		}
 
 		// Mark as clicked if still 'sent'.
@@ -623,7 +623,7 @@ final class Email_Sender {
 
 		$product_ids = json_decode( $invitation->product_ids, true );
 		if ( ! is_array( $product_ids ) || empty( $product_ids ) ) {
-			return '<p>' . esc_html__( 'Invalid invitation data.', 'woo-ai-review-manager' ) . '</p>';
+			return '<p>' . esc_html__( 'Invalid invitation data.', 'ai-review-manager-for-woocommerce' ) . '</p>';
 		}
 		$product_ids = array_map( 'absint', $product_ids );
 		$product_ids = array_filter( $product_ids );
@@ -632,8 +632,8 @@ final class Email_Sender {
 		?>
 		<div class="wairm-review-form">
 			<p class="wairm-store-name"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></p>
-			<h2><?php esc_html_e( 'Leave a Review', 'woo-ai-review-manager' ); ?></h2>
-			<p><?php esc_html_e( 'Please share your thoughts on the products you purchased:', 'woo-ai-review-manager' ); ?></p>
+			<h2><?php esc_html_e( 'Leave a Review', 'ai-review-manager-for-woocommerce' ); ?></h2>
+			<p><?php esc_html_e( 'Please share your thoughts on the products you purchased:', 'ai-review-manager-for-woocommerce' ); ?></p>
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="wairm_submit_review">
@@ -661,31 +661,31 @@ final class Email_Sender {
 
 					<input type="hidden" name="product_ids[]" value="<?php echo esc_attr( $pid ); ?>">
 
-					<div class="wairm-star-rating-label"><?php esc_html_e( 'Your rating', 'woo-ai-review-manager' ); ?></div>
+					<div class="wairm-star-rating-label"><?php esc_html_e( 'Your rating', 'ai-review-manager-for-woocommerce' ); ?></div>
 					<div class="wairm-star-rating">
 						<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
 							<input type="radio" id="star-<?php echo esc_attr( $pid ); ?>-<?php echo esc_attr( $i ); ?>" name="star_rating[<?php echo esc_attr( $pid ); ?>]" value="<?php echo esc_attr( $i ); ?>">
-							<label for="star-<?php echo esc_attr( $pid ); ?>-<?php echo esc_attr( $i ); ?>" title="<?php echo esc_attr( $i ); ?> <?php esc_attr_e( 'stars', 'woo-ai-review-manager' ); ?>">&#9733;</label>
+							<label for="star-<?php echo esc_attr( $pid ); ?>-<?php echo esc_attr( $i ); ?>" title="<?php echo esc_attr( $i ); ?> <?php esc_attr_e( 'stars', 'ai-review-manager-for-woocommerce' ); ?>">&#9733;</label>
 						<?php endfor; ?>
 					</div>
 
 					<select name="rating[<?php echo esc_attr( $pid ); ?>]" class="wairm-rating-select" required>
-						<option value=""><?php esc_html_e( 'Select a rating', 'woo-ai-review-manager' ); ?></option>
+						<option value=""><?php esc_html_e( 'Select a rating', 'ai-review-manager-for-woocommerce' ); ?></option>
 						<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
 						<option value="<?php echo absint( $i ); ?>"><?php echo absint( $i ); ?></option>
 						<?php endfor; ?>
 					</select>
 
 					<div class="wairm-field">
-						<label for="review-<?php echo esc_attr( $pid ); ?>"><?php esc_html_e( 'Your review', 'woo-ai-review-manager' ); ?></label>
-						<textarea id="review-<?php echo esc_attr( $pid ); ?>" name="review[<?php echo esc_attr( $pid ); ?>]" rows="4" placeholder="<?php esc_attr_e( 'What did you like or dislike about this product?', 'woo-ai-review-manager' ); ?>" required></textarea>
+						<label for="review-<?php echo esc_attr( $pid ); ?>"><?php esc_html_e( 'Your review', 'ai-review-manager-for-woocommerce' ); ?></label>
+						<textarea id="review-<?php echo esc_attr( $pid ); ?>" name="review[<?php echo esc_attr( $pid ); ?>]" rows="4" placeholder="<?php esc_attr_e( 'What did you like or dislike about this product?', 'ai-review-manager-for-woocommerce' ); ?>" required></textarea>
 					</div>
 				</div>
 				<?php endforeach; ?>
 
 				<div class="wairm-submit-wrap">
 					<button type="submit" class="wairm-submit-btn">
-						<?php esc_html_e( 'Submit Reviews', 'woo-ai-review-manager' ); ?>
+						<?php esc_html_e( 'Submit Reviews', 'ai-review-manager-for-woocommerce' ); ?>
 						<span>&#8594;</span>
 					</button>
 				</div>
@@ -700,7 +700,7 @@ final class Email_Sender {
 	 */
 	public function handle_form_submission(): void {
 		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ?? '' ) ), 'wairm_review' ) ) {
-			wp_die( esc_html__( 'Invalid request.', 'woo-ai-review-manager' ) );
+			wp_die( esc_html__( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) );
 		}
 
 		global $wpdb;
@@ -720,7 +720,7 @@ final class Email_Sender {
 		);
 
 		if ( ! $invitation ) {
-			wp_die( esc_html__( 'Invalid invitation or reviews already submitted.', 'woo-ai-review-manager' ) );
+			wp_die( esc_html__( 'Invalid invitation or reviews already submitted.', 'ai-review-manager-for-woocommerce' ) );
 		}
 
 		// Process each product review.
@@ -840,7 +840,7 @@ final class Email_Sender {
 		<head>
 			<meta charset="<?php echo esc_attr( $charset ); ?>">
 			<meta name="viewport" content="width=device-width, initial-scale=1">
-			<title><?php echo esc_html__( 'Thank You', 'woo-ai-review-manager' ) . ' — ' . esc_html( $site_name ); ?></title>
+			<title><?php echo esc_html__( 'Thank You', 'ai-review-manager-for-woocommerce' ) . ' — ' . esc_html( $site_name ); ?></title>
 			<?php wp_head(); ?>
 			<style>
 				*, *::before, *::after { box-sizing: border-box; }
@@ -988,9 +988,9 @@ final class Email_Sender {
 					</svg>
 				</div>
 
-				<h1 class="wairm-ty-heading"><?php esc_html_e( 'Thank you!', 'woo-ai-review-manager' ); ?></h1>
-				<p class="wairm-ty-message"><?php esc_html_e( 'Your reviews have been submitted successfully.', 'woo-ai-review-manager' ); ?></p>
-				<p class="wairm-ty-submessage"><?php esc_html_e( 'Your feedback helps us improve and helps other customers make informed decisions.', 'woo-ai-review-manager' ); ?></p>
+				<h1 class="wairm-ty-heading"><?php esc_html_e( 'Thank you!', 'ai-review-manager-for-woocommerce' ); ?></h1>
+				<p class="wairm-ty-message"><?php esc_html_e( 'Your reviews have been submitted successfully.', 'ai-review-manager-for-woocommerce' ); ?></p>
+				<p class="wairm-ty-submessage"><?php esc_html_e( 'Your feedback helps us improve and helps other customers make informed decisions.', 'ai-review-manager-for-woocommerce' ); ?></p>
 
 				<div class="wairm-ty-stars">
 					<span>&#9733;</span>
@@ -1001,7 +1001,7 @@ final class Email_Sender {
 				</div>
 
 				<a href="<?php echo esc_url( $shop_url ); ?>" class="wairm-ty-btn">
-					<?php esc_html_e( 'Continue Shopping', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Continue Shopping', 'ai-review-manager-for-woocommerce' ); ?>
 				</a>
 
 				<div class="wairm-ty-footer">

@@ -50,14 +50,14 @@ final class Settings_Page {
 				'nonce'       => wp_create_nonce( 'wairm_settings' ),
 				'preview_url' => admin_url( 'admin-ajax.php?action=wairm_preview_email&nonce=' . wp_create_nonce( 'wairm_settings' ) ),
 				'i18n'        => [
-					'sending'        => __( 'Sending...', 'woo-ai-review-manager' ),
-					'send_test'      => __( 'Send Test Email', 'woo-ai-review-manager' ),
-					'sent'           => __( 'Test email sent!', 'woo-ai-review-manager' ),
-					'error'          => __( 'Failed to send test email.', 'woo-ai-review-manager' ),
-					'confirm_delete' => __( 'Are you sure you want to delete ALL plugin data? This will remove all sentiment records, invitations, email queue entries, insights, and plugin settings. This action cannot be undone.', 'woo-ai-review-manager' ),
-					'deleting'       => __( 'Deleting...', 'woo-ai-review-manager' ),
-					'deleted'        => __( 'All data deleted. Reloading...', 'woo-ai-review-manager' ),
-					'delete_error'   => __( 'Failed to delete data.', 'woo-ai-review-manager' ),
+					'sending'        => __( 'Sending...', 'ai-review-manager-for-woocommerce' ),
+					'send_test'      => __( 'Send Test Email', 'ai-review-manager-for-woocommerce' ),
+					'sent'           => __( 'Test email sent!', 'ai-review-manager-for-woocommerce' ),
+					'error'          => __( 'Failed to send test email.', 'ai-review-manager-for-woocommerce' ),
+					'confirm_delete' => __( 'Are you sure you want to delete ALL plugin data? This will remove all sentiment records, invitations, email queue entries, insights, and plugin settings. This action cannot be undone.', 'ai-review-manager-for-woocommerce' ),
+					'deleting'       => __( 'Deleting...', 'ai-review-manager-for-woocommerce' ),
+					'deleted'        => __( 'All data deleted. Reloading...', 'ai-review-manager-for-woocommerce' ),
+					'delete_error'   => __( 'Failed to delete data.', 'ai-review-manager-for-woocommerce' ),
 				],
 			]
 		);
@@ -66,8 +66,8 @@ final class Settings_Page {
 	public function add_submenu_page(): void {
 		add_submenu_page(
 			'wairm-dashboard',
-			__( 'Settings', 'woo-ai-review-manager' ),
-			__( 'Settings', 'woo-ai-review-manager' ),
+			__( 'Settings', 'ai-review-manager-for-woocommerce' ),
+			__( 'Settings', 'ai-review-manager-for-woocommerce' ),
 			'manage_woocommerce',
 			'wairm-settings',
 			[ $this, 'render_page' ]
@@ -211,7 +211,7 @@ final class Settings_Page {
 		check_ajax_referer( 'wairm_settings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		$to = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
@@ -224,10 +224,10 @@ final class Settings_Page {
 			$from_name = get_bloginfo( 'name' );
 		}
 
-		$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) );
+		$subject = get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'ai-review-manager-for-woocommerce' ) );
 		$subject = str_replace(
 			[ '{customer_name}', '{store_name}' ],
-			[ __( 'Test Customer', 'woo-ai-review-manager' ), get_bloginfo( 'name' ) ],
+			[ __( 'Test Customer', 'ai-review-manager-for-woocommerce' ), get_bloginfo( 'name' ) ],
 			$subject
 		);
 		$subject = '[TEST] ' . $subject;
@@ -243,7 +243,7 @@ final class Settings_Page {
 		if ( $sent ) {
 			wp_send_json_success();
 		} else {
-			wp_send_json_error( [ 'message' => __( 'wp_mail() returned false. Check your mail configuration.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'wp_mail() returned false. Check your mail configuration.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 	}
 
@@ -254,7 +254,7 @@ final class Settings_Page {
 		check_ajax_referer( 'wairm_settings', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
@@ -329,17 +329,17 @@ final class Settings_Page {
 		}
 		?>
 		<div class="wrap wairm-settings">
-			<h1><?php esc_html_e( 'AI Review Manager Settings', 'woo-ai-review-manager' ); ?></h1>
+			<h1><?php esc_html_e( 'AI Review Manager Settings', 'ai-review-manager-for-woocommerce' ); ?></h1>
 
 			<nav class="nav-tab-wrapper">
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings&tab=api' ) ); ?>" class="nav-tab <?php echo 'api' === $active_tab ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'API Settings', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'API Settings', 'ai-review-manager-for-woocommerce' ); ?>
 				</a>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings&tab=email' ) ); ?>" class="nav-tab <?php echo 'email' === $active_tab ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'Email Settings', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Email Settings', 'ai-review-manager-for-woocommerce' ); ?>
 				</a>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=wairm-settings&tab=general' ) ); ?>" class="nav-tab <?php echo 'general' === $active_tab ? 'nav-tab-active' : ''; ?>">
-					<?php esc_html_e( 'General', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'General', 'ai-review-manager-for-woocommerce' ); ?>
 				</a>
 			</nav>
 
@@ -360,23 +360,23 @@ final class Settings_Page {
 					$providers       = \WooAIReviewManager\AI_Client::discover_providers();
 					$saved_model     = get_option( 'wairm_model_preference', '' );
 					?>
-					<h2><?php esc_html_e( 'AI Provider', 'woo-ai-review-manager' ); ?></h2>
+					<h2><?php esc_html_e( 'AI Provider', 'ai-review-manager-for-woocommerce' ); ?></h2>
 
 					<?php if ( ! $ai_available ) : ?>
 						<p>
-							<span class="wairm-ai-unavailable"><?php esc_html_e( 'WordPress AI Client is not available.', 'woo-ai-review-manager' ); ?></span>
-							&mdash; <?php esc_html_e( 'This plugin requires WordPress 7.0 or later.', 'woo-ai-review-manager' ); ?>
+							<span class="wairm-ai-unavailable"><?php esc_html_e( 'WordPress AI Client is not available.', 'ai-review-manager-for-woocommerce' ); ?></span>
+							&mdash; <?php esc_html_e( 'This plugin requires WordPress 7.0 or later.', 'ai-review-manager-for-woocommerce' ); ?>
 						</p>
 					<?php elseif ( ! $text_supported ) : ?>
 						<p>
-							<span class="wairm-ai-unavailable"><?php esc_html_e( 'No active AI provider.', 'woo-ai-review-manager' ); ?></span>
+							<span class="wairm-ai-unavailable"><?php esc_html_e( 'No active AI provider.', 'ai-review-manager-for-woocommerce' ); ?></span>
 							&mdash;
 							<?php
 							echo wp_kses(
 								sprintf(
 									/* translators: %s: link to Connectors settings */
-									__( 'Configure a provider in %s.', 'woo-ai-review-manager' ),
-									'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
+									__( 'Configure a provider in %s.', 'ai-review-manager-for-woocommerce' ),
+									'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'ai-review-manager-for-woocommerce' ) . '</a>'
 								),
 								[ 'a' => [ 'href' => [] ] ]
 							);
@@ -397,8 +397,8 @@ final class Settings_Page {
 							echo wp_kses(
 								sprintf(
 									/* translators: %s: link to Connectors settings */
-									__( 'Manage in %s.', 'woo-ai-review-manager' ),
-									'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
+									__( 'Manage in %s.', 'ai-review-manager-for-woocommerce' ),
+									'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'ai-review-manager-for-woocommerce' ) . '</a>'
 								),
 								[ 'a' => [ 'href' => [] ] ]
 							);
@@ -447,12 +447,12 @@ final class Settings_Page {
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<label for="wairm_model_preference"><?php esc_html_e( 'Model', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_model_preference"><?php esc_html_e( 'Model', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<?php if ( ! empty( $model_options ) ) : ?>
 								<select id="wairm_model_preference" name="wairm_model_preference">
-									<option value=""><?php esc_html_e( 'Automatic (first available)', 'woo-ai-review-manager' ); ?></option>
+									<option value=""><?php esc_html_e( 'Automatic (first available)', 'ai-review-manager-for-woocommerce' ); ?></option>
 									<?php foreach ( $model_options as $pid => $pdata ) : ?>
 										<optgroup label="<?php echo esc_attr( $pdata['name'] ); ?>">
 											<?php foreach ( $pdata['models'] as $model_id => $model_name ) : ?>
@@ -464,15 +464,15 @@ final class Settings_Page {
 									<?php endforeach; ?>
 								</select>
 								<?php else : ?>
-								<input type="text" id="wairm_model_preference" name="wairm_model_preference" value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g. claude-sonnet-4-6', 'woo-ai-review-manager' ); ?>" />
+								<input type="text" id="wairm_model_preference" name="wairm_model_preference" value="<?php echo esc_attr( $saved_model ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'e.g. claude-sonnet-4-6', 'ai-review-manager-for-woocommerce' ); ?>" />
 								<?php endif; ?>
 								<p class="description">
 									<?php
 									echo wp_kses(
 										sprintf(
 											/* translators: %s: link to Connectors settings */
-											__( 'Select a model from your configured providers, or manage providers in %s.', 'woo-ai-review-manager' ),
-											'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'woo-ai-review-manager' ) . '</a>'
+											__( 'Select a model from your configured providers, or manage providers in %s.', 'ai-review-manager-for-woocommerce' ),
+											'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">' . esc_html__( 'Settings &rarr; Connectors', 'ai-review-manager-for-woocommerce' ) . '</a>'
 										),
 										[ 'a' => [ 'href' => [] ] ]
 									);
@@ -483,16 +483,16 @@ final class Settings_Page {
 					</table>
 					<?php endif; ?>
 
-					<h2><?php esc_html_e( 'Analysis', 'woo-ai-review-manager' ); ?></h2>
+					<h2><?php esc_html_e( 'Analysis', 'ai-review-manager-for-woocommerce' ); ?></h2>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<label for="wairm_negative_threshold"><?php esc_html_e( 'Negative Threshold', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_negative_threshold"><?php esc_html_e( 'Negative Threshold', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<input type="number" id="wairm_negative_threshold" name="wairm_negative_threshold" value="<?php echo esc_attr( get_option( 'wairm_negative_threshold', '0.30' ) ); ?>" min="0" max="1" step="0.05" />
 								<p class="description">
-									<?php esc_html_e( 'Reviews scored below this value (0.0–1.0) are flagged as negative and get AI response suggestions. Default: 0.30.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Reviews scored below this value (0.0–1.0) are flagged as negative and get AI response suggestions. Default: 0.30.', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -501,11 +501,11 @@ final class Settings_Page {
 				<?php elseif ( 'email' === $active_tab ) : ?>
 
 					<!-- ── Delivery ── -->
-					<h2><?php esc_html_e( 'Delivery', 'woo-ai-review-manager' ); ?></h2>
+					<h2><?php esc_html_e( 'Delivery', 'ai-review-manager-for-woocommerce' ); ?></h2>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<label for="wairm_email_from_name"><?php esc_html_e( 'From Name', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_email_from_name"><?php esc_html_e( 'From Name', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<input type="text" id="wairm_email_from_name" name="wairm_email_from_name" value="<?php echo esc_attr( get_option( 'wairm_email_from_name', get_bloginfo( 'name' ) ) ); ?>" class="regular-text" />
@@ -513,126 +513,126 @@ final class Settings_Page {
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_invitation_delay_days"><?php esc_html_e( 'Send After', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_invitation_delay_days"><?php esc_html_e( 'Send After', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<input type="number" id="wairm_invitation_delay_days" name="wairm_invitation_delay_days" value="<?php echo esc_attr( get_option( 'wairm_invitation_delay_days', '7' ) ); ?>" min="1" max="30" />
-								<span><?php esc_html_e( 'days after order completion', 'woo-ai-review-manager' ); ?></span>
+								<span><?php esc_html_e( 'days after order completion', 'ai-review-manager-for-woocommerce' ); ?></span>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_invitation_expiry_days"><?php esc_html_e( 'Link Expiry', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_invitation_expiry_days"><?php esc_html_e( 'Link Expiry', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<input type="number" id="wairm_invitation_expiry_days" name="wairm_invitation_expiry_days" value="<?php echo esc_attr( get_option( 'wairm_invitation_expiry_days', '30' ) ); ?>" min="7" max="90" />
-								<span><?php esc_html_e( 'days', 'woo-ai-review-manager' ); ?></span>
+								<span><?php esc_html_e( 'days', 'ai-review-manager-for-woocommerce' ); ?></span>
 							</td>
 						</tr>
 					</table>
 
 					<!-- ── Initial Invitation ── -->
-					<h2><?php esc_html_e( 'Initial Invitation', 'woo-ai-review-manager' ); ?></h2>
-					<p class="description"><?php esc_html_e( 'Sent to customers after their order is completed. Placeholders: {customer_name}, {store_name}', 'woo-ai-review-manager' ); ?></p>
+					<h2><?php esc_html_e( 'Initial Invitation', 'ai-review-manager-for-woocommerce' ); ?></h2>
+					<p class="description"><?php esc_html_e( 'Sent to customers after their order is completed. Placeholders: {customer_name}, {store_name}', 'ai-review-manager-for-woocommerce' ); ?></p>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<label for="wairm_email_subject"><?php esc_html_e( 'Subject', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_email_subject"><?php esc_html_e( 'Subject', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_email_subject" name="wairm_email_subject" value="<?php echo esc_attr( get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'woo-ai-review-manager' ) ) ); ?>" class="regular-text" />
+								<input type="text" id="wairm_email_subject" name="wairm_email_subject" value="<?php echo esc_attr( get_option( 'wairm_email_subject', __( 'How was your recent purchase?', 'ai-review-manager-for-woocommerce' ) ) ); ?>" class="regular-text" />
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_email_greeting"><?php esc_html_e( 'Greeting', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_email_greeting"><?php esc_html_e( 'Greeting', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_email_greeting" name="wairm_email_greeting" value="<?php echo esc_attr( get_option( 'wairm_email_greeting', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Hi {customer_name}, thank you for your recent order!', 'woo-ai-review-manager' ); ?>" />
+								<input type="text" id="wairm_email_greeting" name="wairm_email_greeting" value="<?php echo esc_attr( get_option( 'wairm_email_greeting', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Hi {customer_name}, thank you for your recent order!', 'ai-review-manager-for-woocommerce' ); ?>" />
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_email_body_text"><?php esc_html_e( 'Body Text', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_email_body_text"><?php esc_html_e( 'Body Text', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<textarea id="wairm_email_body_text" name="wairm_email_body_text" rows="3" class="regular-text" placeholder="<?php echo esc_attr__( 'We would love to hear what you think about the products you purchased:', 'woo-ai-review-manager' ); ?>"><?php echo esc_textarea( get_option( 'wairm_email_body_text', '' ) ); ?></textarea>
+								<textarea id="wairm_email_body_text" name="wairm_email_body_text" rows="3" class="regular-text" placeholder="<?php echo esc_attr__( 'We would love to hear what you think about the products you purchased:', 'ai-review-manager-for-woocommerce' ); ?>"><?php echo esc_textarea( get_option( 'wairm_email_body_text', '' ) ); ?></textarea>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_email_button_text"><?php esc_html_e( 'Button Text', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_email_button_text"><?php esc_html_e( 'Button Text', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_email_button_text" name="wairm_email_button_text" value="<?php echo esc_attr( get_option( 'wairm_email_button_text', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Leave a Review', 'woo-ai-review-manager' ); ?>" />
+								<input type="text" id="wairm_email_button_text" name="wairm_email_button_text" value="<?php echo esc_attr( get_option( 'wairm_email_button_text', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Leave a Review', 'ai-review-manager-for-woocommerce' ); ?>" />
 							</td>
 						</tr>
 					</table>
 
 					<!-- ── Reminder Email ── -->
 					<h2>
-						<?php esc_html_e( 'Reminder Email', 'woo-ai-review-manager' ); ?>
-						<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span><?php endif; ?>
+						<?php esc_html_e( 'Reminder Email', 'ai-review-manager-for-woocommerce' ); ?>
+						<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'ai-review-manager-for-woocommerce' ); ?></span><?php endif; ?>
 					</h2>
-					<p class="description"><?php esc_html_e( 'Sent to customers who haven\'t reviewed after the initial invitation. Uses same placeholders.', 'woo-ai-review-manager' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Sent to customers who haven\'t reviewed after the initial invitation. Uses same placeholders.', 'ai-review-manager-for-woocommerce' ); ?></p>
 					<?php if ( ! warc_fs()->is_paying() ) : ?>
 						<div class="wairm-pro-gate">
 							<div class="wairm-upgrade-banner">
-								<p><?php esc_html_e( 'Automated follow-up reminders help increase your review conversion rate.', 'woo-ai-review-manager' ); ?></p>
-								<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'woo-ai-review-manager' ); ?></a>
+								<p><?php esc_html_e( 'Automated follow-up reminders help increase your review conversion rate.', 'ai-review-manager-for-woocommerce' ); ?></p>
+								<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'ai-review-manager-for-woocommerce' ); ?></a>
 							</div>
 					<?php endif; ?>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<label for="wairm_reminder_enabled"><?php esc_html_e( 'Enabled', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_reminder_enabled"><?php esc_html_e( 'Enabled', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<label>
 									<input type="checkbox" id="wairm_reminder_enabled" name="wairm_reminder_enabled" value="yes" <?php checked( get_option( 'wairm_reminder_enabled', 'yes' ), 'yes' ); ?> <?php disabled( ! warc_fs()->is_paying() ); ?> />
-									<?php esc_html_e( 'Send a reminder if the customer doesn\'t review', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Send a reminder if the customer doesn\'t review', 'ai-review-manager-for-woocommerce' ); ?>
 								</label>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_reminder_delay_days"><?php esc_html_e( 'Send After', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_reminder_delay_days"><?php esc_html_e( 'Send After', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<input type="number" id="wairm_reminder_delay_days" name="wairm_reminder_delay_days" value="<?php echo esc_attr( get_option( 'wairm_reminder_delay_days', '14' ) ); ?>" min="1" max="60" <?php disabled( ! warc_fs()->is_paying() ); ?> />
-								<span><?php esc_html_e( 'days after initial invitation', 'woo-ai-review-manager' ); ?></span>
+								<span><?php esc_html_e( 'days after initial invitation', 'ai-review-manager-for-woocommerce' ); ?></span>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_reminder_subject"><?php esc_html_e( 'Subject', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_reminder_subject"><?php esc_html_e( 'Subject', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_reminder_subject" name="wairm_reminder_subject" value="<?php echo esc_attr( get_option( 'wairm_reminder_subject', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'We\'d still love to hear from you!', 'woo-ai-review-manager' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
+								<input type="text" id="wairm_reminder_subject" name="wairm_reminder_subject" value="<?php echo esc_attr( get_option( 'wairm_reminder_subject', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'We\'d still love to hear from you!', 'ai-review-manager-for-woocommerce' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_reminder_greeting"><?php esc_html_e( 'Greeting', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_reminder_greeting"><?php esc_html_e( 'Greeting', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_reminder_greeting" name="wairm_reminder_greeting" value="<?php echo esc_attr( get_option( 'wairm_reminder_greeting', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Hi {customer_name}, just a friendly reminder!', 'woo-ai-review-manager' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
+								<input type="text" id="wairm_reminder_greeting" name="wairm_reminder_greeting" value="<?php echo esc_attr( get_option( 'wairm_reminder_greeting', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Hi {customer_name}, just a friendly reminder!', 'ai-review-manager-for-woocommerce' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_reminder_body_text"><?php esc_html_e( 'Body Text', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_reminder_body_text"><?php esc_html_e( 'Body Text', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<textarea id="wairm_reminder_body_text" name="wairm_reminder_body_text" rows="3" class="regular-text" placeholder="<?php echo esc_attr__( 'We noticed you haven\'t had a chance to review your recent purchase yet. Your feedback helps other shoppers and helps us improve:', 'woo-ai-review-manager' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?>><?php echo esc_textarea( get_option( 'wairm_reminder_body_text', '' ) ); ?></textarea>
+								<textarea id="wairm_reminder_body_text" name="wairm_reminder_body_text" rows="3" class="regular-text" placeholder="<?php echo esc_attr__( 'We noticed you haven\'t had a chance to review your recent purchase yet. Your feedback helps other shoppers and helps us improve:', 'ai-review-manager-for-woocommerce' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?>><?php echo esc_textarea( get_option( 'wairm_reminder_body_text', '' ) ); ?></textarea>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<label for="wairm_reminder_button_text"><?php esc_html_e( 'Button Text', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_reminder_button_text"><?php esc_html_e( 'Button Text', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="wairm_reminder_button_text" name="wairm_reminder_button_text" value="<?php echo esc_attr( get_option( 'wairm_reminder_button_text', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Write a Review', 'woo-ai-review-manager' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
+								<input type="text" id="wairm_reminder_button_text" name="wairm_reminder_button_text" value="<?php echo esc_attr( get_option( 'wairm_reminder_button_text', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr__( 'Write a Review', 'ai-review-manager-for-woocommerce' ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 							</td>
 						</tr>
 					</table>
@@ -641,30 +641,30 @@ final class Settings_Page {
 					<?php endif; ?>
 
 					<!-- ── Preview & Test ── -->
-					<h2><?php esc_html_e( 'Preview & Test', 'woo-ai-review-manager' ); ?></h2>
+					<h2><?php esc_html_e( 'Preview & Test', 'ai-review-manager-for-woocommerce' ); ?></h2>
 					<div class="wairm-email-preview">
 						<iframe id="wairm-email-preview-frame" class="wairm-email-preview-frame"></iframe>
 						<div class="wairm-test-email-form">
-							<input type="email" id="wairm-test-email-address" value="<?php echo esc_attr( wp_get_current_user()->user_email ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Recipient email', 'woo-ai-review-manager' ); ?>">
-							<button type="button" class="button" id="wairm-send-test-email"><?php esc_html_e( 'Send Test Email', 'woo-ai-review-manager' ); ?></button>
+							<input type="email" id="wairm-test-email-address" value="<?php echo esc_attr( wp_get_current_user()->user_email ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Recipient email', 'ai-review-manager-for-woocommerce' ); ?>">
+							<button type="button" class="button" id="wairm-send-test-email"><?php esc_html_e( 'Send Test Email', 'ai-review-manager-for-woocommerce' ); ?></button>
 							<span id="wairm-test-email-result"></span>
 						</div>
 					</div>
 
 				<?php elseif ( 'general' === $active_tab ) : ?>
-					<h2><?php esc_html_e( 'General Settings', 'woo-ai-review-manager' ); ?></h2>
+					<h2><?php esc_html_e( 'General Settings', 'ai-review-manager-for-woocommerce' ); ?></h2>
 					<table class="form-table">
 						<tr>
 							<th scope="row">
-								<label for="wairm_auto_analyze"><?php esc_html_e( 'Auto‑Analyze New Reviews', 'woo-ai-review-manager' ); ?></label>
+								<label for="wairm_auto_analyze"><?php esc_html_e( 'Auto‑Analyze New Reviews', 'ai-review-manager-for-woocommerce' ); ?></label>
 							</th>
 							<td>
 								<label>
 									<input type="checkbox" id="wairm_auto_analyze" name="wairm_auto_analyze" value="yes" <?php checked( get_option( 'wairm_auto_analyze', 'yes' ), 'yes' ); ?> />
-									<?php esc_html_e( 'Automatically analyze new reviews for sentiment', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Automatically analyze new reviews for sentiment', 'ai-review-manager-for-woocommerce' ); ?>
 								</label>
 								<p class="description">
-									<?php esc_html_e( 'When enabled, all new WooCommerce reviews will be sent to the configured AI provider for sentiment analysis.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'When enabled, all new WooCommerce reviews will be sent to the configured AI provider for sentiment analysis.', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -672,33 +672,33 @@ final class Settings_Page {
 						</table>
 						<div class="wairm-pro-gate">
 							<div class="wairm-upgrade-banner">
-								<p><?php esc_html_e( 'AI response suggestions, auto-reply settings, and support email configuration are available in the Pro version.', 'woo-ai-review-manager' ); ?></p>
-								<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'woo-ai-review-manager' ); ?></a>
+								<p><?php esc_html_e( 'AI response suggestions, auto-reply settings, and support email configuration are available in the Pro version.', 'ai-review-manager-for-woocommerce' ); ?></p>
+								<a href="<?php echo esc_url( warc_fs()->get_upgrade_url() ); ?>" class="button"><?php esc_html_e( 'Upgrade to Pro', 'ai-review-manager-for-woocommerce' ); ?></a>
 							</div>
 							<table class="form-table">
 						<?php endif; ?>
 						<tr>
 							<th scope="row">
 								<label for="wairm_auto_respond_positive">
-									<?php esc_html_e( 'Auto-respond to Positive Reviews', 'woo-ai-review-manager' ); ?>
-									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span><?php endif; ?>
+									<?php esc_html_e( 'Auto-respond to Positive Reviews', 'ai-review-manager-for-woocommerce' ); ?>
+									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'ai-review-manager-for-woocommerce' ); ?></span><?php endif; ?>
 								</label>
 							</th>
 							<td>
 								<label>
 									<input type="checkbox" id="wairm_auto_respond_positive" name="wairm_auto_respond_positive" value="yes" <?php checked( get_option( 'wairm_auto_respond_positive', 'no' ), 'yes' ); ?> <?php disabled( ! warc_fs()->is_paying() ); ?> />
-									<?php esc_html_e( 'Automatically generate response suggestions for positive reviews', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Automatically generate response suggestions for positive reviews', 'ai-review-manager-for-woocommerce' ); ?>
 								</label>
 								<p class="description">
-									<?php esc_html_e( 'By default, only negative reviews get AI response suggestions. Enable this to get suggestions for positive reviews too.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'By default, only negative reviews get AI response suggestions. Enable this to get suggestions for positive reviews too.', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
 								<label for="wairm_reply_as">
-									<?php esc_html_e( 'Post Replies As', 'woo-ai-review-manager' ); ?>
-									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span><?php endif; ?>
+									<?php esc_html_e( 'Post Replies As', 'ai-review-manager-for-woocommerce' ); ?>
+									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'ai-review-manager-for-woocommerce' ); ?></span><?php endif; ?>
 								</label>
 							</th>
 							<td>
@@ -712,31 +712,31 @@ final class Settings_Page {
 										}
 										printf(
 											/* translators: %s: store name */
-											esc_html__( 'Store name (%s)', 'woo-ai-review-manager' ),
+											esc_html__( 'Store name (%s)', 'ai-review-manager-for-woocommerce' ),
 											esc_html( $store_label )
 										);
 										?>
 									</option>
 									<option value="user" <?php selected( $reply_as, 'user' ); ?>>
-										<?php esc_html_e( 'Logged-in user (your personal account)', 'woo-ai-review-manager' ); ?>
+										<?php esc_html_e( 'Logged-in user (your personal account)', 'ai-review-manager-for-woocommerce' ); ?>
 									</option>
 								</select>
 								<p class="description">
-									<?php esc_html_e( 'Choose how reply comments appear on the product page. "Store name" uses the Email From Name setting (or site name).', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Choose how reply comments appear on the product page. "Store name" uses the Email From Name setting (or site name).', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
 								<label for="wairm_support_email">
-									<?php esc_html_e( 'Support Email', 'woo-ai-review-manager' ); ?>
-									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'woo-ai-review-manager' ); ?></span><?php endif; ?>
+									<?php esc_html_e( 'Support Email', 'ai-review-manager-for-woocommerce' ); ?>
+									<?php if ( ! warc_fs()->is_paying() ) : ?><span class="wairm-pro-badge"><?php esc_html_e( 'Pro', 'ai-review-manager-for-woocommerce' ); ?></span><?php endif; ?>
 								</label>
 							</th>
 							<td>
 								<input type="email" id="wairm_support_email" name="wairm_support_email" value="<?php echo esc_attr( get_option( 'wairm_support_email', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" <?php disabled( ! warc_fs()->is_paying() ); ?> />
 								<p class="description">
-									<?php esc_html_e( 'Email address for customer support. The AI will reference this in response suggestions when directing customers to reach out. Defaults to the site admin email if left empty.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Email address for customer support. The AI will reference this in response suggestions when directing customers to reach out. Defaults to the site admin email if left empty.', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -747,31 +747,31 @@ final class Settings_Page {
 						<?php endif; ?>
 						<tr>
 							<th scope="row">
-								<?php esc_html_e( 'Data & Privacy', 'woo-ai-review-manager' ); ?>
+								<?php esc_html_e( 'Data & Privacy', 'ai-review-manager-for-woocommerce' ); ?>
 							</th>
 							<td>
 								<p>
-									<?php esc_html_e( 'This plugin sends review text to the AI provider configured in your WordPress Connectors for sentiment analysis and response generation.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'This plugin sends review text to the AI provider configured in your WordPress Connectors for sentiment analysis and response generation.', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 								<p>
-									<?php esc_html_e( 'Please review the privacy policy of your configured AI provider for details on how they handle your data.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Please review the privacy policy of your configured AI provider for details on how they handle your data.', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 								<p>
-									<?php esc_html_e( 'No customer personally identifiable information (PII) is sent to the AI provider—only the review text and product name.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'No customer personally identifiable information (PII) is sent to the AI provider—only the review text and product name.', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 							</td>
 						</tr>
 						<tr>
 							<th scope="row">
-								<?php esc_html_e( 'Delete All Data', 'woo-ai-review-manager' ); ?>
+								<?php esc_html_e( 'Delete All Data', 'ai-review-manager-for-woocommerce' ); ?>
 							</th>
 							<td>
 								<p>
-									<?php esc_html_e( 'Remove all plugin data including sentiment records, invitations, email queue, insights, and settings. This cannot be undone.', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'Remove all plugin data including sentiment records, invitations, email queue, insights, and settings. This cannot be undone.', 'ai-review-manager-for-woocommerce' ); ?>
 								</p>
 								<p style="margin-top: 10px;">
 									<button type="button" class="button button-link-delete" id="wairm-delete-all-data">
-										<?php esc_html_e( 'Delete All Data', 'woo-ai-review-manager' ); ?>
+										<?php esc_html_e( 'Delete All Data', 'ai-review-manager-for-woocommerce' ); ?>
 									</button>
 									<span id="wairm-delete-result"></span>
 								</p>

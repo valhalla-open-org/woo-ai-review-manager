@@ -109,7 +109,7 @@ final class Installer {
 			static function ( array $schedules ): array {
 				$schedules['every_five_minutes'] = [
 					'interval' => 300,
-					'display'  => esc_html__( 'Every 5 Minutes', 'woo-ai-review-manager' ),
+					'display'  => esc_html__( 'Every 5 Minutes', 'ai-review-manager-for-woocommerce' ),
 				];
 				return $schedules;
 			}
@@ -130,7 +130,7 @@ final class Installer {
 			'wairm_reminder_delay_days'   => 14,
 			'wairm_invitation_expiry_days' => 30,
 			'wairm_email_from_name'       => get_bloginfo( 'name' ),
-			'wairm_email_subject'         => __( 'How was your recent purchase?', 'woo-ai-review-manager' ),
+			'wairm_email_subject'         => __( 'How was your recent purchase?', 'ai-review-manager-for-woocommerce' ),
 			'wairm_auto_analyze'          => 'yes',
 			'wairm_auto_respond_positive' => 'no',
 			'wairm_negative_threshold'    => '0.30',

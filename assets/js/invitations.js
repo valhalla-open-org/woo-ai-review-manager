@@ -1,5 +1,5 @@
 /**
- * WooAI Review Manager – Invitations Page
+ * AI Review Manager – Invitations Page
  *
  * Handles send-now and resend AJAX actions for review invitations.
  *

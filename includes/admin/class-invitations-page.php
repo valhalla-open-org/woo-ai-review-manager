@@ -27,8 +27,8 @@ final class Invitations_Page {
 	public function add_submenu_page(): void {
 		add_submenu_page(
 			'wairm-dashboard',
-			__( 'Invitations', 'woo-ai-review-manager' ),
-			__( 'Invitations', 'woo-ai-review-manager' ),
+			__( 'Invitations', 'ai-review-manager-for-woocommerce' ),
+			__( 'Invitations', 'ai-review-manager-for-woocommerce' ),
 			'manage_woocommerce',
 			'wairm-invitations',
 			[ $this, 'render_page' ]
@@ -62,22 +62,22 @@ final class Invitations_Page {
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'nonce'    => wp_create_nonce( 'wairm_invitations' ),
 				'i18n'     => [
-					'confirm_send'   => __( 'Send this invitation email now?', 'woo-ai-review-manager' ),
-					'confirm_resend' => __( 'Resend this invitation email?', 'woo-ai-review-manager' ),
-					'sending'        => __( 'Sending...', 'woo-ai-review-manager' ),
-					'sent'           => __( 'Email sent successfully.', 'woo-ai-review-manager' ),
-					'error'          => __( 'Something went wrong. Please try again.', 'woo-ai-review-manager' ),
-					'send_now'       => __( 'Send Now', 'woo-ai-review-manager' ),
-					'resend'         => __( 'Resend', 'woo-ai-review-manager' ),
-					'status_pending'  => __( 'Pending', 'woo-ai-review-manager' ),
-					'status_sent'     => __( 'Sent', 'woo-ai-review-manager' ),
-					'status_clicked'  => __( 'Clicked', 'woo-ai-review-manager' ),
-					'status_reviewed' => __( 'Reviewed', 'woo-ai-review-manager' ),
-					'status_expired'  => __( 'Expired', 'woo-ai-review-manager' ),
-					'email_log'       => __( 'Email Log', 'woo-ai-review-manager' ),
-					'close'           => __( 'Close', 'woo-ai-review-manager' ),
-					'loading'         => __( 'Loading...', 'woo-ai-review-manager' ),
-					'no_emails'       => __( 'No emails found for this invitation.', 'woo-ai-review-manager' ),
+					'confirm_send'   => __( 'Send this invitation email now?', 'ai-review-manager-for-woocommerce' ),
+					'confirm_resend' => __( 'Resend this invitation email?', 'ai-review-manager-for-woocommerce' ),
+					'sending'        => __( 'Sending...', 'ai-review-manager-for-woocommerce' ),
+					'sent'           => __( 'Email sent successfully.', 'ai-review-manager-for-woocommerce' ),
+					'error'          => __( 'Something went wrong. Please try again.', 'ai-review-manager-for-woocommerce' ),
+					'send_now'       => __( 'Send Now', 'ai-review-manager-for-woocommerce' ),
+					'resend'         => __( 'Resend', 'ai-review-manager-for-woocommerce' ),
+					'status_pending'  => __( 'Pending', 'ai-review-manager-for-woocommerce' ),
+					'status_sent'     => __( 'Sent', 'ai-review-manager-for-woocommerce' ),
+					'status_clicked'  => __( 'Clicked', 'ai-review-manager-for-woocommerce' ),
+					'status_reviewed' => __( 'Reviewed', 'ai-review-manager-for-woocommerce' ),
+					'status_expired'  => __( 'Expired', 'ai-review-manager-for-woocommerce' ),
+					'email_log'       => __( 'Email Log', 'ai-review-manager-for-woocommerce' ),
+					'close'           => __( 'Close', 'ai-review-manager-for-woocommerce' ),
+					'loading'         => __( 'Loading...', 'ai-review-manager-for-woocommerce' ),
+					'no_emails'       => __( 'No emails found for this invitation.', 'ai-review-manager-for-woocommerce' ),
 				],
 			]
 		);
@@ -90,14 +90,14 @@ final class Invitations_Page {
 		check_ajax_referer( 'wairm_invitations', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
 
 		$invitation_id = absint( $_POST['invitation_id'] ?? 0 );
 		if ( ! $invitation_id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -109,11 +109,11 @@ final class Invitations_Page {
 		);
 
 		if ( ! $invitation ) {
-			wp_send_json_error( [ 'message' => __( 'Invitation not found.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invitation not found.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		if ( ! in_array( $invitation->status, [ 'pending' ], true ) ) {
-			wp_send_json_error( [ 'message' => __( 'This invitation has already been sent.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'This invitation has already been sent.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Find the queued initial email and send it now by setting scheduled_at to now.
@@ -128,7 +128,7 @@ final class Invitations_Page {
 		);
 
 		if ( ! $email ) {
-			wp_send_json_error( [ 'message' => __( 'No queued email found for this invitation.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'No queued email found for this invitation.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Update scheduled_at to now so it's immediately eligible.
@@ -163,7 +163,7 @@ final class Invitations_Page {
 			);
 			wp_send_json_success( [ 'status' => $new_status ] );
 		} else {
-			wp_send_json_error( [ 'message' => __( 'Email sending failed. Check your mail configuration.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Email sending failed. Check your mail configuration.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 	}
 
@@ -174,14 +174,14 @@ final class Invitations_Page {
 		check_ajax_referer( 'wairm_invitations', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
 
 		$invitation_id = absint( $_POST['invitation_id'] ?? 0 );
 		if ( ! $invitation_id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -193,12 +193,12 @@ final class Invitations_Page {
 		);
 
 		if ( ! $invitation ) {
-			wp_send_json_error( [ 'message' => __( 'Invitation not found.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invitation not found.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Allow resending for sent, clicked, or expired invitations, but not reviewed ones.
 		if ( 'reviewed' === $invitation->status ) {
-			wp_send_json_error( [ 'message' => __( 'This customer has already submitted a review.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'This customer has already submitted a review.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Check for expired invitation — extend expiry.
@@ -231,7 +231,7 @@ final class Invitations_Page {
 
 		$new_email_id = $wpdb->insert_id;
 		if ( ! $new_email_id ) {
-			wp_send_json_error( [ 'message' => __( 'Failed to queue email.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Failed to queue email.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// Process immediately.
@@ -256,7 +256,7 @@ final class Invitations_Page {
 			);
 			wp_send_json_success( [ 'status' => $new_status ] );
 		} else {
-			wp_send_json_error( [ 'message' => __( 'Email sending failed. Check your mail configuration.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Email sending failed. Check your mail configuration.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 	}
 
@@ -267,14 +267,14 @@ final class Invitations_Page {
 		check_ajax_referer( 'wairm_invitations', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'woo-ai-review-manager' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'ai-review-manager-for-woocommerce' ) ], 403 );
 		}
 
 		global $wpdb;
 		$invitation_id = absint( $_POST['invitation_id'] ?? 0 );
 
 		if ( ! $invitation_id ) {
-			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
+			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'ai-review-manager-for-woocommerce' ) ] );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -378,36 +378,36 @@ final class Invitations_Page {
 		?>
 		<div class="wrap wairm-invitations">
 			<div class="wairm-page-header">
-				<h1><?php esc_html_e( 'Review Invitations', 'woo-ai-review-manager' ); ?></h1>
+				<h1><?php esc_html_e( 'Review Invitations', 'ai-review-manager-for-woocommerce' ); ?></h1>
 				<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=wairm_export_csv&export_type=invitations' ), 'wairm_export_csv' ) ); ?>" class="page-title-action">
-					<?php esc_html_e( 'Export CSV', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Export CSV', 'ai-review-manager-for-woocommerce' ); ?>
 				</a>
 			</div>
 			<hr class="wp-header-end">
 
 			<ul class="subsubsub">
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'all', $base_url ) ); ?>" class="<?php echo 'all' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'All', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'All', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( (string) $count_all ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'pending', $base_url ) ); ?>" class="<?php echo 'pending' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Pending', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Pending', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( (string) $count_pending ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'sent', $base_url ) ); ?>" class="<?php echo 'sent' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Sent', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Sent', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( (string) $count_sent ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'clicked', $base_url ) ); ?>" class="<?php echo 'clicked' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Clicked', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Clicked', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( (string) $count_clicked ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'reviewed', $base_url ) ); ?>" class="<?php echo 'reviewed' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Reviewed', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Reviewed', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( (string) $count_reviewed ); ?>)</span>
 				</a> |</li>
 				<li><a href="<?php echo esc_url( add_query_arg( 'status', 'expired', $base_url ) ); ?>" class="<?php echo 'expired' === $filter ? 'current' : ''; ?>">
-					<?php esc_html_e( 'Expired', 'woo-ai-review-manager' ); ?>
+					<?php esc_html_e( 'Expired', 'ai-review-manager-for-woocommerce' ); ?>
 					<span class="count">(<?php echo esc_html( (string) $count_expired ); ?>)</span>
 				</a></li>
 			</ul>
@@ -418,16 +418,16 @@ final class Invitations_Page {
 				<form method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
 					<input type="hidden" name="page" value="wairm-invitations">
 					<input type="hidden" name="status" value="<?php echo esc_attr( $filter ); ?>">
-					<input type="text" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search customer...', 'woo-ai-review-manager' ); ?>" class="wairm-search-input">
-					<label><?php esc_html_e( 'From:', 'woo-ai-review-manager' ); ?>
+					<input type="text" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Search customer...', 'ai-review-manager-for-woocommerce' ); ?>" class="wairm-search-input">
+					<label><?php esc_html_e( 'From:', 'ai-review-manager-for-woocommerce' ); ?>
 						<input type="date" name="date_from" value="<?php echo esc_attr( $date_from ); ?>">
 					</label>
-					<label><?php esc_html_e( 'To:', 'woo-ai-review-manager' ); ?>
+					<label><?php esc_html_e( 'To:', 'ai-review-manager-for-woocommerce' ); ?>
 						<input type="date" name="date_to" value="<?php echo esc_attr( $date_to ); ?>">
 					</label>
-					<button type="submit" class="button"><?php esc_html_e( 'Filter', 'woo-ai-review-manager' ); ?></button>
+					<button type="submit" class="button"><?php esc_html_e( 'Filter', 'ai-review-manager-for-woocommerce' ); ?></button>
 					<?php if ( ! empty( $search ) || ! empty( $date_from ) || ! empty( $date_to ) ) : ?>
-						<a href="<?php echo esc_url( add_query_arg( 'status', $filter, $base_url ) ); ?>" class="button"><?php esc_html_e( 'Reset', 'woo-ai-review-manager' ); ?></a>
+						<a href="<?php echo esc_url( add_query_arg( 'status', $filter, $base_url ) ); ?>" class="button"><?php esc_html_e( 'Reset', 'ai-review-manager-for-woocommerce' ); ?></a>
 					<?php endif; ?>
 				</form>
 			</div>
@@ -435,7 +435,7 @@ final class Invitations_Page {
 			<?php if ( empty( $rows ) ) : ?>
 				<div class="wairm-empty-state">
 					<p>
-						<?php esc_html_e( 'No invitations found.', 'woo-ai-review-manager' ); ?>
+						<?php esc_html_e( 'No invitations found.', 'ai-review-manager-for-woocommerce' ); ?>
 					</p>
 				</div>
 			<?php else : ?>
@@ -443,15 +443,15 @@ final class Invitations_Page {
 				<table class="wp-list-table widefat striped">
 					<thead>
 						<tr>
-							<th scope="col" class="column-id"><?php esc_html_e( 'ID', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col"><?php esc_html_e( 'Customer', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" class="column-order"><?php esc_html_e( 'Order', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col"><?php esc_html_e( 'Products', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" class="column-status"><?php esc_html_e( 'Status', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" class="column-emails"><?php esc_html_e( 'Emails', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" class="column-date"><?php esc_html_e( 'Created', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" class="column-date"><?php esc_html_e( 'Expires', 'woo-ai-review-manager' ); ?></th>
-							<th scope="col" class="column-date"><?php esc_html_e( 'Actions', 'woo-ai-review-manager' ); ?></th>
+							<th scope="col" class="column-id"><?php esc_html_e( 'ID', 'ai-review-manager-for-woocommerce' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Customer', 'ai-review-manager-for-woocommerce' ); ?></th>
+							<th scope="col" class="column-order"><?php esc_html_e( 'Order', 'ai-review-manager-for-woocommerce' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Products', 'ai-review-manager-for-woocommerce' ); ?></th>
+							<th scope="col" class="column-status"><?php esc_html_e( 'Status', 'ai-review-manager-for-woocommerce' ); ?></th>
+							<th scope="col" class="column-emails"><?php esc_html_e( 'Emails', 'ai-review-manager-for-woocommerce' ); ?></th>
+							<th scope="col" class="column-date"><?php esc_html_e( 'Created', 'ai-review-manager-for-woocommerce' ); ?></th>
+							<th scope="col" class="column-date"><?php esc_html_e( 'Expires', 'ai-review-manager-for-woocommerce' ); ?></th>
+							<th scope="col" class="column-date"><?php esc_html_e( 'Actions', 'ai-review-manager-for-woocommerce' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -504,7 +504,7 @@ final class Invitations_Page {
 								if ( $sent_count > 0 ) {
 									printf(
 										/* translators: %d: number of emails sent */
-										esc_html( _n( '%d sent', '%d sent', $sent_count, 'woo-ai-review-manager' ) ),
+										esc_html( _n( '%d sent', '%d sent', $sent_count, 'ai-review-manager-for-woocommerce' ) ),
 										absint( $sent_count )
 									);
 								}
@@ -515,18 +515,18 @@ final class Invitations_Page {
 									echo '<span class="wairm-email-failed">';
 									printf(
 										/* translators: %d: number of emails failed */
-										esc_html( _n( '%d failed', '%d failed', $failed_count, 'woo-ai-review-manager' ) ),
+										esc_html( _n( '%d failed', '%d failed', $failed_count, 'ai-review-manager-for-woocommerce' ) ),
 										absint( $failed_count )
 									);
 									echo '</span>';
 								}
 								if ( 0 === $sent_count && 0 === $failed_count ) {
-									echo '<span class="wairm-email-queued">' . esc_html__( 'Queued', 'woo-ai-review-manager' ) . '</span>';
+									echo '<span class="wairm-email-queued">' . esc_html__( 'Queued', 'ai-review-manager-for-woocommerce' ) . '</span>';
 								}
 								?>
 								<br>
 								<button type="button" class="button-link wairm-view-email-log" data-id="<?php echo absint( $row->id ); ?>">
-									<?php esc_html_e( 'View log', 'woo-ai-review-manager' ); ?>
+									<?php esc_html_e( 'View log', 'ai-review-manager-for-woocommerce' ); ?>
 								</button>
 							</td>
 							<td><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $row->created_at ) ) ); ?></td>
@@ -544,14 +544,14 @@ final class Invitations_Page {
 							<td>
 								<?php if ( 'pending' === $row->status ) : ?>
 									<button type="button" class="button button-small wairm-send-now" data-id="<?php echo absint( $row->id ); ?>">
-										<?php esc_html_e( 'Send Now', 'woo-ai-review-manager' ); ?>
+										<?php esc_html_e( 'Send Now', 'ai-review-manager-for-woocommerce' ); ?>
 									</button>
 								<?php elseif ( in_array( $row->status, [ 'sent', 'clicked', 'expired' ], true ) ) : ?>
 									<button type="button" class="button button-small wairm-resend" data-id="<?php echo absint( $row->id ); ?>">
-										<?php esc_html_e( 'Resend', 'woo-ai-review-manager' ); ?>
+										<?php esc_html_e( 'Resend', 'ai-review-manager-for-woocommerce' ); ?>
 									</button>
 								<?php elseif ( 'reviewed' === $row->status ) : ?>
-									<span class="dashicons dashicons-yes-alt" title="<?php esc_attr_e( 'Review submitted', 'woo-ai-review-manager' ); ?>"></span>
+									<span class="dashicons dashicons-yes-alt" title="<?php esc_attr_e( 'Review submitted', 'ai-review-manager-for-woocommerce' ); ?>"></span>
 								<?php endif; ?>
 							</td>
 						</tr>
@@ -580,7 +580,7 @@ final class Invitations_Page {
 			<div id="wairm-email-log-modal" class="wairm-modal" style="display:none;">
 				<div class="wairm-modal-content">
 					<div class="wairm-modal-header">
-						<h3><?php esc_html_e( 'Email Log', 'woo-ai-review-manager' ); ?></h3>
+						<h3><?php esc_html_e( 'Email Log', 'ai-review-manager-for-woocommerce' ); ?></h3>
 						<button type="button" class="wairm-modal-close">&times;</button>
 					</div>
 					<div class="wairm-modal-body" id="wairm-email-log-body"></div>

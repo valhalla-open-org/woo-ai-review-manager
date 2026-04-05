@@ -1,14 +1,14 @@
 <?php
 /**
- * Plugin Name: WooCommerce AI Review Manager
- * Plugin URI:  https://github.com/valhalla-open-org/woo-ai-review-manager
+ * Plugin Name: AI Review Manager for WooCommerce
+ * Plugin URI:  https://github.com/valhalla-open-org/ai-review-manager-for-woocommerce
  * Description: Automated review collection, sentiment analysis, and AI-powered response suggestions for WooCommerce stores.
  * Version:     2.1.0
  * Author:      Valhalla Open
  * Author URI:  https://github.com/valhalla-open-org
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: woo-ai-review-manager
+ * Text Domain: ai-review-manager-for-woocommerce
  * Domain Path: /languages
  * Requires at least: 7.0
  * Requires PHP: 8.0
@@ -93,7 +93,7 @@ if ( function_exists( 'warc_fs' ) ) {
 				static function (): void {
 					printf(
 						'<div class="notice notice-error"><p>%s</p></div>',
-						esc_html__( 'WooCommerce AI Review Manager requires WooCommerce to be installed and active.', 'woo-ai-review-manager' )
+						esc_html__( 'AI Review Manager for WooCommerce requires WooCommerce to be installed and active.', 'ai-review-manager-for-woocommerce' )
 					);
 				}
 			);
@@ -106,7 +106,7 @@ if ( function_exists( 'warc_fs' ) ) {
 				static function (): void {
 					printf(
 						'<div class="notice notice-warning"><p>%s</p></div>',
-						esc_html__( 'WooCommerce AI Review Manager requires WordPress 7.0+ with the AI Client. Sentiment analysis and AI responses are disabled until the AI Client is available.', 'woo-ai-review-manager' )
+						esc_html__( 'AI Review Manager for WooCommerce requires WordPress 7.0+ with the AI Client. Sentiment analysis and AI responses are disabled until the AI Client is available.', 'ai-review-manager-for-woocommerce' )
 					);
 				}
 			);
@@ -121,7 +121,7 @@ if ( function_exists( 'warc_fs' ) ) {
 	function wairm_load_textdomain(): void {
 		// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- Required for non-wp.org distribution
 		load_plugin_textdomain(
-			'woo-ai-review-manager',
+			'ai-review-manager-for-woocommerce',
 			false,
 			dirname( WAIRM_PLUGIN_BASENAME ) . '/languages'
 		);
@@ -184,10 +184,10 @@ if ( function_exists( 'warc_fs' ) ) {
 			$message = sprintf(
 				/* translators: %d: number of reply comments that remain after uninstall */
 				_n(
-					'WooAI Review Manager: %d AI-generated reply comment remains on your product pages. You may want to review these manually.',
-					'WooAI Review Manager: %d AI-generated reply comments remain on your product pages. You may want to review these manually.',
+					'AI Review Manager: %d AI-generated reply comment remains on your product pages. You may want to review these manually.',
+					'AI Review Manager: %d AI-generated reply comments remain on your product pages. You may want to review these manually.',
 					$orphaned_replies,
-					'woo-ai-review-manager'
+					'ai-review-manager-for-woocommerce'
 				),
 				$orphaned_replies
 			);

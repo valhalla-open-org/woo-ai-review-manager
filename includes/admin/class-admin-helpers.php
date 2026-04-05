@@ -38,11 +38,11 @@ final class Admin_Helpers {
 	 */
 	public static function invitation_status_labels(): array {
 		return [
-			'pending'  => __( 'Pending', 'woo-ai-review-manager' ),
-			'sent'     => __( 'Sent', 'woo-ai-review-manager' ),
-			'clicked'  => __( 'Clicked', 'woo-ai-review-manager' ),
-			'reviewed' => __( 'Reviewed', 'woo-ai-review-manager' ),
-			'expired'  => __( 'Expired', 'woo-ai-review-manager' ),
+			'pending'  => __( 'Pending', 'ai-review-manager-for-woocommerce' ),
+			'sent'     => __( 'Sent', 'ai-review-manager-for-woocommerce' ),
+			'clicked'  => __( 'Clicked', 'ai-review-manager-for-woocommerce' ),
+			'reviewed' => __( 'Reviewed', 'ai-review-manager-for-woocommerce' ),
+			'expired'  => __( 'Expired', 'ai-review-manager-for-woocommerce' ),
 		];
 	}
 
@@ -53,10 +53,10 @@ final class Admin_Helpers {
 	 */
 	public static function response_status_labels(): array {
 		return [
-			'generated' => __( 'New', 'woo-ai-review-manager' ),
-			'approved'  => __( 'Approved', 'woo-ai-review-manager' ),
-			'sent'      => __( 'Posted', 'woo-ai-review-manager' ),
-			'dismissed' => __( 'Dismissed', 'woo-ai-review-manager' ),
+			'generated' => __( 'New', 'ai-review-manager-for-woocommerce' ),
+			'approved'  => __( 'Approved', 'ai-review-manager-for-woocommerce' ),
+			'sent'      => __( 'Posted', 'ai-review-manager-for-woocommerce' ),
+			'dismissed' => __( 'Dismissed', 'ai-review-manager-for-woocommerce' ),
 		];
 	}
 }
