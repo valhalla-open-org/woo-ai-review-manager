@@ -202,7 +202,7 @@ final class AI_Client {
 		$result = self::apply_model_preference( $builder )->generate_text();
 
 		if ( is_wp_error( $result ) ) {
-			throw new \RuntimeException( 'AI sentiment analysis failed: ' . $result->get_error_message() );
+			throw new \RuntimeException( 'AI sentiment analysis failed: ' . esc_html( $result->get_error_message() ) );
 		}
 
 		return $this->parse_sentiment_response( $result );
@@ -230,15 +230,12 @@ final class AI_Client {
 			$support_email = get_option( 'admin_email' );
 		}
 
-		$prompt = <<<PROMPT
-Write a store owner's reply to this customer review.
-
-Store: {$store_name}
-Product: {$product_name}
-Sentiment: {$sentiment}
-Support email: {$support_email}
-Review: "{$review_text}"
-PROMPT;
+		$prompt = 'Write a store owner\'s reply to this customer review.' . "\n\n"
+			. 'Store: ' . $store_name . "\n"
+			. 'Product: ' . $product_name . "\n"
+			. 'Sentiment: ' . $sentiment . "\n"
+			. 'Support email: ' . $support_email . "\n"
+			. 'Review: "' . $review_text . '"';
 
 		$system = implode( "\n", [
 			'You are a store owner who personally reads every review. You are helpful, personable, and genuine.',
@@ -272,7 +269,7 @@ PROMPT;
 		$result = self::apply_model_preference( $builder )->generate_text();
 
 		if ( is_wp_error( $result ) ) {
-			throw new \RuntimeException( 'AI response generation failed: ' . $result->get_error_message() );
+			throw new \RuntimeException( 'AI response generation failed: ' . esc_html( $result->get_error_message() ) );
 		}
 
 		return trim( $result );
@@ -312,17 +309,12 @@ PROMPT;
 		$category_prompt = $this->get_insight_prompt( $category );
 		$schema          = $this->get_insight_schema( $category );
 
-		$prompt = <<<PROMPT
-Analyze these {$review_count} customer reviews and provide structured insights.
-
-Time period: {$period_label}
-Category: {$category}
-
-{$category_prompt}
-
-Reviews:
-{$reviews_text}
-PROMPT;
+		$prompt = 'Analyze these ' . $review_count . ' customer reviews and provide structured insights.' . "\n\n"
+			. 'Time period: ' . $period_label . "\n"
+			. 'Category: ' . $category . "\n\n"
+			. $category_prompt . "\n\n"
+			. 'Reviews:' . "\n"
+			. $reviews_text;
 
 		$system = implode( "\n", [
 			'You are a business intelligence analyst helping an e-commerce store owner understand their customer feedback.',
@@ -354,7 +346,7 @@ PROMPT;
 		remove_filter( 'http_request_timeout', $extend_timeout );
 
 		if ( is_wp_error( $result ) ) {
-			throw new \RuntimeException( 'AI insight generation failed: ' . $result->get_error_message() );
+			throw new \RuntimeException( 'AI insight generation failed: ' . esc_html( $result->get_error_message() ) );
 		}
 
 		return $this->parse_insight_response( $result );

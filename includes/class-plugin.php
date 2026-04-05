@@ -43,6 +43,7 @@ final class Plugin {
 	public static function expire_stale_invitations(): void {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query(
 			$wpdb->prepare(
 				"UPDATE {$wpdb->prefix}wairm_review_invitations
@@ -54,6 +55,7 @@ final class Plugin {
 		);
 
 		// Cancel queued emails for expired invitations.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query(
 			$wpdb->prepare(
 				"UPDATE {$wpdb->prefix}wairm_email_queue eq

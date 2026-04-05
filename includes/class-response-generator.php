@@ -27,6 +27,7 @@ final class Response_Generator {
 	public function generate_for_sentiment( int $sentiment_id ): void {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT s.*, c.comment_content
@@ -60,6 +61,7 @@ final class Response_Generator {
 			return;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			[

@@ -64,6 +64,7 @@ final class Review_Collector {
 		$token = wp_generate_password( 48, false );
 		$now   = current_time( 'mysql', true );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$wpdb->insert(
 			$wpdb->prefix . 'wairm_review_invitations',
 			[
@@ -86,6 +87,7 @@ final class Review_Collector {
 		// Queue the initial email.
 		$send_at = gmdate( 'Y-m-d H:i:s', strtotime( "+{$delay_days} days", strtotime( $now ) ) );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$wpdb->insert(
 			$wpdb->prefix . 'wairm_email_queue',
 			[
@@ -102,6 +104,7 @@ final class Review_Collector {
 			$reminder_days = absint( get_option( 'wairm_reminder_delay_days', 14 ) );
 			$reminder_at   = gmdate( 'Y-m-d H:i:s', strtotime( "+{$reminder_days} days", strtotime( $now ) ) );
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			$wpdb->insert(
 				$wpdb->prefix . 'wairm_email_queue',
 				[
@@ -160,6 +163,7 @@ final class Review_Collector {
 
 		// Prevent duplicate scheduling — check if already analyzed.
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$already = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM {$wpdb->prefix}wairm_review_sentiment WHERE comment_id = %d",

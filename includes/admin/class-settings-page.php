@@ -260,9 +260,13 @@ final class Settings_Page {
 		global $wpdb;
 
 		// Drop custom tables.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_email_queue" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_review_invitations" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_review_sentiment" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_insights" );
 
 		// Delete plugin options.
@@ -317,6 +321,7 @@ final class Settings_Page {
 	}
 
 	public function render_page(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only page display
 		$active_tab = sanitize_key( $_GET['tab'] ?? 'api' );
 		$valid_tabs = [ 'api', 'email', 'general' ];
 		if ( ! in_array( $active_tab, $valid_tabs, true ) ) {

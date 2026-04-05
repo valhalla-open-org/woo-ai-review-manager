@@ -75,6 +75,7 @@ final class CSV_Export {
 			'Response Status',
 		] );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
 			"SELECT s.*, c.comment_content, c.comment_author, c.comment_date,
 			        p.post_title AS product_name
@@ -98,6 +99,7 @@ final class CSV_Export {
 			] );
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Writing to php://output stream.
 		fclose( $output );
 		exit;
 	}
@@ -123,6 +125,7 @@ final class CSV_Export {
 			'Emails Failed',
 		] );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
 			"SELECT i.*,
 			        (SELECT COUNT(*) FROM {$wpdb->prefix}wairm_email_queue eq WHERE eq.invitation_id = i.id AND eq.status = 'sent') AS emails_sent,
@@ -145,6 +148,7 @@ final class CSV_Export {
 			] );
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Writing to php://output stream.
 		fclose( $output );
 		exit;
 	}
@@ -168,6 +172,7 @@ final class CSV_Export {
 			'AI Suggested Response',
 		] );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
 			"SELECT s.*, c.comment_author, p.post_title AS product_name
 			 FROM {$wpdb->prefix}wairm_review_sentiment s
@@ -189,6 +194,7 @@ final class CSV_Export {
 			] );
 		}
 
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Writing to php://output stream.
 		fclose( $output );
 		exit;
 	}

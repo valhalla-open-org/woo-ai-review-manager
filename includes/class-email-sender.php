@@ -50,9 +50,9 @@ final class Email_Sender {
 		<!DOCTYPE html>
 		<html <?php language_attributes(); ?>>
 		<head>
-			<meta charset="<?php echo $charset; ?>">
+			<meta charset="<?php echo esc_attr( $charset ); ?>">
 			<meta name="viewport" content="width=device-width, initial-scale=1">
-			<title><?php echo esc_html__( 'Leave a Review', 'woo-ai-review-manager' ) . ' — ' . $site_name; ?></title>
+			<title><?php echo esc_html__( 'Leave a Review', 'woo-ai-review-manager' ) . ' — ' . esc_html( $site_name ); ?></title>
 			<?php wp_head(); ?>
 			<style>
 				/* Reset & base */
@@ -281,6 +281,7 @@ final class Email_Sender {
 		$now = current_time( 'mysql', true );
 
 		// Allow invitations in 'pending' (initial) or 'sent'/'clicked' (reminder) statuses.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$pending = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT eq.*, ri.customer_email, ri.customer_name, ri.order_id, ri.token, ri.product_ids
@@ -311,6 +312,7 @@ final class Email_Sender {
 
 		// Skip emails that have exceeded retry limit.
 		if ( (int) $email->attempts >= self::MAX_EMAIL_ATTEMPTS ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->update(
 				$wpdb->prefix . 'wairm_email_queue',
 				[ 'status' => 'failed', 'last_error' => 'Max retry attempts exceeded' ],
@@ -322,6 +324,7 @@ final class Email_Sender {
 		}
 
 		// Increment attempts before trying.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query(
 			$wpdb->prepare(
 				"UPDATE {$wpdb->prefix}wairm_email_queue SET attempts = attempts + 1 WHERE id = %d",
@@ -334,6 +337,7 @@ final class Email_Sender {
 		$body    = self::build_email_body( $email );
 
 		if ( '' === $body ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->update(
 				$wpdb->prefix . 'wairm_email_queue',
 				[ 'status' => 'failed', 'last_error' => 'Empty email body (invalid product data)' ],
@@ -353,6 +357,7 @@ final class Email_Sender {
 
 		if ( $sent ) {
 			// Mark email as sent.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->update(
 				$wpdb->prefix . 'wairm_email_queue',
 				[ 'status' => 'sent', 'sent_at' => current_time( 'mysql', true ) ],
@@ -362,6 +367,7 @@ final class Email_Sender {
 			);
 
 			// Update invitation status to 'sent' only if still 'pending'.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->query(
 				$wpdb->prepare(
 					"UPDATE {$wpdb->prefix}wairm_review_invitations
@@ -375,6 +381,7 @@ final class Email_Sender {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( sprintf( '[WAIRM] Email send failed for invitation %d to %s.', $email->invitation_id, $email->customer_email ) );
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->update(
 				$wpdb->prefix . 'wairm_email_queue',
 				[ 'status' => 'failed', 'last_error' => 'wp_mail returned false' ],
@@ -535,7 +542,7 @@ final class Email_Sender {
 					printf(
 						/* translators: %d: number of days */
 						esc_html__( 'This review link will expire in %d days.', 'woo-ai-review-manager' ),
-						$expiry_days
+						absint( $expiry_days )
 					);
 					?>
 				</p>
@@ -588,6 +595,7 @@ final class Email_Sender {
 		global $wpdb;
 
 		// Accept invitations that are sent or clicked (allow page refreshes).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$invitation = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}wairm_review_invitations
@@ -603,6 +611,7 @@ final class Email_Sender {
 
 		// Mark as clicked if still 'sent'.
 		if ( 'sent' === $invitation->status ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->update(
 				$wpdb->prefix . 'wairm_review_invitations',
 				[ 'status' => 'clicked', 'clicked_at' => current_time( 'mysql', true ) ],
@@ -663,7 +672,7 @@ final class Email_Sender {
 					<select name="rating[<?php echo esc_attr( $pid ); ?>]" class="wairm-rating-select" required>
 						<option value=""><?php esc_html_e( 'Select a rating', 'woo-ai-review-manager' ); ?></option>
 						<?php for ( $i = 5; $i >= 1; $i-- ) : ?>
-						<option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+						<option value="<?php echo absint( $i ); ?>"><?php echo absint( $i ); ?></option>
 						<?php endfor; ?>
 					</select>
 
@@ -690,16 +699,17 @@ final class Email_Sender {
 	 * Handle review form submission.
 	 */
 	public function handle_form_submission(): void {
-		if ( ! wp_verify_nonce( $_POST['_wpnonce'] ?? '', 'wairm_review' ) ) {
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ?? '' ) ), 'wairm_review' ) ) {
 			wp_die( esc_html__( 'Invalid request.', 'woo-ai-review-manager' ) );
 		}
 
 		global $wpdb;
 
 		$invitation_id = absint( $_POST['invitation_id'] ?? 0 );
-		$token         = sanitize_text_field( $_POST['token'] ?? '' );
+		$token         = sanitize_text_field( wp_unslash( $_POST['token'] ?? '' ) );
 
 		// Verify invitation exists, matches token, and hasn't already been reviewed.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$invitation = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}wairm_review_invitations
@@ -714,9 +724,9 @@ final class Email_Sender {
 		}
 
 		// Process each product review.
-		$product_ids = $_POST['product_ids'] ?? [];
-		$ratings     = $_POST['rating'] ?? [];
-		$reviews     = $_POST['review'] ?? [];
+		$product_ids = array_map( 'absint', (array) wp_unslash( $_POST['product_ids'] ?? [] ) );
+		$ratings     = array_map( 'absint', (array) wp_unslash( $_POST['rating'] ?? [] ) );
+		$reviews     = array_map( 'sanitize_textarea_field', (array) wp_unslash( $_POST['review'] ?? [] ) );
 
 
 		foreach ( (array) $product_ids as $product_id ) {
@@ -736,6 +746,7 @@ final class Email_Sender {
 			}
 
 			// Check for duplicate review from this customer for this product.
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$existing = $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT comment_ID FROM {$wpdb->comments}
@@ -785,6 +796,7 @@ final class Email_Sender {
 		}
 
 		// Mark invitation as reviewed to prevent resubmission.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_invitations',
 			[ 'status' => 'reviewed' ],
@@ -794,6 +806,7 @@ final class Email_Sender {
 		);
 
 		// Cancel any pending reminder emails for this invitation.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_email_queue',
 			[ 'status' => 'cancelled' ],
@@ -825,9 +838,9 @@ final class Email_Sender {
 		<!DOCTYPE html>
 		<html <?php language_attributes(); ?>>
 		<head>
-			<meta charset="<?php echo $charset; ?>">
+			<meta charset="<?php echo esc_attr( $charset ); ?>">
 			<meta name="viewport" content="width=device-width, initial-scale=1">
-			<title><?php echo esc_html__( 'Thank You', 'woo-ai-review-manager' ) . ' — ' . $site_name; ?></title>
+			<title><?php echo esc_html__( 'Thank You', 'woo-ai-review-manager' ) . ' — ' . esc_html( $site_name ); ?></title>
 			<?php wp_head(); ?>
 			<style>
 				*, *::before, *::after { box-sizing: border-box; }

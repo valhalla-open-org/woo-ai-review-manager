@@ -94,6 +94,7 @@ final class Sentiment_Controller {
 			);
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$stats = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT
@@ -108,6 +109,7 @@ final class Sentiment_Controller {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$recent = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT s.sentiment, s.score, s.key_phrases, s.analyzed_at,

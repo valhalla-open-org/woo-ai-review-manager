@@ -31,6 +31,7 @@ final class Sentiment_Analyzer {
 		}
 
 		// Skip if already analyzed.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$exists = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT id FROM {$wpdb->prefix}wairm_review_sentiment WHERE comment_id = %d",
@@ -68,6 +69,7 @@ final class Sentiment_Analyzer {
 			return;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$wpdb->insert(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			[
@@ -98,6 +100,7 @@ final class Sentiment_Analyzer {
 	public static function count_pending(): int {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*)
@@ -121,6 +124,7 @@ final class Sentiment_Analyzer {
 	public static function process_pending( int $batch_size = 50 ): array {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$unanalyzed = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT c.comment_ID
@@ -143,6 +147,7 @@ final class Sentiment_Analyzer {
 		if ( ! empty( $unanalyzed ) ) {
 			$analyzer = new self();
 			foreach ( $unanalyzed as $comment_id ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 				$before = $wpdb->get_var(
 					$wpdb->prepare(
 						"SELECT id FROM {$wpdb->prefix}wairm_review_sentiment WHERE comment_id = %d",
@@ -150,6 +155,7 @@ final class Sentiment_Analyzer {
 					)
 				);
 				$analyzer->analyze_review( (int) $comment_id );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 				$after = $wpdb->get_var(
 					$wpdb->prepare(
 						"SELECT id FROM {$wpdb->prefix}wairm_review_sentiment WHERE comment_id = %d",
@@ -194,6 +200,7 @@ final class Sentiment_Analyzer {
 			return;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			[

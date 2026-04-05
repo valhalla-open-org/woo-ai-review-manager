@@ -93,18 +93,14 @@ final class Reviews_Controller {
 		$offset    = ( $page - 1 ) * $per_page;
 
 		$where = '';
-		$args  = [];
 
 		if ( '' !== $sentiment ) {
-			$where = 'AND s.sentiment = %s';
-			$args[] = $sentiment;
+			$where = $wpdb->prepare( 'AND s.sentiment = %s', $sentiment );
 		}
 
-		$args[] = $per_page;
-		$args[] = $offset;
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where is built safely above.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$results = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where is built via prepare() above.
 			$wpdb->prepare(
 				"SELECT s.*, c.comment_content, c.comment_author, c.comment_date, p.post_title AS product_name
 				 FROM {$wpdb->prefix}wairm_review_sentiment s
@@ -113,7 +109,8 @@ final class Reviews_Controller {
 				 WHERE 1=1 {$where}
 				 ORDER BY s.analyzed_at DESC
 				 LIMIT %d OFFSET %d",
-				...$args
+				$per_page,
+				$offset
 			)
 		);
 

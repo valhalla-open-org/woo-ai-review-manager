@@ -167,7 +167,7 @@ final class Dashboard_Page {
 			$inv_date_filter = $wpdb->prepare( ' AND i.sent_at >= %s', $cutoff );
 		}
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$review_trends = $wpdb->get_results(
 			"SELECT {$group_expr} as period_key,
 					COUNT(*) as review_count,
@@ -178,7 +178,7 @@ final class Dashboard_Page {
 			 ORDER BY period_key ASC"
 		);
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$conversion_trends = $wpdb->get_results(
 			"SELECT {$inv_group} as period_key,
 					COUNT(*) as total_sent,
@@ -224,8 +224,10 @@ final class Dashboard_Page {
 		$prev_end   = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
 		$prev_start = gmdate( 'Y-m-d H:i:s', strtotime( '-' . ( $days * 2 ) . ' days' ) );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$prev_sentiment = $wpdb->get_row(
 			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				"SELECT COUNT(*) as total_reviews, AVG(score) as avg_score
 				 FROM {$sentiment_table}
 				 WHERE analyzed_at >= %s AND analyzed_at < %s",
@@ -234,8 +236,10 @@ final class Dashboard_Page {
 			)
 		);
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$prev_email = $wpdb->get_row(
 			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				"SELECT
 					COUNT(*) as total_sent,
 					SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) as reviewed
@@ -268,7 +272,7 @@ final class Dashboard_Page {
 		$invitations_table = $wpdb->prefix . 'wairm_review_invitations';
 		$inv_date_where    = str_replace( 's.analyzed_at', 'i.sent_at', $date_where );
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row(
 			"SELECT
 				COUNT(CASE WHEN i.status IN ('sent','clicked','reviewed','expired') THEN 1 END) as sent,
@@ -397,7 +401,7 @@ final class Dashboard_Page {
 		}
 
 		// Overall sentiment stats.
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $date_where built with prepare().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$stats = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT
@@ -418,8 +422,10 @@ final class Dashboard_Page {
 		$pending_count = \WooAIReviewManager\Sentiment_Analyzer::count_pending();
 
 		// Actionable responses count.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$actionable_responses = (int) $wpdb->get_var(
 			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				"SELECT COUNT(*) FROM {$table}
 				 WHERE ai_response_suggestion IS NOT NULL
 				   AND ai_response_status IN (%s, %s)",
@@ -429,8 +435,9 @@ final class Dashboard_Page {
 		);
 
 		// Failure stats for the error widget.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$failed_emails = (int) $wpdb->get_var(
-			"SELECT COUNT(*) FROM {$wpdb->prefix}wairm_email_queue WHERE status = 'failed'"
+			"SELECT COUNT(*) FROM {$wpdb->prefix}wairm_email_queue WHERE status = 'failed'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		);
 
 		// Pro dashboard data.
@@ -452,8 +459,10 @@ final class Dashboard_Page {
 		}
 
 		// Negative reviews needing response.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$negative_needing_response = (int) $wpdb->get_var(
 			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				"SELECT COUNT(*) FROM {$table}
 				 WHERE sentiment = %s
 				   AND ai_response_suggestion IS NOT NULL
@@ -470,8 +479,10 @@ final class Dashboard_Page {
 		$checklist = $this->get_setup_checklist();
 
 		// Recent reviews.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$recent = $wpdb->get_results(
 			$wpdb->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 				"SELECT s.*, c.comment_content, c.comment_author, c.comment_date, p.post_title as product_name
 				 FROM {$table} s
 				 JOIN {$wpdb->comments} c ON c.comment_ID = s.comment_id
@@ -483,7 +494,7 @@ final class Dashboard_Page {
 		);
 
 		// Top products (respects date filter).
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $date_where built with prepare().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$top_products = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT product_id, COUNT(*) as review_count, AVG(score) as avg_score,
@@ -513,6 +524,7 @@ final class Dashboard_Page {
 		$needs_action_count = $negative_needing_response + $pending_count;
 
 		// First-run check.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$total_all_time = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
 		?>
 		<div class="wrap wairm-dashboard">
@@ -551,7 +563,7 @@ final class Dashboard_Page {
 							printf(
 								/* translators: %d: number of unanalyzed reviews */
 								esc_html__( 'Analyze %d Reviews', 'woo-ai-review-manager' ),
-								$pending_count
+								absint( $pending_count )
 							);
 							?>
 						</button>
@@ -583,13 +595,14 @@ final class Dashboard_Page {
 				<p>
 					<?php
 					printf(
+						/* translators: %1$d: number of failed emails, %2$s: opening link tag, %3$s: closing link tag */
 						esc_html( _n(
 							'%1$d email failed to send. %2$sView invitations%3$s to investigate.',
 							'%1$d emails failed to send. %2$sView invitations%3$s to investigate.',
 							$failed_emails,
 							'woo-ai-review-manager'
 						) ),
-						$failed_emails,
+						absint( $failed_emails ),
 						'<a href="' . esc_url( admin_url( 'admin.php?page=wairm-invitations' ) ) . '">',
 						'</a>'
 					);
@@ -649,7 +662,7 @@ final class Dashboard_Page {
 			<div class="wairm-stats-grid">
 				<?php $sparkline_reviews = $this->render_sparkline_svg( $sparkline_data['reviews'], $review_delta['is_positive'] ); ?>
 				<div class="wairm-kpi-card" role="group"
-				     aria-label="<?php printf( esc_attr__( 'Total Reviews: %d', 'woo-ai-review-manager' ), absint( $stats->total_reviews ?? 0 ) ); ?>">
+				     aria-label="<?php /* translators: %d: total number of reviews */ printf( esc_attr__( 'Total Reviews: %d', 'woo-ai-review-manager' ), absint( $stats->total_reviews ?? 0 ) ); ?>">
 					<div class="kpi-label"><?php esc_html_e( 'Total Reviews', 'woo-ai-review-manager' ); ?></div>
 					<div class="wairm-kpi-body">
 						<div>
@@ -666,7 +679,7 @@ final class Dashboard_Page {
 
 				<?php $sparkline_scores = $this->render_sparkline_svg( $sparkline_data['scores'], $score_delta['is_positive'] ); ?>
 				<div class="wairm-kpi-card" role="group"
-				     aria-label="<?php printf( esc_attr__( 'Average Score: %s', 'woo-ai-review-manager' ), number_format( (float) ( $stats->avg_score ?? 0 ), 2 ) ); ?>">
+				     aria-label="<?php /* translators: %s: average sentiment score */ printf( esc_attr__( 'Average Score: %s', 'woo-ai-review-manager' ), number_format( (float) ( $stats->avg_score ?? 0 ), 2 ) ); ?>">
 					<div class="kpi-label"><?php esc_html_e( 'Avg Score', 'woo-ai-review-manager' ); ?></div>
 					<div class="wairm-kpi-body">
 						<div>
@@ -683,7 +696,7 @@ final class Dashboard_Page {
 
 				<?php $sparkline_conv = $this->render_sparkline_svg( $sparkline_data['conversions'], $conversion_delta['is_positive'] ); ?>
 				<div class="wairm-kpi-card" role="group"
-				     aria-label="<?php printf( esc_attr__( 'Email to Review conversion: %s%%', 'woo-ai-review-manager' ), (string) $current_conversion ); ?>">
+				     aria-label="<?php /* translators: %s: conversion rate percentage */ printf( esc_attr__( 'Email to Review conversion: %s%%', 'woo-ai-review-manager' ), esc_attr( (string) $current_conversion ) ); ?>">
 					<div class="kpi-label"><?php esc_html_e( 'Email → Review', 'woo-ai-review-manager' ); ?></div>
 					<div class="wairm-kpi-body">
 						<div>
@@ -699,19 +712,19 @@ final class Dashboard_Page {
 				</div>
 
 				<div class="wairm-kpi-card <?php echo $needs_action_count > 0 ? 'needs-action' : 'all-clear'; ?>" role="group"
-				     aria-label="<?php printf( esc_attr__( 'Needs Action: %d items', 'woo-ai-review-manager' ), $needs_action_count ); ?>">
+				     aria-label="<?php /* translators: %d: number of items needing action */ printf( esc_attr__( 'Needs Action: %d items', 'woo-ai-review-manager' ), absint( $needs_action_count ) ); ?>">
 					<div class="kpi-label"><?php esc_html_e( 'Needs Action', 'woo-ai-review-manager' ); ?></div>
 					<div>
 						<div class="kpi-value"><?php echo absint( $needs_action_count ); ?></div>
 						<div class="wairm-kpi-pills">
 							<?php if ( $negative_needing_response > 0 ) : ?>
 								<span class="wairm-kpi-pill pill-negative">
-									<?php printf( esc_html__( '%d negative', 'woo-ai-review-manager' ), $negative_needing_response ); ?>
+									<?php /* translators: %d: number of negative reviews needing response */ printf( esc_html__( '%d negative', 'woo-ai-review-manager' ), absint( $negative_needing_response ) ); ?>
 								</span>
 							<?php endif; ?>
 							<?php if ( $pending_count > 0 ) : ?>
 								<span class="wairm-kpi-pill pill-pending">
-									<?php printf( esc_html__( '%d pending', 'woo-ai-review-manager' ), $pending_count ); ?>
+									<?php /* translators: %d: number of reviews pending analysis */ printf( esc_html__( '%d pending', 'woo-ai-review-manager' ), absint( $pending_count ) ); ?>
 								</span>
 							<?php endif; ?>
 							<?php if ( 0 === $needs_action_count ) : ?>
@@ -745,7 +758,7 @@ final class Dashboard_Page {
 								</span>
 								<span class="bar-label-right"
 								      role="img"
-								      aria-label="<?php printf( esc_attr__( '%1$s: %2$d reviews, %3$s percent', 'woo-ai-review-manager' ), esc_attr( $s['label'] ), $s['count'], (string) $pct ); ?>">
+								      aria-label="<?php /* translators: 1: sentiment label, 2: review count, 3: percentage */ printf( esc_attr__( '%1$s: %2$d reviews, %3$s percent', 'woo-ai-review-manager' ), esc_attr( $s['label'] ), absint( $s['count'] ), esc_attr( (string) $pct ) ); ?>">
 									<?php echo absint( $s['count'] ); ?>
 									<span class="bar-pct">(<?php echo esc_html( (string) $pct ); ?>%)</span>
 								</span>
@@ -795,7 +808,7 @@ final class Dashboard_Page {
 								<span class="funnel-label-name"><?php echo esc_html( $step['label'] ); ?></span>
 								<span class="funnel-label-value"
 								      role="img"
-								      aria-label="<?php printf( esc_attr__( '%1$s: %2$d, %3$s percent of sent', 'woo-ai-review-manager' ), esc_attr( $step['label'] ), $step['count'], (string) $step['pct'] ); ?>">
+								      aria-label="<?php /* translators: 1: funnel step label, 2: count, 3: percentage of sent */ printf( esc_attr__( '%1$s: %2$d, %3$s percent of sent', 'woo-ai-review-manager' ), esc_attr( $step['label'] ), absint( $step['count'] ), esc_attr( (string) $step['pct'] ) ); ?>">
 									<?php echo absint( $step['count'] ); ?>
 									<?php if ( $idx > 0 ) : ?>
 										<span class="funnel-pct">(<?php echo esc_html( (string) $step['pct'] ); ?>%)</span>
@@ -813,7 +826,7 @@ final class Dashboard_Page {
 							$dropoff_pct = round( ( $dropoffs[ $idx ] / $email_funnel->sent ) * 100, 1 );
 						?>
 						<div class="wairm-funnel-dropoff">
-							<?php printf( esc_html__( '%s%% drop-off', 'woo-ai-review-manager' ), (string) $dropoff_pct ); ?>
+							<?php /* translators: %s: drop-off percentage */ printf( esc_html__( '%s%% drop-off', 'woo-ai-review-manager' ), esc_html( (string) $dropoff_pct ) ); ?>
 						</div>
 						<?php endif; ?>
 						<?php endforeach; ?>

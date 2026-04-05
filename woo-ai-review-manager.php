@@ -119,6 +119,7 @@ if ( function_exists( 'warc_fs' ) ) {
 	 * Load plugin textdomain for translations.
 	 */
 	function wairm_load_textdomain(): void {
+		// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- Required for non-wp.org distribution
 		load_plugin_textdomain(
 			'woo-ai-review-manager',
 			false,
@@ -170,6 +171,7 @@ if ( function_exists( 'warc_fs' ) ) {
 		global $wpdb;
 
 		// Log warning about orphaned AI reply comments.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$orphaned_replies = (int) $wpdb->get_var(
 			"SELECT COUNT(DISTINCT c.comment_ID)
 			 FROM {$wpdb->comments} c
@@ -179,8 +181,8 @@ if ( function_exists( 'warc_fs' ) ) {
 		);
 
 		if ( $orphaned_replies > 0 ) {
-			/* translators: %d: number of reply comments that remain after uninstall */
 			$message = sprintf(
+				/* translators: %d: number of reply comments that remain after uninstall */
 				_n(
 					'WooAI Review Manager: %d AI-generated reply comment remains on your product pages. You may want to review these manually.',
 					'WooAI Review Manager: %d AI-generated reply comments remain on your product pages. You may want to review these manually.',
@@ -195,9 +197,13 @@ if ( function_exists( 'warc_fs' ) ) {
 		}
 
 		// Drop custom tables.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_email_queue" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_review_invitations" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_review_sentiment" );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}wairm_insights" );
 
 		// Delete plugin options.

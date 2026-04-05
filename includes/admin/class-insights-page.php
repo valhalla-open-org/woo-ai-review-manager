@@ -82,6 +82,7 @@ final class Insights_Page {
 		// Retrieve initial data to embed in the page for JS rendering.
 		global $wpdb;
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only page display
 		$active_tab = sanitize_key( $_GET['tab'] ?? 'product' );
 		if ( ! isset( self::CATEGORIES[ $active_tab ] ) ) {
 			$active_tab = 'product';
@@ -94,6 +95,7 @@ final class Insights_Page {
 		$initial_html = null;
 		$page_history = $this->get_history( $active_tab );
 		if ( ! empty( $page_history ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$raw = $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT content FROM {$wpdb->prefix}wairm_insights WHERE id = %d",
@@ -206,6 +208,7 @@ final class Insights_Page {
 		$review_count = count( $sampled );
 		$generated_at = current_time( 'mysql' );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$wpdb->insert(
 			$wpdb->prefix . 'wairm_insights',
 			[
@@ -253,6 +256,7 @@ final class Insights_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT id, category, content, review_count, period, generated_at
@@ -290,6 +294,7 @@ final class Insights_Page {
 	private function get_history( string $category ): array {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT id, generated_at, review_count, period
@@ -334,8 +339,9 @@ final class Insights_Page {
 		}
 
 		// Fetch more than MAX_REVIEWS so we can sample proportionally.
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $date_filter built via prepare().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is a prefixed table name, $date_filter built via prepare().
 			"SELECT s.sentiment, s.score, s.product_id,
 			        c.comment_content, c.comment_date,
 			        p.post_title AS product_name
@@ -425,7 +431,9 @@ final class Insights_Page {
 
 		$table = $wpdb->prefix . 'wairm_review_sentiment';
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is a prefixed table name.
 			"SELECT DISTINCT s.product_id, p.post_title AS product_name
 			 FROM {$table} s
 			 JOIN {$wpdb->posts} p ON p.ID = s.product_id"
@@ -445,6 +453,7 @@ final class Insights_Page {
 	public function render_page(): void {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only page display
 		$active_tab = sanitize_key( $_GET['tab'] ?? 'product' );
 		if ( ! isset( self::CATEGORIES[ $active_tab ] ) ) {
 			$active_tab = 'product';
@@ -461,6 +470,7 @@ final class Insights_Page {
 		$has_json_data  = false;
 		$latest_html    = null;
 		if ( $has_insights ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$latest_raw = $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT content FROM {$wpdb->prefix}wairm_insights WHERE id = %d",

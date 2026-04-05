@@ -123,6 +123,7 @@ final class Responses_Page {
 		}
 
 		// Validate state transition — only generated/approved responses can be updated.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$current_status = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment WHERE id = %d",
@@ -142,6 +143,7 @@ final class Responses_Page {
 			$format[] = '%s';
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			$update,
@@ -176,6 +178,7 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT s.comment_id, s.product_id, s.ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment s WHERE s.id = %d",
@@ -224,6 +227,7 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Failed to post reply.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			[
@@ -263,6 +267,7 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT s.*, c.comment_content
@@ -292,6 +297,7 @@ final class Responses_Page {
 
 		$suggestion = sanitize_textarea_field( $suggestion );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			[
@@ -337,7 +343,9 @@ final class Responses_Page {
 			if ( 'post' === $action ) {
 				// Simulate individual post — reuse post logic.
 				$_POST['sentiment_id'] = $id;
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 				$row = $wpdb->get_row( $wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					"SELECT s.*, s.ai_response_suggestion AS text FROM {$table} s WHERE s.id = %d",
 					$id
 				) );
@@ -348,11 +356,14 @@ final class Responses_Page {
 					$succeeded++;
 				}
 			} else {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 				$current = $wpdb->get_var( $wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					"SELECT ai_response_status FROM {$table} WHERE id = %d",
 					$id
 				) );
 				if ( in_array( $current, [ 'generated', 'approved' ], true ) ) {
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 					$wpdb->update( $table, [ 'ai_response_status' => $action ], [ 'id' => $id ], [ '%s' ], [ '%d' ] );
 					$succeeded++;
 				}
@@ -368,6 +379,7 @@ final class Responses_Page {
 	private function post_single_response( int $id, string $text ): bool {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row( $wpdb->prepare(
 			"SELECT comment_id, product_id, ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment WHERE id = %d",
 			$id
@@ -409,6 +421,7 @@ final class Responses_Page {
 			return false;
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			[
@@ -444,6 +457,7 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$current = $wpdb->get_var( $wpdb->prepare(
 			"SELECT ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment WHERE id = %d",
 			$id
@@ -453,6 +467,7 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'This response is not dismissed.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			[ 'ai_response_status' => 'generated' ],
@@ -487,6 +502,7 @@ final class Responses_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$row = $wpdb->get_row( $wpdb->prepare(
 			"SELECT comment_id, ai_response_status FROM {$wpdb->prefix}wairm_review_sentiment WHERE id = %d",
 			$id
@@ -497,6 +513,7 @@ final class Responses_Page {
 		}
 
 		// Find the reply comment (child of the review comment).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$reply_id = $wpdb->get_var( $wpdb->prepare(
 			"SELECT comment_ID FROM {$wpdb->comments} WHERE comment_parent = %d ORDER BY comment_ID DESC LIMIT 1",
 			(int) $row->comment_id
@@ -511,6 +528,7 @@ final class Responses_Page {
 			'comment_content' => $text,
 		] );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_review_sentiment',
 			[ 'ai_response_suggestion' => $text ],
@@ -526,10 +544,13 @@ final class Responses_Page {
 		global $wpdb;
 
 		$table  = $wpdb->prefix . 'wairm_review_sentiment';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter parameter.
 		$filter = sanitize_key( $_GET['status'] ?? 'actionable' );
 
 		// Count by status.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$counts = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			"SELECT ai_response_status, COUNT(*) as cnt FROM {$table} WHERE ai_response_suggestion IS NOT NULL GROUP BY ai_response_status",
 			OBJECT_K
 		);
@@ -560,8 +581,11 @@ final class Responses_Page {
 		$per_page   = $pagination['per_page'];
 		$offset     = $pagination['offset'];
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} s WHERE {$where}" );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where built with prepare() above.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(

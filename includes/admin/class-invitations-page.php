@@ -100,6 +100,7 @@ final class Invitations_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$invitation = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}wairm_review_invitations WHERE id = %d",
@@ -116,6 +117,7 @@ final class Invitations_Page {
 		}
 
 		// Find the queued initial email and send it now by setting scheduled_at to now.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$email = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}wairm_email_queue
@@ -130,6 +132,7 @@ final class Invitations_Page {
 		}
 
 		// Update scheduled_at to now so it's immediately eligible.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$wpdb->prefix . 'wairm_email_queue',
 			[ 'scheduled_at' => current_time( 'mysql', true ) ],
@@ -142,6 +145,7 @@ final class Invitations_Page {
 		\WooAIReviewManager\Email_Sender::process_queue();
 
 		// Check if it was sent.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$updated_email = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT status FROM {$wpdb->prefix}wairm_email_queue WHERE id = %d",
@@ -150,6 +154,7 @@ final class Invitations_Page {
 		);
 
 		if ( 'sent' === $updated_email->status ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$new_status = $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT status FROM {$wpdb->prefix}wairm_review_invitations WHERE id = %d",
@@ -179,6 +184,7 @@ final class Invitations_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$invitation = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT * FROM {$wpdb->prefix}wairm_review_invitations WHERE id = %d",
@@ -198,6 +204,7 @@ final class Invitations_Page {
 		// Check for expired invitation — extend expiry.
 		if ( 'expired' === $invitation->status ) {
 			$expiry_days = absint( get_option( 'wairm_invitation_expiry_days', 30 ) );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->update(
 				$wpdb->prefix . 'wairm_review_invitations',
 				[
@@ -211,6 +218,7 @@ final class Invitations_Page {
 		}
 
 		// Queue a new email.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->insert(
 			$wpdb->prefix . 'wairm_email_queue',
 			[
@@ -230,6 +238,7 @@ final class Invitations_Page {
 		\WooAIReviewManager\Email_Sender::process_queue();
 
 		// Check result.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$updated_email = $wpdb->get_row(
 			$wpdb->prepare(
 				"SELECT status FROM {$wpdb->prefix}wairm_email_queue WHERE id = %d",
@@ -238,6 +247,7 @@ final class Invitations_Page {
 		);
 
 		if ( 'sent' === $updated_email->status ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$new_status = $wpdb->get_var(
 				$wpdb->prepare(
 					"SELECT status FROM {$wpdb->prefix}wairm_review_invitations WHERE id = %d",
@@ -267,6 +277,7 @@ final class Invitations_Page {
 			wp_send_json_error( [ 'message' => __( 'Invalid request.', 'woo-ai-review-manager' ) ] );
 		}
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$emails = $wpdb->get_results( $wpdb->prepare(
 			"SELECT id, email_type, status, scheduled_at, sent_at
 			 FROM {$wpdb->prefix}wairm_email_queue
@@ -292,17 +303,20 @@ final class Invitations_Page {
 		global $wpdb;
 
 		$table  = $wpdb->prefix . 'wairm_review_invitations';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter parameter.
 		$filter = sanitize_key( $_GET['status'] ?? 'all' );
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only search/filter parameters.
 		$search   = sanitize_text_field( wp_unslash( $_GET['s'] ?? '' ) );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$date_from = sanitize_text_field( $_GET['date_from'] ?? '' );
+		$date_from = sanitize_text_field( wp_unslash( $_GET['date_from'] ?? '' ) );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$date_to   = sanitize_text_field( $_GET['date_to'] ?? '' );
+		$date_to   = sanitize_text_field( wp_unslash( $_GET['date_to'] ?? '' ) );
 
 		// Count by status.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$counts = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			"SELECT status, COUNT(*) as cnt FROM {$table} GROUP BY status",
 			OBJECT_K
 		);
@@ -339,9 +353,11 @@ final class Invitations_Page {
 		$per_page   = $pagination['per_page'];
 		$offset     = $pagination['offset'];
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where built via prepare() or literal.
 		$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} i WHERE {$where}" );
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where built via prepare() or literal.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
@@ -489,7 +505,7 @@ final class Invitations_Page {
 									printf(
 										/* translators: %d: number of emails sent */
 										esc_html( _n( '%d sent', '%d sent', $sent_count, 'woo-ai-review-manager' ) ),
-										$sent_count
+										absint( $sent_count )
 									);
 								}
 								if ( $failed_count > 0 ) {
@@ -500,7 +516,7 @@ final class Invitations_Page {
 									printf(
 										/* translators: %d: number of emails failed */
 										esc_html( _n( '%d failed', '%d failed', $failed_count, 'woo-ai-review-manager' ) ),
-										$failed_count
+										absint( $failed_count )
 									);
 									echo '</span>';
 								}
